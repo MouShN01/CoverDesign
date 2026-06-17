@@ -1,0 +1,45 @@
+CREATE TABLE ProductConfigEntity (
+    id                  TEXT    NOT NULL PRIMARY KEY,
+    productId           TEXT    NOT NULL,
+    productType         TEXT    NOT NULL,
+
+    -- Sizes
+    heightMm            REAL    NOT NULL,
+    widthMm             REAL    NOT NULL,
+    depthMm             REAL    NOT NULL,
+    isPreciseMode       INTEGER NOT NULL DEFAULT 0,
+    sizeLabel           TEXT,               -- nullable: S/M/L etc.
+    customSizeMm        REAL,               -- nullable: free numeric size
+
+    -- Appearence
+    colorName           TEXT    NOT NULL,
+    colorHex            TEXT    NOT NULL,
+    material            TEXT    NOT NULL,
+    textureId           TEXT,
+    textureName         TEXT,
+    texturePreviewUrl   TEXT,
+    textureDescription  TEXT,
+
+    -- Персоналізація
+    inscription         TEXT    NOT NULL DEFAULT '',
+    userPhotoUri        TEXT,               -- local device URI, never sent to DB
+    additionalElementsJson TEXT NOT NULL DEFAULT '[]',
+
+    -- Замовлення
+    quantity            INTEGER NOT NULL DEFAULT 1,
+    additionalNotes     TEXT    NOT NULL DEFAULT '',
+    createdAt           INTEGER NOT NULL
+);
+
+insertOrReplaceConfig:
+INSERT OR REPLACE INTO ProductConfigEntity VALUES ?;
+
+selectCurrentConfig:
+SELECT * FROM ProductConfigEntity
+ORDER BY createdAt DESC LIMIT 1;
+
+selectConfigById:
+SELECT * FROM ProductConfigEntity WHERE id = :id;
+
+deleteConfig:
+DELETE FROM ProductConfigEntity WHERE id = :id;

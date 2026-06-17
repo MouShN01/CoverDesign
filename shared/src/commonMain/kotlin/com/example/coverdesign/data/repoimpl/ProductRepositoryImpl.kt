@@ -1,0 +1,89 @@
+package com.example.coverdesign.data.repoimpl
+
+// shared/commonMain/data/repoimpl/ProductRepositoryImpl.kt
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOneOrNull
+import com.example.coverdesign.data.dto.toDomain
+import com.example.coverdesign.data.dto.toDto
+import com.example.coverdesign.data.local.toDomain
+import com.example.coverdesign.data.local.toEntity
+import com.example.coverdesign.data.remote.service.ProductApiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import com.example.coverdesign.db.AppDatabase
+import com.example.coverdesign.domain.model.PriceEstimate
+import com.example.coverdesign.domain.model.Product
+import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.repo.ProductRepository
+import com.example.coverdesign.domain.util.Resource
+import com.example.coverdesign.domain.util.currentEpochMillis
+
+class ProductRepositoryImpl(
+    private val api: ProductApiService,
+    private val db: AppDatabase
+) : ProductRepository {
+
+    override suspend fun getCatalog(): Resource<List<Product>> =
+        withContext(Dispatchers.Default) {
+            try {
+                val dtos = api.getCatalog()
+                val products = dtos.map { it.toDomain() }
+
+                // refresh local cache
+                db.transaction {
+                    db.catalogQueries.clearCatalog()
+                    products.forEach {
+                        db.catalogQueries.insertOrReplaceProduct(
+                            it.toEntity(cachedAt = currentEpochMillis())
+                        )
+                    }
+                }
+
+                Resource.Success(products)
+            } catch (e: Exception) {
+                // fall back to cache if network fails
+                val cached = db.catalogQueries.selectAllProducts()
+                    .executeAsList()
+                    .map { it.toDomain() }
+
+                if (cached.isNotEmpty()) Resource.Success(cached)
+                else Resource.Error("Failed to load catalog: ${e.message}", e)
+            }
+        }
+
+    override suspend fun getProduct(id: String): Resource<Product> =
+        withContext(Dispatchers.Default) {
+            try {
+                Resource.Success(api.getProduct(id).toDomain())
+            } catch (e: Exception) {
+                val cached = db.catalogQueries.selectProductById(id)
+                    .executeAsOneOrNull()
+                    ?.toDomain()
+
+                if (cached != null) Resource.Success(cached)
+                else Resource.Error("Product not found: ${e.message}", e)
+            }
+        }
+
+    override suspend fun saveConfig(config: ProductConfig): Unit = //TODO remove Unit
+        withContext(Dispatchers.Default) {
+            db.productConfigQueries.insertOrReplaceConfig(config.toEntity())
+        }
+
+    override fun getSavedConfig(): Flow<ProductConfig?> =
+        db.productConfigQueries.selectCurrentConfig()
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.Default)
+            .map { it?.toDomain() }
+
+    override suspend fun calculatePrice(config: ProductConfig): Resource<PriceEstimate> =
+        withContext(Dispatchers.Default) {
+            try {
+                Resource.Success(api.calculatePrice(config.toDto()).toDomain())
+            } catch (e: Exception) {
+                Resource.Error("Price calculation failed: ${e.message}", e)
+            }
+        }
+}

@@ -10,5 +10,6 @@ data class Model3DDto(
     @SerialName("config_id")    val configId: String,
     @SerialName("model_url")    val modelUrl: String,
     @SerialName("status")       val status: String,
-    @SerialName("generated_at") val generatedAt: Long
+    @SerialName("generated_at") val generatedAt: Long,
+    @SerialName("estimatedWaitSeconds") val estimatedWaitSeconds: Int?
 )

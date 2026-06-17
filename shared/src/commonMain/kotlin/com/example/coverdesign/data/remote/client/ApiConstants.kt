@@ -3,7 +3,7 @@ package com.example.coverdesign.data.remote.client
 // data/remote/client/ApiConstants.kt
 object ApiConstants {
     // swap via BuildConfig / xcconfig per environment
-    const val BASE_URL     = "https://api.yourbackend.com/v1"
+    const val BASE_URL     = "https://api.yourbackend.com/v1" //TODO API
 
     object Endpoints {
         // products

@@ -1,0 +1,30 @@
+-- shared/commonMain/sqldelight/com/yourpackage/db/Catalog.sq
+
+-- cached catalog (FR1) — lets the catalog screen show data instantly,
+-- backend fetch refreshes it in the background
+CREATE TABLE ProductEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    basePrice REAL NOT NULL,
+    category TEXT NOT NULL,
+    materialsJson TEXT NOT NULL,   -- JSON array of material names
+    texturesJson TEXT NOT NULL,    -- JSON array of Texture objects
+    imageUrl TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL
+);
+
+insertOrReplaceProduct:
+INSERT OR REPLACE INTO ProductEntity
+VALUES ?;
+
+selectAllProducts:
+SELECT * FROM ProductEntity
+ORDER BY name ASC;
+
+selectProductById:
+SELECT * FROM ProductEntity
+WHERE id = :id;
+
+clearCatalog:
+DELETE FROM ProductEntity;

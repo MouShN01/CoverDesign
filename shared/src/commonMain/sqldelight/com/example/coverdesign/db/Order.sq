@@ -1,0 +1,33 @@
+-- shared/commonMain/sqldelight/com/yourpackage/db/Order.sq
+
+CREATE TABLE OrderEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    configId TEXT NOT NULL,
+    -- store the full config snapshot as JSON so order history is
+    -- immutable even if the live draft config changes later
+    configJson TEXT NOT NULL,
+    basePrice REAL NOT NULL,
+    materialSurcharge REAL NOT NULL,
+    textureSurcharge REAL NOT NULL,
+    totalPrice REAL NOT NULL,
+    currency TEXT NOT NULL,
+    status TEXT NOT NULL,
+    createdAt INTEGER NOT NULL
+);
+
+insertOrder:
+INSERT OR REPLACE INTO OrderEntity
+VALUES ?;
+
+selectAllOrders:
+SELECT * FROM OrderEntity
+ORDER BY createdAt DESC;
+
+selectOrderById:
+SELECT * FROM OrderEntity
+WHERE id = :id;
+
+updateOrderStatus:
+UPDATE OrderEntity
+SET status = :status
+WHERE id = :id;
