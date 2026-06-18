@@ -15,9 +15,18 @@ dependencies {
     implementation(projects.shared)
 
     implementation(libs.androidx.activity.compose)
+    //implementation(libs.coil.compose)       // AsyncImage
+    implementation(libs.coil3.coil.compose)
+
+    implementation(libs.accompanist.flowlayout) // FlowRow
+    implementation(libs.accompanist.systemuicontroller)
 
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.androidx.material3)
+    implementation(libs.compose.material.icons.core)
+    implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.uiTooling)
+    implementation(libs.androidx.navigation.compose)
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
