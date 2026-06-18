@@ -1,6 +1,7 @@
 package com.example.coverdesign.di
 
 // shared/commonMain/di/AppModule.kt
+
 import com.example.coverdesign.data.local.DatabaseDriverFactory
 import com.example.coverdesign.data.remote.client.createHttpClient
 import com.example.coverdesign.data.remote.interceptor.InMemoryTokenStorage
@@ -30,9 +31,16 @@ import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.validator.MeasurementValidator
+import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
+import com.example.coverdesign.ui.viewmodel.CatalogViewModel
+import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
+import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
+import com.example.coverdesign.ui.viewmodel.ProductConfigViewModel
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.*
 import org.koin.dsl.module
+import org.koin.core.module.dsl.viewModel
+
 
 
 val databaseModule = module {
@@ -100,10 +108,40 @@ val useCaseModule = module {
     // shared validator
     singleOf(::MeasurementValidator)
 }
+val viewModelModule = module {
+    viewModel { CatalogViewModel(getCatalog = get()) }
+    viewModel {
+        ProductConfigViewModel(
+            configureProduct = get(),
+            updateConfig = get(),
+            calculatePrice = get(),
+            getSavedConfig = get()
+        )
+    }
+    viewModel {
+        ModelPreviewViewModel(
+            generateModel = get(),
+            getModelPreview = get()
+        )
+    }
+    viewModel {
+        ArTryOnViewModel(
+            virtualTryOn = get(),
+            updateConfig = get()
+        )
+    }
+    viewModel {
+        OrderSummaryViewModel(
+            submitOrderUseCase = get(),
+            getOrderSummary = get()
+        )
+    }
+}
 
 val appModules = listOf(
     databaseModule,
     networkModule,
     repositoryModule,
-    useCaseModule
+    useCaseModule,
+    viewModelModule
 )

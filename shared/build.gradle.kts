@@ -76,6 +76,7 @@ kotlin {
 
             //sqldelight
             implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.runtime)
             implementation(libs.sqldelight.coroutines)
 
