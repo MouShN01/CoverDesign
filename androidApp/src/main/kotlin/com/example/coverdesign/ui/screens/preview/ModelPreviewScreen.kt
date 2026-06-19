@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens
+package com.example.coverdesign.ui.screens.preview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.domain.model.ModelStatus
@@ -49,6 +48,19 @@ fun ModelPreviewScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+//    val engine = rememberEngine()
+//    val modelLoader = rememberModelLoader(engine)
+//    var modelInstance by remember {
+//        mutableStateOf<ModelInstance?>(null)
+//    }
+//    LaunchedEffect(state.modelUrl) {
+//
+//        val url = state.modelUrl ?: return@LaunchedEffect
+//
+//        modelInstance =
+//            modelLoader.loadModelInstance(url)
+//    }
+
     EventHandler(viewModel.events) { event ->
         when (event) {
             is ModelPreviewUiEvent.NavigateToAr    -> onTryOn()
@@ -60,7 +72,9 @@ fun ModelPreviewScreen(
         topBar = { AppTopBar(title = "3D Preview", onBack = onBack) }
     ) { padding ->
         Column(
-            modifier            = Modifier.fillMaxSize().padding(padding),
+            modifier            = Modifier
+                .fillMaxSize()
+                .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ── 3D viewer area ─────────────────────────────────────────────
@@ -74,7 +88,17 @@ fun ModelPreviewScreen(
                 when {
                     state.isGenerating -> ModelGeneratingIndicator(state.modelStatus)
                     state.error != null -> ErrorScreen(state.error!!)
-                    state.modelUrl != null -> ModelViewer(url = state.modelUrl!!)
+                    state.modelUrl != null -> {
+//                        modelInstance?.let {
+//                            ModelViewerComposable(
+//                                modelInstance = it
+//                            )
+//                        }
+                        ModelViewerComposable(
+                            modelUrl = state.modelUrl!!,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                     else -> Text("Select a product to generate the model",
                         style = MaterialTheme.typography.bodyMedium)
                 }
@@ -87,7 +111,9 @@ fun ModelPreviewScreen(
             ) {
                 Button(
                     onClick  = { viewModel.onAction(ModelPreviewAction.ProceedToAr(configId)) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                     enabled  = state.modelUrl != null,
                     shape    = RoundedCornerShape(14.dp)
                 ) {
@@ -97,7 +123,9 @@ fun ModelPreviewScreen(
                 }
                 OutlinedButton(
                     onClick  = { viewModel.onAction(ModelPreviewAction.ProceedToOrder(configId)) },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                     enabled  = state.modelUrl != null,
                     shape    = RoundedCornerShape(14.dp)
                 ) {
@@ -125,34 +153,5 @@ private fun ModelGeneratingIndicator(status: ModelStatus) {
             },
             style = MaterialTheme.typography.bodyMedium
         )
-    }
-}
-
-@Composable
-private fun ModelViewer(url: String) {
-    // Placeholder — real implementation uses SceneView in Step 9
-    // SceneView is an AndroidView wrapping Filament renderer
-    Box(
-        modifier         = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Default.ViewInAr,
-                contentDescription = null,
-                modifier           = Modifier.size(64.dp),
-                tint               = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text("3D Viewer — Step 9",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(url,
-                style   = MaterialTheme.typography.labelSmall,
-                color   = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 16.dp))
-        }
     }
 }

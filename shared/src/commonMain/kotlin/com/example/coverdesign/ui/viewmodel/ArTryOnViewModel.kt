@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.ArSessionState
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.TrackingState
+import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.util.onError
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 // shared/commonMain/ui/viewmodel/ArTryOnViewModel.kt
 class ArTryOnViewModel(
     private val virtualTryOn  : VirtualTryOnUseCase,
-    private val updateConfig  : UpdateConfigUseCase
+    private val updateConfig  : UpdateConfigUseCase,
+    private val getModelPreview : GetModelPreviewUseCase
 ) : BaseViewModel<ArTryOnUiState, ArTryOnUiEvent>() {
 
     override fun initialState() = ArTryOnUiState()
@@ -35,6 +37,8 @@ class ArTryOnViewModel(
             is ArTryOnAction.ProceedToOrder  -> sendEvent(
                 ArTryOnUiEvent.NavigateToOrder(action.configId)
             )
+            is ArTryOnAction.UpdateTracking ->
+                setState { copy(trackingState = action.state) }
         }
     }
 
@@ -54,15 +58,26 @@ class ArTryOnViewModel(
             }
         }
     }
-
     private fun startSession(configId: String) {
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
+
+            // 1. fetch model URL
             virtualTryOn.start(configId)
-                .onSuccess { setState { copy(isLoading = false) } }
+                .onSuccess {
+                    // model URL comes back through ArSessionState
+                }
                 .onError { message, _ ->
                     setState { copy(isLoading = false, error = message) }
+                    return@launch
                 }
+
+            val urlResult = getModelPreview(configId)
+            urlResult.onSuccess { url ->
+                setState { copy(modelUrl = url, isLoading = false) }
+            }.onError { message, _ ->
+                setState { copy(isLoading = false, error = message) }
+            }
         }
     }
 
@@ -101,6 +116,7 @@ class ArTryOnViewModel(
 data class ArTryOnUiState(
     val isArSupported : Boolean         = false,
     val isLoading     : Boolean         = false,
+    val modelUrl      : String?        = null,   // ← add
     val sessionState  : ArSessionState = ArSessionState.Idle,
     val trackingState : TrackingState = TrackingState.NOT_AVAILABLE,
     val error         : String?         = null
@@ -117,6 +133,10 @@ sealed class ArTryOnAction {
     data class StartSession(val configId: String)    : ArTryOnAction()
     data class UpdateConfig(val config: ProductConfig) : ArTryOnAction()
     data class ProceedToOrder(val configId: String)  : ArTryOnAction()
+
+    data class UpdateTracking(val state: TrackingState) : ArTryOnAction()
+
     object StopSession                               : ArTryOnAction()
     object CaptureSnapshot                           : ArTryOnAction()
+
 }

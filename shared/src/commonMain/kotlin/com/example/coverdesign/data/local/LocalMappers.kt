@@ -1,11 +1,14 @@
 package com.example.coverdesign.data.local
 
 // shared/commonMain/data/local/LocalMappers.kt
-import com.example.coverdesign.db.ProductConfigEntity
+import com.example.coverdesign.db.Model3DEntity
 import com.example.coverdesign.db.OrderEntity
+import com.example.coverdesign.db.ProductConfigEntity
 import com.example.coverdesign.db.ProductEntity
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
+import com.example.coverdesign.domain.model.Model3D
+import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.domain.model.PriceEstimate
@@ -17,8 +20,6 @@ import com.example.coverdesign.domain.model.ProductType
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -126,4 +127,24 @@ fun Product.toEntity(cachedAt: Long): ProductEntity = ProductEntity(
     texturesJson = json.encodeToString(availableTextures),
     imageUrl = imageUrl,
     cachedAt = cachedAt
+)
+fun Model3DEntity.toDomain() = Model3D(
+    id = id,
+    configId = configId ?: "",
+    modelUrl = modelUrl,
+    previewImageUrl = previewImageUrl,
+    status = ModelStatus.valueOf(status),
+    generatedAt = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds?.toInt()
+)
+
+fun Model3D.toEntity(productId: String) = Model3DEntity(
+    id                   = id,
+    productId            = productId,
+    configId             = configId.ifEmpty { null },
+    modelUrl             = modelUrl,
+    previewImageUrl      = previewImageUrl ?: "3D/${modelUrl}",
+    status               = status.name,
+    generatedAt          = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds?.toLong()
 )

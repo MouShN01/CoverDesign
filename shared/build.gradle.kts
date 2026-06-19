@@ -50,6 +50,11 @@ kotlin {
             implementation(libs.koin.androidx.compose)
             implementation(libs.androidx.security.crypto)
             implementation(libs.androidx.biometric)
+               // ARCore tracking
+
+            implementation(libs.sceneview)     // 3D model viewer
+            implementation(libs.arcore)
+            implementation(libs.arsceneview)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

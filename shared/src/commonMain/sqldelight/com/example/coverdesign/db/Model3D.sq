@@ -1,0 +1,46 @@
+-- shared/commonMain/sqldelight/com/yourpackage/db/Model3D.sq
+
+CREATE TABLE Model3DEntity (
+    id                   TEXT    NOT NULL PRIMARY KEY,
+    -- foreign key to ProductEntity
+    productId            TEXT    NOT NULL,
+    configId             TEXT,               -- null until user creates a config
+    modelUrl             TEXT    NOT NULL,   -- .glb / .usdz URL
+    previewImageUrl      TEXT    NOT NULL DEFAULT '',
+    status               TEXT    NOT NULL DEFAULT 'READY',
+    generatedAt          INTEGER NOT NULL,
+    estimatedWaitSeconds INTEGER,
+    FOREIGN KEY (productId) REFERENCES ProductEntity(id) ON DELETE CASCADE
+);
+
+insertOrReplaceModel3D:
+INSERT OR REPLACE INTO Model3DEntity VALUES ?;
+
+selectByProductId:
+SELECT * FROM Model3DEntity
+WHERE productId = :productId
+LIMIT 1;
+
+selectByConfigId:
+SELECT * FROM Model3DEntity
+WHERE configId = :configId
+ORDER BY generatedAt DESC
+LIMIT 1;
+
+selectById:
+SELECT * FROM Model3DEntity
+WHERE id = :id;
+
+updateConfigId:
+UPDATE Model3DEntity
+SET configId = :configId
+WHERE id = :id;
+
+updateStatus:
+UPDATE Model3DEntity
+SET status = :status
+WHERE id = :id;
+
+deleteByProductId:
+DELETE FROM Model3DEntity
+WHERE productId = :productId;

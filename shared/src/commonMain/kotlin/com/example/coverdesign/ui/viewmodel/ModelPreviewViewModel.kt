@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
 import com.example.coverdesign.domain.util.onError
@@ -16,13 +17,17 @@ import kotlinx.coroutines.launch
 // shared/commonMain/ui/viewmodel/ModelPreviewViewModel.kt
 class ModelPreviewViewModel(
     private val generateModel   : GenerateModelUseCase,
-    private val getModelPreview : GetModelPreviewUseCase
+    private val getModelPreview : GetModelPreviewUseCase,
+    private val model3DRepo        : Model3DRepository       // ← add
 ) : BaseViewModel<ModelPreviewUiState, ModelPreviewUiEvent>() {
+
+
 
     override fun initialState() = ModelPreviewUiState()
 
     fun onAction(action: ModelPreviewAction) {
         when (action) {
+            is ModelPreviewAction.LoadForProduct -> loadBaseModel(action.productId)
             is ModelPreviewAction.LoadModel   -> loadModel(action.config)
             is ModelPreviewAction.ProceedToAr -> sendEvent(
                 ModelPreviewUiEvent.NavigateToAr(action.configId)
@@ -33,6 +38,27 @@ class ModelPreviewViewModel(
         }
     }
 
+    // called from 3D tab — show base model straight from DB
+    private fun loadBaseModel(productId: String) {
+        viewModelScope.launch {
+            setState { copy(isGenerating = true, error = null) }
+            model3DRepo.getBaseModelForProduct(productId)
+                .onSuccess { model ->
+                    setState {
+                        copy(
+                            model        = model,
+                            modelUrl     = model.modelUrl,
+                            modelStatus  = ModelStatus.READY,
+                            isGenerating = false
+                        )
+                    }
+                }
+                .onError { message, _ ->
+                    setState { copy(isGenerating = false, error = message) }
+                }
+        }
+    }
+
     private fun loadModel(config: ProductConfig) {
         viewModelScope.launch {
             setState { copy(isGenerating = true, error = null) }
@@ -40,7 +66,17 @@ class ModelPreviewViewModel(
             generateModel(config)
                 .onSuccess { model ->
                     setState { copy(model = model) }
-                    observeStatus(model.id)
+                    if (model.status == ModelStatus.READY) {
+                        setState {
+                            copy(
+                                modelUrl = model.modelUrl,
+                                modelStatus = ModelStatus.READY,
+                                isGenerating = false
+                            )
+                        }
+                    } else {
+                         observeStatus(model.id)
+                    }
                 }
                 .onError { message, _ ->
                     setState { copy(isGenerating = false, error = message) }
@@ -74,7 +110,7 @@ class ModelPreviewViewModel(
 data class ModelPreviewUiState(
     val model        : Model3D?     = null,
     val modelUrl     : String?      = null,
-    val modelStatus  : ModelStatus = ModelStatus.PENDING,
+    val modelStatus  : ModelStatus  = ModelStatus.PENDING,
     val isGenerating : Boolean      = false,
     val error        : String?      = null
 ) : UiState
@@ -87,6 +123,7 @@ sealed class ModelPreviewUiEvent : UiEvent {
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 sealed class ModelPreviewAction {
+    data class LoadForProduct(val productId: String) : ModelPreviewAction()
     data class LoadModel(val config: ProductConfig)       : ModelPreviewAction()
     data class ProceedToAr(val configId: String)          : ModelPreviewAction()
     data class ProceedToOrder(val configId: String)       : ModelPreviewAction()

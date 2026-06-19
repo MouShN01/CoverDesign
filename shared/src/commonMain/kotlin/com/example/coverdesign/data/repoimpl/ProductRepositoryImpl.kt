@@ -8,10 +8,6 @@ import com.example.coverdesign.data.dto.toDto
 import com.example.coverdesign.data.local.toDomain
 import com.example.coverdesign.data.local.toEntity
 import com.example.coverdesign.data.remote.service.ProductApiService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import com.example.coverdesign.db.AppDatabase
 import com.example.coverdesign.domain.model.PriceEstimate
 import com.example.coverdesign.domain.model.Product
@@ -19,6 +15,12 @@ import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.repo.ProductRepository
 import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.domain.util.currentEpochMillis
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ProductRepositoryImpl(
     private val api: ProductApiService,
@@ -28,20 +30,21 @@ class ProductRepositoryImpl(
     override suspend fun getCatalog(): Resource<List<Product>> =
         withContext(Dispatchers.Default) {
             try {
-                val dtos = api.getCatalog()
-                val products = dtos.map { it.toDomain() }
+                // ── 1. try local DB first ─────────────────────────────────────────
+                val cached = db.catalogQueries
+                    .selectAllProducts()
+                    .executeAsList()
+                    .map { it.toDomain() }
 
-                // refresh local cache
-                db.transaction {
-                    db.catalogQueries.clearCatalog()
-                    products.forEach {
-                        db.catalogQueries.insertOrReplaceProduct(
-                            it.toEntity(cachedAt = currentEpochMillis())
-                        )
-                    }
+                if (cached.isNotEmpty()) {
+                    // return cache immediately, then refresh in background
+                    backgroundRefreshCatalog()
+                    return@withContext Resource.Success(cached)
                 }
 
-                Resource.Success(products)
+                // ── 2. nothing cached — try network ───────────────────────────────
+                fetchCatalogFromNetwork()
+
             } catch (e: Exception) {
                 // fall back to cache if network fails
                 val cached = db.catalogQueries.selectAllProducts()
@@ -52,7 +55,29 @@ class ProductRepositoryImpl(
                 else Resource.Error("Failed to load catalog: ${e.message}", e)
             }
         }
+    private fun backgroundRefreshCatalog() {
+        CoroutineScope(Dispatchers.Default).launch {
+            fetchCatalogFromNetwork()
+        }
+    }
 
+    private suspend fun fetchCatalogFromNetwork(): Resource<List<Product>> =
+        try {
+            val products = api.getCatalog().map { it.toDomain() }
+            db.transaction {
+                db.catalogQueries.clearCatalog()
+                products.forEach {
+                    db.catalogQueries.insertOrReplaceProduct(
+                        it.toEntity(cachedAt = currentEpochMillis())
+                    )
+                }
+            }
+            Resource.Success(products)
+        } catch (e: Exception) {
+            Resource.Error("Network unavailable: ${e.message}", e)
+        }
+
+    /* OLD*/
     override suspend fun getProduct(id: String): Resource<Product> =
         withContext(Dispatchers.Default) {
             try {

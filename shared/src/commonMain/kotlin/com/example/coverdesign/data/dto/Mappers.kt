@@ -21,6 +21,7 @@ import com.example.coverdesign.domain.model.Token
 // DTO → Domain  (incoming from backend)
 // ═══════════════════════════════════════════════════════════════════
 
+
 fun ProductDto.toDomain() = Product(
     id                 = id,
     name               = name,
@@ -78,12 +79,12 @@ fun PriceEstimateDto.toDomain() = PriceEstimate(
 )
 
 fun Model3DDto.toDomain() = Model3D(
-    id                   = id,
-    configId             = configId,
-    modelUrl             = modelUrl,
-    // previewImageUrl      = previewImageUrl, todo add preview
-    status               = ModelStatus.valueOf(status.uppercase()),
-    generatedAt          = generatedAt,
+    id = id,
+    configId = configId,
+    modelUrl = modelUrl,
+    previewImageUrl = null, // todo add preview
+    status = ModelStatus.valueOf(status.uppercase()),
+    generatedAt = generatedAt,
     estimatedWaitSeconds = estimatedWaitSeconds
 )
 

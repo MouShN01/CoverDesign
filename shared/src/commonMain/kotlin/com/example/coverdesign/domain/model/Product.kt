@@ -13,5 +13,7 @@ data class Product(
 )
 
 enum class ProductCategory {
-    COSMETIC_COVER
+    COSMETIC_COVER,
+    OTHER,
+    UPPER_LIMB,
 }

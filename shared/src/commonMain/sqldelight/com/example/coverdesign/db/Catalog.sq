@@ -28,3 +28,6 @@ WHERE id = :id;
 
 clearCatalog:
 DELETE FROM ProductEntity;
+
+countProducts:
+SELECT COUNT(*) FROM ProductEntity;

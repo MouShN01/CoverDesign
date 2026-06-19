@@ -23,7 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.coverdesign.domain.model.OrderStatus
 import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
@@ -81,4 +83,23 @@ fun <E> EventHandler(
     LaunchedEffect(events) {
         events.collect { onEvent(it) }
     }
+}
+
+// ── Order status chip ─────────────────────────────────────────────────────────
+@Composable
+fun OrderStatusChip(status: OrderStatus) {
+    val (label, color) = when (status) {
+        OrderStatus.DRAFT        -> "Draft"       to MaterialTheme.colorScheme.onSurfaceVariant
+        OrderStatus.SUBMITTED    -> "Submitted"   to Color(0xFF1565C0)
+        OrderStatus.CONFIRMED    -> "Confirmed"   to Color(0xFF2E7D32)
+        OrderStatus.IN_PRODUCTION -> "Processing" to Color(0xFF1565C0)
+        OrderStatus.SHIPPED      -> "Shipped"     to Color(0xFF6A1B9A)
+        OrderStatus.DELIVERED    -> "Delivered"   to Color(0xFF2E7D32)
+        OrderStatus.CANCELLED    -> "Cancelled"   to MaterialTheme.colorScheme.error
+    }
+    Text(
+        text  = label,
+        style = MaterialTheme.typography.labelSmall,
+        color = color
+    )
 }

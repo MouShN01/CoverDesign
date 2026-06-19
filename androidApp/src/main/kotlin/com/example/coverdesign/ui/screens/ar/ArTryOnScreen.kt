@@ -1,47 +1,28 @@
 package com.example.coverdesign.ui.screens.ar
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.ShoppingCart
-
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-import org.koin.compose.viewmodel.koinViewModel
-
 import com.example.coverdesign.domain.model.TrackingState
-
 import com.example.coverdesign.ui.components.AppTopBar
-import com.example.coverdesign.ui.components.ErrorScreen
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.viewmodel.ArTryOnAction
 import com.example.coverdesign.ui.viewmodel.ArTryOnUiEvent
 import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 // androidApp/ui/screens/ar/ArTryOnScreen.kt
 @Composable
@@ -63,70 +44,42 @@ fun ArTryOnScreen(
     DisposableEffect(Unit) {
         onDispose { viewModel.onAction(ArTryOnAction.StopSession) }
     }
-
+// TODO add WithCameraPermission
     Scaffold(
         topBar = { AppTopBar(title = "AR Try-On", onBack = onBack) }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            if (!state.isArSupported) {
-                // AR not available on device
-                ErrorScreen("AR is not supported on this device")
-            } else {
-                // ── AR camera view — real impl in Step 9 ──────────────────
-                Box(
-                    modifier         = Modifier.fillMaxSize()
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "AR Camera View — Step 9",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                // ── overlay UI ────────────────────────────────────────────
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // tracking state banner
-                    TrackingStateBanner(state.trackingState)
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        // capture snapshot
-                        FloatingActionButton(
-                            onClick = { viewModel.onAction(ArTryOnAction.CaptureSnapshot) },
-                            containerColor = Color.White
-                        ) {
-                            Icon(Icons.Default.CameraAlt, null,
-                                tint = Color.Black)
-                        }
-
-                        // proceed to order
-                        ExtendedFloatingActionButton(
-                            onClick = {
-                                viewModel.onAction(ArTryOnAction.ProceedToOrder(configId))
-                            },
-                            icon    = { Icon(Icons.Default.ShoppingCart, null) },
-                            text    = { Text("Order Now") }
-                        )
-                    }
-                }
-
-                // loading overlay
-                if (state.isLoading) {
-                    Box(
-                        modifier         = Modifier.fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator(color = Color.White) }
+            // in ArTryOnScreen — replace the black box placeholder
+            if (state.isArSupported && state.modelUrl != null) {
+                ArSceneViewComposable(
+                    modelUrl   = state.modelUrl!!,
+                    onTracking = { tracking ->
+                        viewModel.onAction(ArTryOnAction.UpdateTracking(tracking))
+                    },
+                    modifier   = Modifier.fillMaxSize()
+                )
+            } else if (state.modelUrl == null && !state.isLoading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No model loaded", color = Color.White)
                 }
             }
+//            if (!state.isArSupported) {
+//                // AR not available on device
+//                ErrorScreen("AR is not supported on this device")
+//            }
+//           else {
+//                state.modelUrl?.let { url ->
+//                    ArSceneViewComposable(
+//                        modelUrl   = url,
+//                        repository = get<ArSessionRepository>() as ArSessionRepositoryImpl,
+//                        onTracking = { tracking ->
+//                            viewModel.onAction(ArTryOnAction.UpdateTracking(tracking))
+//                        },
+//                        modifier   = Modifier.fillMaxSize()
+//                    )
+//                }
+//            }
         }
     }
 }

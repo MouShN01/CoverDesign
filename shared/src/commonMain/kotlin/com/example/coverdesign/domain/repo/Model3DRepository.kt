@@ -12,4 +12,5 @@ interface Model3DRepository {
     suspend fun getModelUrl(configId: String): Resource<String>
     fun getModelStatus(modelId: String): Flow<ModelStatus>
     suspend fun getTextures(): Resource<List<Texture>>
+    suspend fun getBaseModelForProduct(productId: String): Resource<Model3D>
 }

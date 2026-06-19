@@ -8,7 +8,7 @@ data class Model3D(
     val status: ModelStatus,
     val generatedAt: Long,
     val estimatedWaitSeconds: Int? = null,
-//    val previewImageUrl: String,
+    val previewImageUrl: String?,
 
     )
 

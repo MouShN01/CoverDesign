@@ -38,12 +38,13 @@ import com.example.coverdesign.ui.components.LoadingScreen
 import com.example.coverdesign.ui.viewmodel.CatalogAction
 import com.example.coverdesign.ui.viewmodel.CatalogUiEvent
 import com.example.coverdesign.ui.viewmodel.CatalogUiState
+import com.example.coverdesign.ui.viewmodel.CatalogViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun CatalogScreen(
-    viewModel         : com.example.coverdesign.ui.viewmodel.CatalogViewModel = koinViewModel(),
+    viewModel         : CatalogViewModel = koinViewModel(),
     onProductSelected : (Product) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

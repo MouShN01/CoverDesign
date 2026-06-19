@@ -10,13 +10,12 @@ import com.example.coverdesign.data.remote.service.AuthApiService
 import com.example.coverdesign.data.remote.service.Model3DApiService
 import com.example.coverdesign.data.remote.service.OrderApiService
 import com.example.coverdesign.data.remote.service.ProductApiService
-import com.example.coverdesign.data.repoimpl.ArSessionRepositoryImpl
 import com.example.coverdesign.data.repoimpl.AuthRepositoryImpl
+import com.example.coverdesign.data.repoimpl.AuthRepositoryImplTest
 import com.example.coverdesign.data.repoimpl.Model3DRepositoryImpl
 import com.example.coverdesign.data.repoimpl.OrderRepositoryImpl
 import com.example.coverdesign.data.repoimpl.ProductRepositoryImpl
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.repo.ArSessionRepository
 import com.example.coverdesign.domain.repo.AuthRepository
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.repo.OrderRepository
@@ -32,15 +31,16 @@ import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.validator.MeasurementValidator
 import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
+import com.example.coverdesign.ui.viewmodel.AuthViewModel
 import com.example.coverdesign.ui.viewmodel.CatalogViewModel
+import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import com.example.coverdesign.ui.viewmodel.ProductConfigViewModel
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.*
-import org.koin.dsl.module
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
-
+import org.koin.dsl.module
 
 
 val databaseModule = module {
@@ -52,6 +52,8 @@ val databaseModule = module {
     single { get<AppDatabase>().productConfigQueries }
     single { get<AppDatabase>().orderQueries }
     single { get<AppDatabase>().catalogQueries }
+    single { get<AppDatabase>().model3DQueries }    // ← add
+
 }
 
 val networkModule = module {
@@ -71,10 +73,13 @@ val networkModule = module {
 
 val repositoryModule = module {
     single<ProductRepository>  { ProductRepositoryImpl(api = get(), db = get()) }
-    single<Model3DRepository>  { Model3DRepositoryImpl(api = get()) }
+    single<Model3DRepository>  { Model3DRepositoryImpl(api = get(), db = get()) }
     single<OrderRepository>    { OrderRepositoryImpl(api = get(), db = get()) }
     single<AuthRepository>     { AuthRepositoryImpl(api = get(), tokenStorage = get()) }
-    single<ArSessionRepository>{ ArSessionRepositoryImpl() }
+    single<AuthRepository> {
+        AuthRepositoryImplTest(tokenStorage = get())
+    }
+//single<ArSessionRepository>{ ArSessionRepositoryImpl() }
 }
 
 val useCaseModule = module {
@@ -121,13 +126,15 @@ val viewModelModule = module {
     viewModel {
         ModelPreviewViewModel(
             generateModel = get(),
-            getModelPreview = get()
+            getModelPreview = get(),
+            model3DRepo = get()
         )
     }
     viewModel {
         ArTryOnViewModel(
             virtualTryOn = get(),
-            updateConfig = get()
+            updateConfig = get(),
+            getModelPreview = get()
         )
     }
     viewModel {
@@ -136,6 +143,9 @@ val viewModelModule = module {
             getOrderSummary = get()
         )
     }
+    viewModel { HomeViewModel(getOrderSummary = get(), authRepo = get()) }
+    viewModel { AuthViewModel(authRepo = get()) }
+
 }
 
 val appModules = listOf(

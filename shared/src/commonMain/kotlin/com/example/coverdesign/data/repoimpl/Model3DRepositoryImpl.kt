@@ -2,7 +2,9 @@ package com.example.coverdesign.data.repoimpl
 
 import com.example.coverdesign.data.dto.toDomain
 import com.example.coverdesign.data.dto.toDto
+import com.example.coverdesign.data.local.toDomain
 import com.example.coverdesign.data.remote.service.Model3DApiService
+import com.example.coverdesign.db.AppDatabase
 import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.ProductConfig
@@ -10,13 +12,14 @@ import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 class Model3DRepositoryImpl(
-    private val api: Model3DApiService
+    private val api: Model3DApiService,
+    private val db  : AppDatabase
 ) : Model3DRepository {
 
     override suspend fun generateModel(config: ProductConfig): Resource<Model3D> =
@@ -58,5 +61,20 @@ class Model3DRepositoryImpl(
             } catch (e: Exception) {
                 Resource.Error("Could not load textures: ${e.message}", e)
             }
+        }
+    // ── new: fetch base model for a product (seeded / cached) ────────────────
+    override suspend fun getBaseModelForProduct(productId: String): Resource<Model3D> =
+        withContext(Dispatchers.Default) {
+            val local = db.model3DQueries
+                .selectByProductId(productId)
+                .executeAsOneOrNull()
+            if (local != null) Resource.Success(local.toDomain())
+            else Resource.Error("No base model found for product $productId")
+        }
+
+    private suspend fun <T> safeApiCall(block: suspend () -> T): Resource<T> =
+        withContext(Dispatchers.Default) {
+            try { Resource.Success(block()) }
+            catch (e: Exception) { Resource.Error(e.message ?: "Unknown error", e) }
         }
 }

@@ -28,6 +28,11 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
     implementation(libs.androidx.navigation.compose)
 
+    implementation(libs.sceneview)     // 3D model viewer
+    implementation(libs.arsceneview)   // AR camera + model overlay
+    implementation(libs.arcore)        // ARCore tracking
+    implementation(libs.accompanist.permissions)
+
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 }

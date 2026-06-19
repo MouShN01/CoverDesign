@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CoverDesign</string>
+    <string name="contact_number">+380 XX XXX XX XX</string>
+    <string name="phone">Phone</string>
+    <string name="info_email">info@proscover.com</string>
+    <string name="online_chat">Online chat</string>
+    <string name="available_24_7">Available 24/7</string>
+    <string name="consultation_question">"Have questions or need a consultation? "</string>
+    <string name="our_team_is_always_ready_to_help">Our team is always ready to help!</string>
 </resources>
