@@ -94,7 +94,7 @@ private fun OrderSummaryContent(order: Order, modifier: Modifier = Modifier) {
     ) {
         // ── Product info ───────────────────────────────────────────────────
         SummarySection(title = "Product") {
-            SummaryRow("Type",     config.productType.displayName)
+            SummaryRow("Type",     config.productCategory.name)
             SummaryRow("Material", config.material.displayName)
             config.texture?.let { SummaryRow("Texture", it.name) }
             SummaryRow("Color",    config.color.name)

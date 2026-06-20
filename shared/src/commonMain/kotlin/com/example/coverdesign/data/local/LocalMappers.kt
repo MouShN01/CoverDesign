@@ -16,7 +16,6 @@ import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
-import com.example.coverdesign.domain.model.ProductType
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import kotlinx.serialization.json.Json
@@ -26,7 +25,7 @@ private val json = Json { ignoreUnknownKeys = true }
 fun ProductConfigEntity.toDomain(): ProductConfig = ProductConfig(
     id = id,
     productId = productId,
-    productType = ProductType.valueOf(productType),
+    productCategory = ProductCategory.valueOf(productType),
     measurement = Measurement(
         height = heightMm,
         width = widthMm,
@@ -54,7 +53,7 @@ fun ProductConfigEntity.toDomain(): ProductConfig = ProductConfig(
 fun ProductConfig.toEntity(): ProductConfigEntity = ProductConfigEntity(
     id = id,
     productId = productId,
-    productType = productType.name,
+    productType = productCategory.name,
     heightMm = measurement.height,
     widthMm = measurement.width,
     depthMm = measurement.depth,

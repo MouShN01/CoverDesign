@@ -1,6 +1,5 @@
 package com.example.coverdesign.domain.model
 
-// shared/commonMain/domain/model/Product.kt
 data class Product(
     val id: String,
     val name: String,
@@ -11,9 +10,3 @@ data class Product(
     val availableTextures: List<Texture>,
     val imageUrl: String
 )
-
-enum class ProductCategory {
-    COSMETIC_COVER,
-    OTHER,
-    UPPER_LIMB,
-}

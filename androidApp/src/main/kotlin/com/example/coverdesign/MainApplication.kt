@@ -16,5 +16,6 @@ class MainApplication : Application() {
             androidContext(this@MainApplication)
             modules(appModules + androidModule)
         }
+        //get<DatabaseSeeder>().seedIfEmpty()
     }
 }

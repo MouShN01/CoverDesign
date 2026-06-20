@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -44,7 +45,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,19 +56,28 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.R
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.PriceEstimate
+import com.example.coverdesign.domain.model.Product
+import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
+import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.ui.components.AppTopBar
+import com.example.coverdesign.ui.components.ErrorScreen
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.components.LoadingScreen
+import com.example.coverdesign.ui.theme.AppTheme
+import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ProductConfigAction
 import com.example.coverdesign.ui.viewmodel.ProductConfigUiEvent
 import com.example.coverdesign.ui.viewmodel.ProductConfigUiState
@@ -75,12 +87,16 @@ import org.koin.compose.viewmodel.koinViewModel
 // androidApp/ui/screens/config/ProductConfigScreen.kt
 @Composable
 fun ProductConfigScreen(
-    productId  : String,
-    viewModel  : ProductConfigViewModel = koinViewModel(),
-    onProceed  : (configId: String) -> Unit,
-    onBack     : () -> Unit
+    entryMode : ConfigEntryMode,
+    viewModel : ProductConfigViewModel = koinViewModel(),
+    onProceed : (configId: String) -> Unit,
+    onBack    : () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(entryMode) {
+        viewModel.onAction(ProductConfigAction.Enter(entryMode))
+    }
 
     EventHandler(viewModel.events) { event ->
         when (event) {
@@ -89,12 +105,7 @@ fun ProductConfigScreen(
     }
 
     Scaffold(
-        topBar = {
-            AppTopBar(
-                title  = "Configure Product",
-                onBack = onBack
-            )
-        },
+        topBar = { AppTopBar(title = state.selectedProduct?.name ?: "Configure", onBack = onBack) },
         bottomBar = {
             ProceedBottomBar(
                 priceEstimate = state.priceEstimate,
@@ -104,12 +115,110 @@ fun ProductConfigScreen(
             )
         }
     ) { padding ->
+        when {
+            state.isLoading -> LoadingScreen()
+            state.error != null && state.currentConfig == null -> ErrorScreen(state.error!!)
+            state.currentConfig != null -> ProductConfigContent(
+                state    = state,
+                onAction = viewModel::onAction,
+                modifier = Modifier.padding(padding)
+            )
+        }
+    }
+
+    // FR3 — ask before silently resuming or discarding a prior draft
+    state.pendingResumePrompt?.let { previousConfig ->
+        ResumeConfigDialog(
+            previousConfig = previousConfig,
+            onResume = { viewModel.onAction(ProductConfigAction.ResumePreviousConfig(previousConfig)) },
+            onStartFresh = {
+                state.selectedProduct?.let {
+                    viewModel.onAction(ProductConfigAction.StartFreshConfig(it))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ResumeConfigDialog(
+    previousConfig : ProductConfig,
+    onResume       : () -> Unit,
+    onStartFresh   : () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onStartFresh,   // dismiss = safest default = fresh start
+        title = { Text("Continue previous configuration?") },
+        text = {
+            Text(
+                "You previously configured this product " +
+                        "(material: ${previousConfig.material.displayName}, " +
+                        "quantity: ${previousConfig.quantity}). " +
+                        "Would you like to continue editing it, or start a new configuration?"
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onResume) { Text("Continue editing") }
+        },
+        dismissButton = {
+            TextButton(onClick = onStartFresh) { Text("Start fresh") }
+        }
+    )
+}
+//@Composable
+//fun ProductConfigScreen(
+//    entryMode : ConfigEntryMode,
+//    viewModel : ProductConfigViewModel = koinViewModel(),
+//    onProceed : (configId: String) -> Unit,
+//    onBack    : () -> Unit
+//) {
+//    val state by viewModel.uiState.collectAsStateWithLifecycle()
+//
+//    LaunchedEffect(productId) {
+//        viewModel.onAction(ProductConfigAction.Init(productId))
+//    }
+//
+//    EventHandler(viewModel.events) { event ->
+//        when (event) {
+//            is ProductConfigUiEvent.NavigateToPreview -> onProceed(event.configId)
+//        }
+//    }
+//
+//    ProductConfigScreenContent(
+//        state    = state,
+//        onAction = viewModel::onAction,
+//        onBack   = onBack
+//    )
+//}
+
+@Composable
+private fun ProductConfigScreenContent(
+    state    : ProductConfigUiState,
+    onAction : (ProductConfigAction) -> Unit,
+    onBack   : () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title  = stringResource(R.string.configure_product),
+                onBack = onBack
+            )
+        },
+        bottomBar = {
+            ProceedBottomBar(
+                priceEstimate = state.priceEstimate,
+                isLoading     = state.isSaving,
+                enabled       = state.currentConfig != null && state.measurementError == null,
+                onProceed     = { onAction(ProductConfigAction.SaveAndProceed) }
+            )
+        }
+    ) { padding ->
         if (state.isLoading) {
             LoadingScreen()
         } else {
             ProductConfigContent(
                 state    = state,
-                onAction = viewModel::onAction,
+                onAction = onAction,
                 modifier = Modifier.padding(padding)
             )
         }
@@ -228,9 +337,9 @@ private fun MeasurementInputs(
     onChanged   : (Measurement) -> Unit
 ) {
     listOf(
-        Triple("Height", measurement.height) { v: Double -> onChanged(measurement.copy(height = v)) },
-        Triple("Width",  measurement.width)  { v: Double -> onChanged(measurement.copy(width  = v)) },
-        Triple("Depth",  measurement.depth)  { v: Double -> onChanged(measurement.copy(depth  = v)) }
+        Triple(stringResource(R.string.height), measurement.height) { v: Double -> onChanged(measurement.copy(height = v)) },
+        Triple(stringResource(R.string.width),  measurement.width)  { v: Double -> onChanged(measurement.copy(width  = v)) },
+        Triple(stringResource(R.string.depth),  measurement.depth)  { v: Double -> onChanged(measurement.copy(depth  = v)) }
     ).forEach { (label, value, updater) ->
         Row(
             modifier          = Modifier.fillMaxWidth(),
@@ -280,7 +389,9 @@ private fun MaterialSelector(selected: Material, onChanged: (Material) -> Unit) 
             onValueChange = {},
             readOnly      = true,
             label         = { Text("Material") },
-            modifier      = Modifier.fillMaxWidth().menuAnchor(),
+            modifier      = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
             trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             shape         = RoundedCornerShape(10.dp)
         )
@@ -304,8 +415,9 @@ private fun ColorPicker(selected: ProductColor, onChanged: (ProductColor) -> Uni
     // preset colors — in a real app these come from Product.availableColors
     val presets = listOf(
         ProductColor("Black", "#000000"),
-        ProductColor("White",  "#FFFFFF"),
+        ProductColor("Yellow",  "#FFEF70"),
         ProductColor("Red",    "#FF0000"),
+        ProductColor("Green",    "#00FF15"),
         ProductColor("Blue",   "#0000FF"),
         ProductColor("Custom", selected.hex)
     )
@@ -507,5 +619,61 @@ private fun ProceedBottomBar(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun productConfigScreenPreview() {
+
+    val sampleProduct = Product(
+        id                 = "prod-001",
+        name               = "Custom Phone Case",
+        description        = "Personalized phone case with adjustable color, material, and engraved text.",
+        basePrice          = 24.99,
+        category           = ProductCategory.ACCESSORY,
+        availableMaterials = listOf(Material.PLASTIC, Material.PLA, Material.EPOXY_RESIN),
+        availableTextures  = listOf(
+            Texture("tex-001", "Matte",    "", "Smooth matte surface"),
+            Texture("tex-002", "Glossy",   "", "High-gloss finish"),
+            Texture("tex-003", "Textured", "", "Grip-enhanced surface")
+        ),
+        imageUrl           = ""
+    )
+
+    val sampleConfig = ProductConfig(
+        id                 = "config-123",
+        productId          = "prod-001",
+        productCategory    = ProductCategory.ACCESSORY,
+        measurement        = Measurement(150.0, 75.0, 10.0),
+        sizeLabel          = SizeLabel.M,
+        color              = ProductColor("Dark green", "#0f3F15"),
+        material           = Material.PLA,
+        texture            = Texture("tex-001", "Matte", "", "Smooth matte surface"),
+        inscription        = "Custom Inscription",
+        userPhotoUri       = null,
+        additionalElements = listOf(AdditionalElement.LOGO, AdditionalElement.ENGRAVING),
+        quantity           = 1,
+        createdAt          = 0L
+    )
+
+    val sampleState = ProductConfigUiState(
+        selectedProduct = sampleProduct,
+        currentConfig   = sampleConfig,
+        priceEstimate   = PriceEstimate(
+            configId = "config-123",
+            basePrice = 24.99,
+            materialSurcharge = 5.0,
+            textureSurcharge = 2.0,
+            total = 31.99
+        )
+    )
+
+    AppTheme {
+        ProductConfigScreenContent(
+            state    = sampleState,
+            onAction = {},
+            onBack   = {}
+        )
     }
 }

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class ProductConfig(
     val id: String,
     val productId: String,
-    val productType: ProductType,        // Тип товару
+    val productCategory: ProductCategory,        // Тип товару
     val measurement: Measurement,        // Розмір (numeric)
     val sizeLabel: SizeLabel?,           // Розмір (enum S/M/L)
     val color: ProductColor,             // Колір
@@ -20,15 +20,15 @@ data class ProductConfig(
     val createdAt: Long
 )
 
-enum class ProductType(val displayName: String) {
-    COVER("Cosmetics"),
-    ACCESSORY("Accessory"),
-    CLOTHING_ELEMENT("Clothing"),
-    UPPER_LIMB("Верхня кінцівка"),
-    LOWER_LIMB("Нижня кінцівка"),
-    COSMETIC_COVER("Косметичний чохол"),
-    CUSTOM("Personalised option")
-}
+//enum class ProductType(val displayName: String) {
+//    COVER("Cosmetics"),
+//    ACCESSORY("Accessory"),
+//    CLOTHING_ELEMENT("Clothing"),
+//    UPPER_LIMB("Верхня кінцівка"),
+//    LOWER_LIMB("Нижня кінцівка"),
+//    COSMETIC_COVER("Косметичний чохол"),
+//    CUSTOM("Personalised option")
+//}
 
 enum class SizeLabel { NONE, XS, S, M, L, XL, XXL }
 

@@ -43,3 +43,8 @@ SELECT * FROM ProductConfigEntity WHERE id = :id;
 
 deleteConfig:
 DELETE FROM ProductConfigEntity WHERE id = :id;
+
+selectConfigsByProductId:
+SELECT * FROM ProductConfigEntity
+WHERE productId = :productId
+ORDER BY createdAt DESC;

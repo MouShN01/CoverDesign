@@ -13,4 +13,6 @@ interface ProductRepository {
     suspend fun saveConfig(config: ProductConfig)
     fun getSavedConfig(): Flow<ProductConfig?>
     suspend fun calculatePrice(config: ProductConfig): Resource<PriceEstimate>
+    suspend fun getConfigsForProduct(productId: String): List<ProductConfig>
+    suspend fun getConfigById(configId: String): ProductConfig?
 }

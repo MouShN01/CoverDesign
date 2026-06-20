@@ -111,4 +111,18 @@ class ProductRepositoryImpl(
                 Resource.Error("Price calculation failed: ${e.message}", e)
             }
         }
+    // ProductRepositoryImpl.kt
+    override suspend fun getConfigsForProduct(productId: String): List<ProductConfig> =
+        withContext(Dispatchers.Default) {
+            db.productConfigQueries.selectConfigsByProductId(productId)
+                .executeAsList()
+                .map { it.toDomain() }
+        }
+
+    override suspend fun getConfigById(configId: String): ProductConfig? =
+        withContext(Dispatchers.Default) {
+            db.productConfigQueries.selectConfigById(configId)
+                .executeAsOneOrNull()
+                ?.toDomain()
+        }
 }

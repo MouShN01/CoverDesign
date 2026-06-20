@@ -164,11 +164,11 @@ private fun HomeTopBar(onInfoClick: () -> Unit) {
         title = {
             Column {
                 Text(
-                    text  = "ProsCover",
+                    text  = stringResource(R.string.title_custom),
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text  = "Cosmetic prosthetic covers",
+                    text  = stringResource(R.string.slogan),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -339,7 +339,7 @@ private fun RecentOrderCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text  = order.config.productType.displayName,
+                    text  = order.config.productCategory.name,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(Modifier.height(2.dp))

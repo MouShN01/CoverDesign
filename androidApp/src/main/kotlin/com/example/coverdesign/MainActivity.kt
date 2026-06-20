@@ -5,9 +5,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.coverdesign.ui.navigation.AppNavigation
+import com.example.coverdesign.ui.navigation.AppScaffold
 import com.example.coverdesign.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,14 +18,14 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             AppTheme {
-                AppNavigation()
+                AppScaffold()
             }
         }
     }
 }
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
-}
+//
+//@Preview
+//@Composable
+//fun AppAndroidPreview() {
+//    App()
+//}

@@ -67,7 +67,8 @@ data class CatalogUiState(
     val products    : List<Product> = emptyList(),
     val filtered    : List<Product> = emptyList(),
     val searchQuery : String        = "",
-    val error       : String?       = null
+    val error       : String?       = null,
+    val isCreatingConfig: Boolean = false
 ) : UiState
 
 // ── One-time events ───────────────────────────────────────────────────────────

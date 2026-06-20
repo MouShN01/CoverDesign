@@ -69,7 +69,7 @@ fun OrdersListScreen(
                                 .padding(16.dp)
                                 .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(order.config.productType.displayName,
+                                Text(order.config.productCategory.name,
                                     style = MaterialTheme.typography.bodyMedium)
                                 Text(formatDate(order.createdAt),
                                     style = MaterialTheme.typography.labelSmall,

@@ -54,7 +54,7 @@ fun ModelViewerComposable(
             modelLoader         = modelLoader,
             cameraManipulator   = rememberCameraManipulator(),
             environment         = rememberEnvironment(environmentLoader) {
-                environmentLoader.createHDREnvironment("envs/studio.hdr")
+                environmentLoader.createHDREnvironment("envs/studio_small.hdr")
                     ?: createEnvironment(environmentLoader)
             }
         ) {

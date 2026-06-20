@@ -8,4 +8,12 @@
     <string name="available_24_7">Available 24/7</string>
     <string name="consultation_question">"Have questions or need a consultation? "</string>
     <string name="our_team_is_always_ready_to_help">Our team is always ready to help!</string>
+    <string name="title_proscover">ProsCover</string>
+    <string name="title_custom">Custom Design</string>
+    <string name="cosmetic_prosthetic_covers">Cosmetic prosthetic covers</string>
+    <string name="slogan">Design for your comfort</string>
+    <string name="configure_product">Configure Product</string>
+    <string name="height">Height</string>
+    <string name="width">Width</string>
+    <string name="depth">Depth</string>
 </resources>

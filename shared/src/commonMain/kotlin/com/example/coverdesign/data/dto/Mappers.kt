@@ -12,7 +12,6 @@ import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
-import com.example.coverdesign.domain.model.ProductType
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.Token
@@ -43,7 +42,7 @@ fun TextureDto.toDomain() = Texture(
 fun ProductConfigDto.toDomain() = ProductConfig(
     id = id,
     productId = productId,
-    productType = ProductType.valueOf(productType.uppercase()),
+    productCategory = ProductCategory.valueOf(productType.uppercase()),
     measurement = Measurement(
         height = heightMm,
         width = widthMm,
@@ -109,7 +108,7 @@ fun OrderDto.toDomain() = Order(
 fun ProductConfig.toDto() = ProductConfigDto(
     id = id,
     productId = productId,
-    productType = productType.name.lowercase(),
+    productType = productCategory.name.lowercase(),
     heightMm = measurement.height,
     widthMm = measurement.width,
     depthMm = measurement.depth,

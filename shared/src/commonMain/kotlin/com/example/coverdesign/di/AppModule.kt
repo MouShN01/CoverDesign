@@ -3,6 +3,7 @@ package com.example.coverdesign.di
 // shared/commonMain/di/AppModule.kt
 
 import com.example.coverdesign.data.local.DatabaseDriverFactory
+import com.example.coverdesign.data.local.DatabaseSeeder
 import com.example.coverdesign.data.remote.client.createHttpClient
 import com.example.coverdesign.data.remote.interceptor.InMemoryTokenStorage
 import com.example.coverdesign.data.remote.interceptor.TokenStorage
@@ -22,6 +23,7 @@ import com.example.coverdesign.domain.repo.OrderRepository
 import com.example.coverdesign.domain.repo.ProductRepository
 import com.example.coverdesign.domain.usecase.CalculatePriceUseCase
 import com.example.coverdesign.domain.usecase.ConfigureProductUseCase
+import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
@@ -53,7 +55,7 @@ val databaseModule = module {
     single { get<AppDatabase>().orderQueries }
     single { get<AppDatabase>().catalogQueries }
     single { get<AppDatabase>().model3DQueries }    // ← add
-
+    single { DatabaseSeeder(db = get()) }   // ← add
 }
 
 val networkModule = module {
@@ -101,6 +103,8 @@ val useCaseModule = module {
     // FR7
     factory { UpdateConfigUseCase(repo = get(), arRepo = get(), validator = get()) }
 
+    factoryOf(::CreateConfigFromProductUseCase)
+
     // FR8
     factoryOf(::CalculatePriceUseCase)
 
@@ -115,12 +119,20 @@ val useCaseModule = module {
 }
 val viewModelModule = module {
     viewModel { CatalogViewModel(getCatalog = get()) }
+//    viewModel {
+//        ProductConfigViewModel(
+//            configureProduct = get(),
+//            updateConfig = get(),
+//            calculatePrice = get(),
+//            getSavedConfig = get()
+//        )
+//    }
     viewModel {
         ProductConfigViewModel(
-            configureProduct = get(),
-            updateConfig = get(),
+            productRepo    = get(),
             calculatePrice = get(),
-            getSavedConfig = get()
+            generateModel  = get(),
+            validator      = get()
         )
     }
     viewModel {
