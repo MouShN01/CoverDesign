@@ -1,12 +1,10 @@
 package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.example.coverdesign.domain.model.Model3D
+import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.ModelStatus
-import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
-import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
 import com.example.coverdesign.domain.util.onError
 import com.example.coverdesign.domain.util.onSuccess
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
@@ -14,91 +12,68 @@ import com.example.coverdesign.ui.viewmodel.base.UiEvent
 import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
-// shared/commonMain/ui/viewmodel/ModelPreviewViewModel.kt
+
 class ModelPreviewViewModel(
     private val generateModel   : GenerateModelUseCase,
-    private val getModelPreview : GetModelPreviewUseCase,
-    private val model3DRepo        : Model3DRepository       // ← add
+    //private val getModelPreview : GetModelPreviewUseCase,
+    private val model3DRepo        : Model3DRepository
 ) : BaseViewModel<ModelPreviewUiState, ModelPreviewUiEvent>() {
 
 
 
     override fun initialState() = ModelPreviewUiState()
 
+
     fun onAction(action: ModelPreviewAction) {
         when (action) {
-            is ModelPreviewAction.LoadForProduct -> loadBaseModel(action.productId)
-            is ModelPreviewAction.LoadModel   -> loadModel(action.config)
-            is ModelPreviewAction.ProceedToAr -> sendEvent(
-                ModelPreviewUiEvent.NavigateToAr(action.configId)
-            )
-            is ModelPreviewAction.ProceedToOrder -> sendEvent(
-                ModelPreviewUiEvent.NavigateToOrder(action.configId)
-            )
+            is ModelPreviewAction.LoadForProduct -> loadBaseModel(action.productId)   // 3D tab only
+            is ModelPreviewAction.LoadForConfig  -> loadAdaptedModel(action.configId) // config pipeline
+            is ModelPreviewAction.ProceedToAr    -> sendEvent(ModelPreviewUiEvent.NavigateToAr(action.configId))
+            is ModelPreviewAction.ProceedToOrder -> sendEvent(ModelPreviewUiEvent.NavigateToOrder(action.configId))
         }
     }
 
-    // called from 3D tab — show base model straight from DB
     private fun loadBaseModel(productId: String) {
         viewModelScope.launch {
             setState { copy(isGenerating = true, error = null) }
             model3DRepo.getBaseModelForProduct(productId)
                 .onSuccess { model ->
                     setState {
-                        copy(
-                            model        = model,
-                            modelUrl     = model.modelUrl,
-                            modelStatus  = ModelStatus.READY,
-                            isGenerating = false
-                        )
+                        copy(modelUrl = model.modelUrl, modelStatus = ModelStatus.READY, isGenerating = false)
                     }
                 }
-                .onError { message, _ ->
-                    setState { copy(isGenerating = false, error = message) }
-                }
+                .onError { message, _ -> setState { copy(isGenerating = false, error = message) } }
         }
     }
 
-    private fun loadModel(config: ProductConfig) {
+    private fun loadAdaptedModel(configId: String) {
         viewModelScope.launch {
             setState { copy(isGenerating = true, error = null) }
-
-            generateModel(config)
-                .onSuccess { model ->
-                    setState { copy(model = model) }
-                    if (model.status == ModelStatus.READY) {
-                        setState {
-                            copy(
-                                modelUrl = model.modelUrl,
-                                modelStatus = ModelStatus.READY,
-                                isGenerating = false
-                            )
-                        }
+            model3DRepo.getAdaptedModel(configId)
+                .onSuccess { adapted ->
+                    setState { copy(adaptedModel = adapted) }
+                    if (adapted.status == ModelStatus.READY) {
+                        setState { copy(modelUrl = adapted.modelUrl, modelStatus = ModelStatus.READY, isGenerating = false) }
                     } else {
-                         observeStatus(model.id)
+                        observeStatus(adapted.id)
                     }
                 }
-                .onError { message, _ ->
-                    setState { copy(isGenerating = false, error = message) }
-                }
+                .onError { message, _ -> setState { copy(isGenerating = false, error = message) } }
         }
     }
 
-    private fun observeStatus(modelId: String) {
+    private fun observeStatus(adaptedModelId: String) {
         viewModelScope.launch {
-            getModelPreview.observeStatus(modelId).collect { status ->
+            model3DRepo.getAdaptedModelStatus(adaptedModelId).collect { status ->
                 setState { copy(modelStatus = status) }
                 when (status) {
-                    ModelStatus.READY  -> {
-                        val urlResult = getModelPreview(
-                            uiState.value.model!!.configId
-                        )
-                        urlResult.onSuccess { url ->
-                            setState { copy(modelUrl = url, isGenerating = false) }
-                        }
+                    ModelStatus.READY -> {
+                        model3DRepo.getAdaptedModel(uiState.value.adaptedModel!!.configId)
+                            .onSuccess { adapted ->
+                                setState { copy(modelUrl = adapted.modelUrl, isGenerating = false) }
+                            }
                     }
-                    ModelStatus.FAILED ->
-                        setState { copy(isGenerating = false, error = "Model generation failed") }
+                    ModelStatus.FAILED -> setState { copy(isGenerating = false, error = "Generation failed") }
                     else -> Unit
                 }
             }
@@ -108,11 +83,11 @@ class ModelPreviewViewModel(
 
 // ── State ─────────────────────────────────────────────────────────────────────
 data class ModelPreviewUiState(
-    val model        : Model3D?     = null,
-    val modelUrl     : String?      = null,
-    val modelStatus  : ModelStatus  = ModelStatus.PENDING,
-    val isGenerating : Boolean      = false,
-    val error        : String?      = null
+    val adaptedModel : AdaptedModel3D? = null,
+    val modelUrl     : String?         = null,
+    val modelStatus  : ModelStatus     = ModelStatus.PENDING,
+    val isGenerating : Boolean         = false,
+    val error        : String?         = null
 ) : UiState
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -124,7 +99,7 @@ sealed class ModelPreviewUiEvent : UiEvent {
 // ── Actions ───────────────────────────────────────────────────────────────────
 sealed class ModelPreviewAction {
     data class LoadForProduct(val productId: String) : ModelPreviewAction()
-    data class LoadModel(val config: ProductConfig)       : ModelPreviewAction()
-    data class ProceedToAr(val configId: String)          : ModelPreviewAction()
-    data class ProceedToOrder(val configId: String)       : ModelPreviewAction()
+    data class LoadForConfig(val configId: String)   : ModelPreviewAction()
+    data class ProceedToAr(val configId: String)     : ModelPreviewAction()
+    data class ProceedToOrder(val configId: String)  : ModelPreviewAction()
 }

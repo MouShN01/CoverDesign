@@ -17,6 +17,7 @@ data class ProductConfig(
     val additionalElements: List<AdditionalElement>,  // Додаткові елементи
     val quantity: Int,                     // Кількість (min 1)
     val additionalNotes: String = "",
+    //val textureImageUri: String? = null,
     val createdAt: Long
 )
 
@@ -30,7 +31,7 @@ data class ProductConfig(
 //    CUSTOM("Personalised option")
 //}
 
-enum class SizeLabel { NONE, XS, S, M, L, XL, XXL }
+enum class SizeLabel { XS, S, M, L, XL, XXL }
 
 @Serializable
 data class ProductColor(
@@ -42,5 +43,8 @@ enum class AdditionalElement(val displayName: String) {
     LOGO("Logo"),
     DECOR("Decor"),
     FASTENER("Fastener"),
-    ENGRAVING("Engraving")
+    ENGRAVING("Engraving"),
+    MOUNTING("Mounting"),
+    PADDING("Padding"),
+    STRAP("Strap"),
 }

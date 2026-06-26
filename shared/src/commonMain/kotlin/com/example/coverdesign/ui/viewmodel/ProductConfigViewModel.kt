@@ -4,12 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
+import com.example.coverdesign.domain.model.pricing.PricingEngine
 import com.example.coverdesign.domain.repo.ProductRepository
 import com.example.coverdesign.domain.usecase.CalculatePriceUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
@@ -24,6 +25,7 @@ import com.example.coverdesign.ui.viewmodel.base.UiEvent
 import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
+
 class ProductConfigViewModel(
     private val productRepo    : ProductRepository,
     private val calculatePrice : CalculatePriceUseCase,
@@ -33,6 +35,7 @@ class ProductConfigViewModel(
 
     override fun initialState() = ProductConfigUiState()
 
+    @OptIn(ExperimentalStdlibApi::class)
     fun onAction(action: ProductConfigAction) {
         when (action) {
             is ProductConfigAction.Enter               -> onEnter(action.mode)
@@ -50,6 +53,9 @@ class ProductConfigViewModel(
             is ProductConfigAction.SetUserPhoto         -> onFieldUpdated { copy(userPhotoUri = action.uri) }
             is ProductConfigAction.RequestPriceUpdate   -> onPriceRequested()
             is ProductConfigAction.SaveAndProceed       -> onSaveAndProceed()
+            is ProductConfigAction.UpdateTextureImage   -> onFieldUpdated {copy( texture = texture.copy(
+                previewUrl = action.uri
+            ))}
             else -> {}
         }
     }
@@ -162,13 +168,17 @@ class ProductConfigViewModel(
     }
 
     private fun onPriceRequested() {
-        val config = uiState.value.currentConfig ?: return
-        viewModelScope.launch {
-            setState { copy(isPriceLoading = true) }
-            calculatePrice(config)
-                .onSuccess { price -> setState { copy(priceEstimate = price, isPriceLoading = false) } }
-                .onError { message, _ -> setState { copy(priceError = message, isPriceLoading = false) } }
-        }
+        val base = uiState.value.selectedProduct?.basePrice ?: 0.0
+        val estimate = PricingEngine.calculate(uiState.value.currentConfig!!, base)
+        setState { copy(priceEstimate = estimate, isPriceLoading = false) }
+
+//        val config = uiState.value.currentConfig ?: return
+//        viewModelScope.launch {
+//            setState { copy(isPriceLoading = true) }
+//            calculatePrice(config)
+//                .onSuccess { price -> setState { copy(priceEstimate = price, isPriceLoading = false) } }
+//                .onError { message, _ -> setState { copy(priceError = message, isPriceLoading = false) } }
+//        }
     }
 
     private fun onSaveAndProceed() {
@@ -226,8 +236,14 @@ sealed class ProductConfigAction {
     data class Enter(val mode: ConfigEntryMode)                 : ProductConfigAction()
     data class ResumePreviousConfig(val config: ProductConfig)  : ProductConfigAction()
     data class StartFreshConfig(val product: Product)           : ProductConfigAction()
+    data class UpdateTextureImage(val uri: String?) : ProductConfigAction()
+
+    data class UpdateUserPhoto(val imageURL: String?)    : ProductConfigAction()
     object SaveAndProceed                                    : ProductConfigAction()
     object RequestPriceUpdate                                : ProductConfigAction()
+
+
+
 }
 // shared/commonMain/ui/viewmodel/ProductConfigViewModel.kt
 sealed class ConfigEntryMode {

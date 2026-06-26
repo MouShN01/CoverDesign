@@ -1,11 +1,7 @@
 package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.example.coverdesign.domain.model.ArSessionState
-import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.TrackingState
-import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
-import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.util.onError
 import com.example.coverdesign.domain.util.onSuccess
@@ -16,127 +12,52 @@ import kotlinx.coroutines.launch
 
 // shared/commonMain/ui/viewmodel/ArTryOnViewModel.kt
 class ArTryOnViewModel(
-    private val virtualTryOn  : VirtualTryOnUseCase,
-    private val updateConfig  : UpdateConfigUseCase,
-    private val getModelPreview : GetModelPreviewUseCase
+    private val virtualTryOn: VirtualTryOnUseCase
 ) : BaseViewModel<ArTryOnUiState, ArTryOnUiEvent>() {
 
     override fun initialState() = ArTryOnUiState()
 
-    init {
-        checkArSupport()
-        observeArSession()
-    }
-
     fun onAction(action: ArTryOnAction) {
         when (action) {
-            is ArTryOnAction.StartSession    -> startSession(action.configId)
-            is ArTryOnAction.StopSession     -> stopSession()
-            is ArTryOnAction.UpdateConfig    -> onConfigUpdated(action.config)
-            is ArTryOnAction.CaptureSnapshot -> captureSnapshot()
-            is ArTryOnAction.ProceedToOrder  -> sendEvent(
-                ArTryOnUiEvent.NavigateToOrder(action.configId)
-            )
-            is ArTryOnAction.UpdateTracking ->
-                setState { copy(trackingState = action.state) }
+            is ArTryOnAction.Load             -> loadModel(action.configId)
+            is ArTryOnAction.UpdateTracking   -> setState { copy(trackingState = action.state) }
+            is ArTryOnAction.UpdateParameters -> sendEvent(ArTryOnUiEvent.NavigateToConfigEdit(action.configId))
+            is ArTryOnAction.Proceed          -> sendEvent(ArTryOnUiEvent.NavigateToOrder(action.configId))
         }
     }
 
-    private fun checkArSupport() {
-        setState { copy(isArSupported = virtualTryOn.isSupported()) }
-    }
-
-    private fun observeArSession() {
+    private fun loadModel(configId: String) {
         viewModelScope.launch {
-            virtualTryOn.observeSession().collect { sessionState ->
-                setState { copy(sessionState = sessionState) }
+            setState {
+                copy(isLoading = true, isArSupported = virtualTryOn.isArSupported(), error = null)
             }
-        }
-        viewModelScope.launch {
-            virtualTryOn.observeTracking().collect { trackingState ->
-                setState { copy(trackingState = trackingState) }
-            }
-        }
-    }
-    private fun startSession(configId: String) {
-        viewModelScope.launch {
-            setState { copy(isLoading = true, error = null) }
-
-            // 1. fetch model URL
-            virtualTryOn.start(configId)
-                .onSuccess {
-                    // model URL comes back through ArSessionState
+            virtualTryOn.loadModelForTryOn(configId)
+                .onSuccess { adapted ->
+                    setState { copy(modelUrl = adapted.modelUrl, isLoading = false) }
                 }
                 .onError { message, _ ->
                     setState { copy(isLoading = false, error = message) }
-                    return@launch
-                }
-
-            val urlResult = getModelPreview(configId)
-            urlResult.onSuccess { url ->
-                setState { copy(modelUrl = url, isLoading = false) }
-            }.onError { message, _ ->
-                setState { copy(isLoading = false, error = message) }
-            }
-        }
-    }
-
-    private fun stopSession() {
-        viewModelScope.launch { virtualTryOn.stop() }
-    }
-
-    private fun onConfigUpdated(config: ProductConfig) {
-        viewModelScope.launch {
-            updateConfig(config)
-                .onError { message, _ ->
-                    setState { copy(error = message) }
                 }
         }
-    }
-
-    private fun captureSnapshot() {
-        viewModelScope.launch {
-            virtualTryOn.capture()
-                .onSuccess { bytes ->
-                    sendEvent(ArTryOnUiEvent.SnapshotCaptured(bytes))
-                }
-                .onError { message, _ ->
-                    setState { copy(error = message) }
-                }
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.launch { virtualTryOn.stop() }
     }
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
 data class ArTryOnUiState(
-    val isArSupported : Boolean         = false,
-    val isLoading     : Boolean         = false,
-    val modelUrl      : String?        = null,   // ← add
-    val sessionState  : ArSessionState = ArSessionState.Idle,
-    val trackingState : TrackingState = TrackingState.NOT_AVAILABLE,
-    val error         : String?         = null
+    val isArSupported : Boolean       = false,
+    val isLoading      : Boolean       = false,
+    val modelUrl        : String?       = null,
+    val trackingState     : TrackingState = TrackingState.NOT_AVAILABLE,
+    val error               : String?      = null
 ) : UiState
 
-// ── Events ────────────────────────────────────────────────────────────────────
 sealed class ArTryOnUiEvent : UiEvent {
-    data class NavigateToOrder(val configId: String)   : ArTryOnUiEvent()
-    data class SnapshotCaptured(val bytes: ByteArray)  : ArTryOnUiEvent()
+    data class NavigateToOrder(val configId: String)      : ArTryOnUiEvent()
+    data class NavigateToConfigEdit(val configId: String) : ArTryOnUiEvent()
 }
 
-// ── Actions ───────────────────────────────────────────────────────────────────
 sealed class ArTryOnAction {
-    data class StartSession(val configId: String)    : ArTryOnAction()
-    data class UpdateConfig(val config: ProductConfig) : ArTryOnAction()
-    data class ProceedToOrder(val configId: String)  : ArTryOnAction()
-
-    data class UpdateTracking(val state: TrackingState) : ArTryOnAction()
-
-    object StopSession                               : ArTryOnAction()
-    object CaptureSnapshot                           : ArTryOnAction()
-
+    data class Load(val configId: String)               : ArTryOnAction()
+    data class UpdateTracking(val state: TrackingState)  : ArTryOnAction()
+    data class UpdateParameters(val configId: String)    : ArTryOnAction()
+    data class Proceed(val configId: String)             : ArTryOnAction()
 }

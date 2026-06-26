@@ -6,12 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.coverdesign.ui.screens.CatalogScreen
-import com.example.coverdesign.ui.screens.HomeScreen
 import com.example.coverdesign.ui.screens.OrderSummaryScreen
 import com.example.coverdesign.ui.screens.OrdersListScreen
-import com.example.coverdesign.ui.screens.ProductConfigScreen
+import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.ProfileScreen
-import com.example.coverdesign.ui.screens.ar.ArTryOnScreen
+import com.example.coverdesign.ui.screens.ar.ARScreen
+import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.preview.ModelPreviewScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
@@ -65,6 +65,10 @@ fun NavGraphBuilder.mainGraph(
                     viewModel.onAction(ModelPreviewAction.LoadForProduct(id))
                 }
                 // LoadModel is triggered by ProductConfigScreen via SaveAndProceed
+            }
+            LaunchedEffect(id) {
+                if (isProductId) viewModel.onAction(ModelPreviewAction.LoadForProduct(id))
+                else viewModel.onAction(ModelPreviewAction.LoadForConfig(id))
             }
 
             ModelPreviewScreen(
@@ -122,13 +126,16 @@ fun NavGraphBuilder.mainGraph(
 //        }
         composable(Screen.ArTryOn.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
-            ArTryOnScreen(
-                configId         = configId,
-                onProceedToOrder = {
-                    navController.navigate(Screen.OrderSummary.createRoute(configId))
-                },
-                onBack           = { navController.popBackStack() }
-            )
+            //shared-assets/models/Astronaut.glb
+            val modelUrl = "https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb"
+            val helmet = "test_models/damaged_helmet.glb"
+            ARScreen(modelUrl = helmet)
+//            ArTryOnScreen(
+//                configId           = configId,
+//                onProceedToOrder   = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+//                onUpdateParameters = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+//                onBack             = { navController.popBackStack() }
+//            )
         }
         composable(Screen.OrderSummary.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable

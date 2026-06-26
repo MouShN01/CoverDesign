@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens
+package com.example.coverdesign.ui.screens.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +55,9 @@ import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiEvent
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 // androidApp/ui/screens/home/HomeScreen.kt
@@ -508,6 +511,6 @@ private fun ContactRow(
 
 // ── Date formatter ────────────────────────────────────────────────────────────
 fun formatDate(epochMillis: Long): String {
-    val sdf = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault())
-    return sdf.format(java.util.Date(epochMillis))
+    val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    return sdf.format(Date(epochMillis))
 }

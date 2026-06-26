@@ -10,16 +10,11 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -97,42 +92,20 @@ fun AppScaffold() {
     ) { padding ->
 
         val authRepo: AuthRepository = koinInject()
-        val isAuthenticated by authRepo.isAuthenticated()
-            .collectAsStateWithLifecycle(initialValue = false)
+//        val isAuthenticated by authRepo.isAuthenticated() // TODO Auth
+//            .collectAsStateWithLifecycle(initialValue = false)
         // auth flow — no bottom bar
+        val isAuthenticated = true
 
         NavHost(
             navController = navController,
             startDestination = if (isAuthenticated) Screen.Main.route else Screen.Auth.route,
+            //startDestination = Screen.ArTryOn.route,
             modifier = Modifier.padding(padding)
         ) {
             authGraph(navController)
             mainGraph(navController)
         }
 
-    }
-}
-
-// ── Bottom nav bar ────────────────────────────────────────────────────────────
-@Composable
-fun AppBottomNavBar(
-    currentRoute   : String?,
-    onItemSelected : (BottomNavItem) -> Unit
-) {
-    NavigationBar {
-        bottomNavItems.forEach { item ->
-            val selected = currentRoute == item.route
-            NavigationBarItem(
-                selected = selected,
-                onClick  = { onItemSelected(item) },
-                icon     = {
-                    Icon(
-                        imageVector        = if (selected) item.iconSelected else item.icon,
-                        contentDescription = item.label
-                    )
-                },
-                label    = { Text(item.label) }
-            )
-        }
     }
 }

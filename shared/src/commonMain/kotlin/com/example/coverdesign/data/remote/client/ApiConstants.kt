@@ -6,6 +6,8 @@ object ApiConstants {
     const val BASE_URL     = "https://api.yourbackend.com/v1" //TODO API
 
     object Endpoints {
+        const val BASE_MODEL = ""
+
         // products
         const val CATALOG        = "/products"
         const val PRODUCT        = "/products/{id}"

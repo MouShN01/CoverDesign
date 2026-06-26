@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.OrderStatusChip
+import com.example.coverdesign.ui.screens.home.formatDate
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import java.util.Locale
@@ -71,7 +72,8 @@ fun OrdersListScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(order.config.productCategory.name,
                                     style = MaterialTheme.typography.bodyMedium)
-                                Text(formatDate(order.createdAt),
+                                Text(
+                                    formatDate(order.createdAt),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }

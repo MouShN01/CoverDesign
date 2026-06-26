@@ -14,6 +14,7 @@ import com.example.coverdesign.data.remote.service.ProductApiService
 import com.example.coverdesign.data.repoimpl.AuthRepositoryImpl
 import com.example.coverdesign.data.repoimpl.AuthRepositoryImplTest
 import com.example.coverdesign.data.repoimpl.Model3DRepositoryImpl
+import com.example.coverdesign.data.repoimpl.Model3DRepositoryImplTest
 import com.example.coverdesign.data.repoimpl.OrderRepositoryImpl
 import com.example.coverdesign.data.repoimpl.ProductRepositoryImpl
 import com.example.coverdesign.db.AppDatabase
@@ -26,7 +27,6 @@ import com.example.coverdesign.domain.usecase.ConfigureProductUseCase
 import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
-import com.example.coverdesign.domain.usecase.GetModelPreviewUseCase
 import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
 import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
@@ -76,6 +76,7 @@ val networkModule = module {
 val repositoryModule = module {
     single<ProductRepository>  { ProductRepositoryImpl(api = get(), db = get()) }
     single<Model3DRepository>  { Model3DRepositoryImpl(api = get(), db = get()) }
+    single<Model3DRepository>  { Model3DRepositoryImplTest(api = get(), db = get()) }
     single<OrderRepository>    { OrderRepositoryImpl(api = get(), db = get()) }
     single<AuthRepository>     { AuthRepositoryImpl(api = get(), tokenStorage = get()) }
     single<AuthRepository> {
@@ -95,13 +96,13 @@ val useCaseModule = module {
     factoryOf(::GenerateModelUseCase)
 
     // FR5
-    factoryOf(::GetModelPreviewUseCase)
+    //factoryOf(::GetModelPreviewUseCase)
 
     // FR6
-    factory { VirtualTryOnUseCase(arRepo = get(), model3DRepo = get()) }
+    factory { VirtualTryOnUseCase(model3DRepo = get()) }
 
     // FR7
-    factory { UpdateConfigUseCase(repo = get(), arRepo = get(), validator = get()) }
+    factory { UpdateConfigUseCase(repo = get(), validator = get()) }
 
     factoryOf(::CreateConfigFromProductUseCase)
 
@@ -138,15 +139,15 @@ val viewModelModule = module {
     viewModel {
         ModelPreviewViewModel(
             generateModel = get(),
-            getModelPreview = get(),
+            //getModelPreview = get(),
             model3DRepo = get()
         )
     }
     viewModel {
         ArTryOnViewModel(
             virtualTryOn = get(),
-            updateConfig = get(),
-            getModelPreview = get()
+            //updateConfig = get(),
+            //getModelPreview = get()
         )
     }
     viewModel {

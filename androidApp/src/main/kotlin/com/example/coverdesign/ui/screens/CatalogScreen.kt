@@ -26,10 +26,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import com.example.coverdesign.R
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.ErrorScreen
@@ -122,12 +127,14 @@ private fun ProductCard(product: Product, onClick: () -> Unit) {
     ) {
         Column {
             AsyncImage(
-                model             = product.imageUrl,
+                model = ImageRequest.Builder(LocalContext.current).data(product.imageUrl)
+                    .crossfade(true).build() ,
                 contentDescription = product.name,
                 modifier          = Modifier
                     .fillMaxWidth()
                     .height(160.dp),
-                contentScale      = ContentScale.Crop
+                contentScale      = ContentScale.Crop,
+                placeholder = painterResource( R.drawable.ic_launcher_foreground)
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(

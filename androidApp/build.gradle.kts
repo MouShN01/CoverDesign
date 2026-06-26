@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     //implementation(libs.coil.compose)       // AsyncImage
     implementation(libs.coil3.coil.compose)
+    implementation(libs.coil3.coil.network)
 
     implementation(libs.accompanist.flowlayout) // FlowRow
     implementation(libs.accompanist.systemuicontroller)

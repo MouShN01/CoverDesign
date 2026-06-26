@@ -1,18 +1,39 @@
 -- shared/commonMain/sqldelight/com/yourpackage/db/Order.sq
+-- shared/commonMain/sqldelight/com/yourpackage/db/Order.sq
 
 CREATE TABLE OrderEntity (
-    id TEXT NOT NULL PRIMARY KEY,
-    configId TEXT NOT NULL,
-    -- store the full config snapshot as JSON so order history is
-    -- immutable even if the live draft config changes later
-    configJson TEXT NOT NULL,
-    basePrice REAL NOT NULL,
-    materialSurcharge REAL NOT NULL,
-    textureSurcharge REAL NOT NULL,
-    totalPrice REAL NOT NULL,
-    currency TEXT NOT NULL,
-    status TEXT NOT NULL,
-    createdAt INTEGER NOT NULL
+    id                     TEXT    NOT NULL PRIMARY KEY,
+    configId               TEXT    NOT NULL,
+    -- full config snapshot as JSON — immutable order history
+    configJson             TEXT    NOT NULL,
+
+    -- base price from catalogue
+    basePrice              REAL    NOT NULL,
+    currency               TEXT    NOT NULL,
+
+    -- material surcharges: JSON map {"CARBON_FIBER": 28.0}
+    materialSurchargesJson TEXT    NOT NULL DEFAULT '{}',
+
+    -- texture surcharge (single value for selected texture)
+    textureSurcharge       REAL    NOT NULL DEFAULT 0.0,
+
+    -- personalisation surcharges
+    inscriptionSurcharge   REAL    NOT NULL DEFAULT 0.0,
+
+    -- element surcharges: JSON map {"LOGO": 8.0, "ENGRAVING": 6.0}
+    elementSurchargesJson  TEXT    NOT NULL DEFAULT '{}',
+
+    -- size multiplier applied after surcharges
+    sizeMultiplier         REAL    NOT NULL DEFAULT 1.0,
+    sizeMultiplierLabel    TEXT    NOT NULL DEFAULT '',
+
+    -- quantity and totals
+    quantity               INTEGER NOT NULL DEFAULT 1,
+    subtotal               REAL    NOT NULL,   -- per unit after size multiplier
+    totalPrice             REAL    NOT NULL,   -- subtotal × quantity
+
+    status                 TEXT    NOT NULL,
+    createdAt              INTEGER NOT NULL
 );
 
 insertOrder:

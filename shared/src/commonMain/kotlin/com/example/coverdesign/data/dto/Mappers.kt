@@ -1,5 +1,6 @@
 package com.example.coverdesign.data.dto
 
+import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
@@ -7,7 +8,6 @@ import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
-import com.example.coverdesign.domain.model.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
@@ -15,6 +15,7 @@ import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.Token
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 
 // ═══════════════════════════════════════════════════════════════════
 // DTO → Domain  (incoming from backend)
@@ -68,24 +69,47 @@ fun ProductConfigDto.toDomain() = ProductConfig(
     createdAt = createdAt,
 )
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PriceEstimateDto  ↔  PriceEstimate (domain)
+// ─────────────────────────────────────────────────────────────────────────────
+
 fun PriceEstimateDto.toDomain() = PriceEstimate(
-    configId          = configId,
-    basePrice         = basePrice,
-    materialSurcharge = materialSurcharge,
-    textureSurcharge  = textureSurcharge,
-    total             = total,
-    currency          = currency
+    configId             = configId,
+    currency             = currency,
+    basePrice            = basePrice,
+    materialSurcharges   = materialSurcharges,
+    textureSurcharge     = textureSurcharge,
+    inscriptionSurcharge = inscriptionSurcharge,
+    elementSurcharges    = elementSurcharges,
+    sizeMultiplier       = sizeMultiplier,
+    sizeMultiplierLabel  = sizeMultiplierLabel,
+    quantity             = quantity,
+    subtotal             = subtotal,
+    total                = total
 )
 
-fun Model3DDto.toDomain() = Model3D(
-    id = id,
-    configId = configId,
-    modelUrl = modelUrl,
-    previewImageUrl = null, // todo add preview
-    status = ModelStatus.valueOf(status.uppercase()),
-    generatedAt = generatedAt,
-    estimatedWaitSeconds = estimatedWaitSeconds
+fun PriceEstimate.toDto() = PriceEstimateDto(
+    configId             = configId,
+    currency             = currency,
+    basePrice            = basePrice,
+    materialSurcharges   = materialSurcharges,
+    textureSurcharge     = textureSurcharge,
+    inscriptionSurcharge = inscriptionSurcharge,
+    elementSurcharges    = elementSurcharges,
+    sizeMultiplier       = sizeMultiplier,
+    sizeMultiplierLabel  = sizeMultiplierLabel,
+    quantity             = quantity,
+    subtotal             = subtotal,
+    total                = total
 )
+//
+//fun Model3DDto.toDomain() = Model3D(
+//    id = id,
+//    modelUrl = modelUrl,
+//    previewImageUrl = null, // todo add preview
+//    status = ModelStatus.valueOf(status.uppercase())
+//)
 
 fun TokenDto.toDomain() = Token(
     accessToken  = accessToken,
@@ -126,4 +150,24 @@ fun ProductConfig.toDto() = ProductConfigDto(
     quantity = quantity,
     createdAt = createdAt,
     additionalNotes = additionalNotes
+)
+
+fun Model3DDto.toDomain() = Model3D(
+    id              = id,
+    productId       = productId,
+    modelUrl        = modelUrl,
+    previewImageUrl = previewImageUrl,
+    status          = ModelStatus.valueOf(status.uppercase()),
+    generatedAt     = generatedAt
+)
+
+fun AdaptedModel3DDto.toDomain() = AdaptedModel3D(
+    id                   = id,
+    configId             = configId,
+    baseModelId          = baseModelId,
+    modelUrl             = modelUrl,
+    previewImageUrl      = previewImageUrl,
+    status               = ModelStatus.valueOf(status.uppercase()),
+    generatedAt          = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds
 )

@@ -35,6 +35,7 @@ import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.ErrorScreen
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.components.LoadingScreen
+import com.example.coverdesign.ui.screens.config.PriceCard
 import com.example.coverdesign.ui.viewmodel.OrderSummaryAction
 import com.example.coverdesign.ui.viewmodel.OrderSummaryUiEvent
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel

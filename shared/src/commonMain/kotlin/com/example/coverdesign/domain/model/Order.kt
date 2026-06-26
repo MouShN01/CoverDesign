@@ -1,5 +1,6 @@
 package com.example.coverdesign.domain.model
 
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import kotlin.jvm.JvmInline
 
 data class Order(

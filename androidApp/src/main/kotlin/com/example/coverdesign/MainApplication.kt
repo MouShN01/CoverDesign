@@ -1,8 +1,10 @@
 package com.example.coverdesign
 
 import android.app.Application
+import com.example.coverdesign.data.local.DatabaseSeeder
 import com.example.coverdesign.di.androidModule
 import com.example.coverdesign.di.appModules
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -16,6 +18,6 @@ class MainApplication : Application() {
             androidContext(this@MainApplication)
             modules(appModules + androidModule)
         }
-        //get<DatabaseSeeder>().seedIfEmpty()
+        get<DatabaseSeeder>().seedIfEmpty()
     }
 }

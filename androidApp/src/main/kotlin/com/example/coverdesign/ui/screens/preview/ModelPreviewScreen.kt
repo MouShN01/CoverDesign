@@ -37,7 +37,9 @@ import com.example.coverdesign.ui.viewmodel.ModelPreviewUiEvent
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
-// androidApp/ui/screens/preview/ModelPreviewScreen.kt
+/**
+* 3D preview screen using SceneView
+* */
 @Composable
 fun ModelPreviewScreen(
     configId  : String,

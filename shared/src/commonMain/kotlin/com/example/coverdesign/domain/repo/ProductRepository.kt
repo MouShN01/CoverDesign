@@ -1,6 +1,6 @@
 package com.example.coverdesign.domain.repo
 
-import com.example.coverdesign.domain.model.PriceEstimate
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.util.Resource

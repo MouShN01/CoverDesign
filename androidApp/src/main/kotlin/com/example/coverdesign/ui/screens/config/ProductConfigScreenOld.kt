@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens
+package com.example.coverdesign.ui.screens.config
 
 
 import androidx.compose.animation.AnimatedVisibility

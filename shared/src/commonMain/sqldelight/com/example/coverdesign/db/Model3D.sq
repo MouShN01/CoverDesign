@@ -1,15 +1,13 @@
 -- shared/commonMain/sqldelight/com/yourpackage/db/Model3D.sq
 
+-- BASE model — one per product, seeded, used by the 3D browse tab only
 CREATE TABLE Model3DEntity (
     id                   TEXT    NOT NULL PRIMARY KEY,
-    -- foreign key to ProductEntity
     productId            TEXT    NOT NULL,
-    configId             TEXT,               -- null until user creates a config
-    modelUrl             TEXT    NOT NULL,   -- .glb / .usdz URL
+    modelUrl             TEXT    NOT NULL,
     previewImageUrl      TEXT    NOT NULL DEFAULT '',
     status               TEXT    NOT NULL DEFAULT 'READY',
     generatedAt          INTEGER NOT NULL,
-    estimatedWaitSeconds INTEGER,
     FOREIGN KEY (productId) REFERENCES ProductEntity(id) ON DELETE CASCADE
 );
 
@@ -21,24 +19,8 @@ SELECT * FROM Model3DEntity
 WHERE productId = :productId
 LIMIT 1;
 
-selectByConfigId:
+selectModel3DById:
 SELECT * FROM Model3DEntity
-WHERE configId = :configId
-ORDER BY generatedAt DESC
-LIMIT 1;
-
-selectById:
-SELECT * FROM Model3DEntity
-WHERE id = :id;
-
-updateConfigId:
-UPDATE Model3DEntity
-SET configId = :configId
-WHERE id = :id;
-
-updateStatus:
-UPDATE Model3DEntity
-SET status = :status
 WHERE id = :id;
 
 deleteByProductId:

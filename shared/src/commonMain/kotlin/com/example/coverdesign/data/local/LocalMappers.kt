@@ -1,23 +1,27 @@
 package com.example.coverdesign.data.local
 
 // shared/commonMain/data/local/LocalMappers.kt
+import com.example.coverdesign.db.AdaptedModel3DEntity
 import com.example.coverdesign.db.Model3DEntity
 import com.example.coverdesign.db.OrderEntity
 import com.example.coverdesign.db.ProductConfigEntity
 import com.example.coverdesign.db.ProductEntity
+import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
-import com.example.coverdesign.domain.model.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -74,35 +78,55 @@ fun ProductConfig.toEntity(): ProductConfigEntity = ProductConfigEntity(
     additionalNotes = additionalNotes,
     createdAt = createdAt
 )
-// ── Order ───────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OrderEntity  →  Order (domain)
+// ─────────────────────────────────────────────────────────────────────────────
+
 fun OrderEntity.toDomain(): Order = Order(
-    id = id,
+    id     = id,
     config = json.decodeFromString<ProductConfig>(configJson),
     priceEstimate = PriceEstimate(
-        configId = configId,
-        basePrice = basePrice,
-        materialSurcharge = materialSurcharge,
-        textureSurcharge = textureSurcharge,
-        total = totalPrice,
-        currency = currency
+        configId             = configId,
+        currency             = currency,
+        basePrice            = basePrice,
+        materialSurcharges   = json.decodeFromString(mapSerializer, materialSurchargesJson),
+        textureSurcharge     = textureSurcharge,
+        inscriptionSurcharge = inscriptionSurcharge,
+        elementSurcharges    = json.decodeFromString(mapSerializer, elementSurchargesJson),
+        sizeMultiplier       = sizeMultiplier,
+        sizeMultiplierLabel  = sizeMultiplierLabel,
+        quantity             = quantity.toInt(),
+        subtotal             = subtotal,
+        total                = totalPrice
     ),
-    status = OrderStatus.valueOf(status),
+    status    = OrderStatus.valueOf(status),
     createdAt = createdAt
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Order (domain)  →  OrderEntity
+// ─────────────────────────────────────────────────────────────────────────────
+private val mapSerializer = MapSerializer(String.serializer(), Double.serializer())
 
 fun Order.toEntity(): OrderEntity = OrderEntity(
-    id = id,
-    configId = config.id,
-    configJson = json.encodeToString(config),
-    basePrice = priceEstimate.basePrice,
-    materialSurcharge = priceEstimate.materialSurcharge,
-    textureSurcharge = priceEstimate.textureSurcharge,
-    totalPrice = priceEstimate.total,
-    currency = priceEstimate.currency,
-    status = status.name,
-    createdAt = createdAt
+    id                     = id,
+    configId               = config.id,
+    configJson             = json.encodeToString(ProductConfig.serializer(), config),
+    currency               = priceEstimate.currency,
+    basePrice              = priceEstimate.basePrice,
+    materialSurchargesJson = json.encodeToString(mapSerializer, priceEstimate.materialSurcharges),
+    textureSurcharge       = priceEstimate.textureSurcharge,
+    inscriptionSurcharge   = priceEstimate.inscriptionSurcharge,
+    elementSurchargesJson  = json.encodeToString(mapSerializer, priceEstimate.elementSurcharges),
+    sizeMultiplier         = priceEstimate.sizeMultiplier,
+    sizeMultiplierLabel    = priceEstimate.sizeMultiplierLabel,
+    quantity               = priceEstimate.quantity.toLong(),
+    subtotal               = priceEstimate.subtotal,
+    totalPrice             = priceEstimate.total,
+    status                 = status.name,
+    createdAt              = createdAt
 )
-
 // ── Product (catalog cache) ───────────────────────────────────────────────
 fun ProductEntity.toDomain(): Product = Product(
     id = id,
@@ -129,21 +153,32 @@ fun Product.toEntity(cachedAt: Long): ProductEntity = ProductEntity(
 )
 fun Model3DEntity.toDomain() = Model3D(
     id = id,
-    configId = configId ?: "",
     modelUrl = modelUrl,
     previewImageUrl = previewImageUrl,
     status = ModelStatus.valueOf(status),
+    productId = productId,
     generatedAt = generatedAt,
-    estimatedWaitSeconds = estimatedWaitSeconds?.toInt()
 )
 
 fun Model3D.toEntity(productId: String) = Model3DEntity(
     id                   = id,
     productId            = productId,
-    configId             = configId.ifEmpty { null },
     modelUrl             = modelUrl,
     previewImageUrl      = previewImageUrl ?: "3D/${modelUrl}",
     status               = status.name,
     generatedAt          = generatedAt,
+)
+
+fun AdaptedModel3DEntity.toDomain() = AdaptedModel3D(
+    id = id, configId = configId, baseModelId = baseModelId,
+    modelUrl = modelUrl, previewImageUrl = previewImageUrl,
+    status = ModelStatus.valueOf(status), generatedAt = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds?.toInt()
+)
+
+fun AdaptedModel3D.toEntity() = AdaptedModel3DEntity(
+    id = id, configId = configId, baseModelId = baseModelId,
+    modelUrl = modelUrl, previewImageUrl = previewImageUrl,
+    status = status.name, generatedAt = generatedAt,
     estimatedWaitSeconds = estimatedWaitSeconds?.toLong()
 )

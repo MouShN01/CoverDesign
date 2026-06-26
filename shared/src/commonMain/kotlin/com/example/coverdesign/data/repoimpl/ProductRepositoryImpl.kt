@@ -9,7 +9,7 @@ import com.example.coverdesign.data.local.toDomain
 import com.example.coverdesign.data.local.toEntity
 import com.example.coverdesign.data.remote.service.ProductApiService
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.model.PriceEstimate
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.repo.ProductRepository
