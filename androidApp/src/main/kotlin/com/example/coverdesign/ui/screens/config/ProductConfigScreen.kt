@@ -197,11 +197,6 @@ private fun isProceedEnabled(config: ProductConfig?): Boolean {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// Proceed confirmation dialog — shown before kicking off 3D generation
-// ─────────────────────────────────────────────────────────────────────
-
-
 @Composable
 private fun ResumeConfigDialog(
     previousConfig: ProductConfig,

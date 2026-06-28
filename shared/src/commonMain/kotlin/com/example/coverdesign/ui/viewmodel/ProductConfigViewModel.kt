@@ -178,23 +178,17 @@ class ProductConfigViewModel(
         val base = uiState.value.selectedProduct?.basePrice ?: 0.0
         val estimate = PricingEngine.calculate(uiState.value.currentConfig!!, base)
         setState { copy(priceEstimate = estimate, isPriceLoading = false) }
-
-//        val config = uiState.value.currentConfig ?: return
-//        viewModelScope.launch {
-//            setState { copy(isPriceLoading = true) }
-//            calculatePrice(config)
-//                .onSuccess { price -> setState { copy(priceEstimate = price, isPriceLoading = false) } }
-//                .onError { message, _ -> setState { copy(priceError = message, isPriceLoading = false) } }
-//        }
     }
 
     private suspend fun uploadTexture(localUri: String, configId: String, userId: String) {
+        println("onSaveAndProceed Uploading texture")
         uploadTextureImage(localUri, configId, userId)
             .collect { state ->
                 when (state) {
                     is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
                     is UploadState.Success -> {
                         onFieldUpdated {
+                            println("onSaveAndProceed texture ${state.downloadUrl}")
                             copy(
                                 texture = texture.copy(previewUrl = state.downloadUrl)
                             )
@@ -207,12 +201,14 @@ class ProductConfigViewModel(
 
     }
       private suspend fun uploadImage(localUri: String, configId: String, userId: String) {
+          println("onSaveAndProceed Uploading image")
         uploadUserImage(localUri, configId, userId)
             .collect { state ->
                 when (state) {
                     is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
                     is UploadState.Success -> {
                         onFieldUpdated {
+                            println("onSaveAndProceed image ${state.downloadUrl}")
                             copy(
                                 userPhotoUri = state.downloadUrl
                             )
@@ -225,40 +221,12 @@ class ProductConfigViewModel(
 
     }
 
-//
-//    private fun onSaveAndProceedWithCustomTexture() {
-//        val config = uiState.value.currentConfig ?: return
-//        val previewUrl = config.texture.previewUrl ?: return
-//
-//        val userId = Firebase.auth.currentUser?.uid ?: run {
-//            setState { copy(error = "You must be signed in to save your configuration") }
-//            return
-//        }
-//
-//        viewModelScope.launch {
-//            setState { copy(isSaving = true, error = null) }
-//
-//
-//            productRepo.saveConfig(config)
-//            generateModel(config)
-//                .onSuccess {
-//                    setState { copy(isSaving = false) }
-//                    sendEvent(ProductConfigUiEvent.NavigateToPreview(config.id))
-//                }
-//                .onError { message, _ ->
-//                    setState { copy(isSaving = false, error = message) }
-//                }
-//        }
-//    }
 
     private fun onSaveAndProceed() {
-        println("onSaveAndProceed")
         val userId = Firebase.auth.currentUser?.uid ?: run {
             setState { copy(error = "You must be signed in to save your configuration") }
             return
         }
-
-        //Log.d("TAG", "onSaveAndProceed: ")
 
         val config = uiState.value.currentConfig ?: return
         val previewUrl = config.texture.previewUrl ?: return
@@ -272,8 +240,13 @@ class ProductConfigViewModel(
                 uploadImage(config.userPhotoUri!!, config.id, userId)
             }
 
-            setState { copy(isSaving = true, error = null) }
-            productRepo.saveConfig(config)
+            val updatedConfig = uiState.value.currentConfig ?: run {
+                setState { copy(isSaving = false, error = "Config lost after upload") }
+                return@launch
+            }
+
+            productRepo.saveConfig(updatedConfig)
+            println("onSaveAndProceed Config was saved")
             generateModel(config)
                 .onSuccess {
                     setState { copy(isSaving = false) }

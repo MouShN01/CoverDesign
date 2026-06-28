@@ -82,7 +82,7 @@ class FirebaseStorageRepositoryImpl(
     ): Flow<UploadState> = callbackFlow {
 
         val ref = storage.reference.child("photos/$userId/$configId.jpg")
-        val uploadTask = ref.putFile(Uri.parse(localUri))
+        val uploadTask = ref.putFile(localUri.toUri())
 
         uploadTask.addOnProgressListener { snapshot ->
             val percent = if (snapshot.totalByteCount > 0)
