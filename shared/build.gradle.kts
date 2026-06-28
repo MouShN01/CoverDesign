@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 val ktorVersion: String by project
 
 
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.googleGmsGoogleServices)
 }
 
 kotlin {
@@ -22,7 +24,11 @@ kotlin {
         }
     }
     
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
     
     androidLibrary {
        namespace = "com.example.coverdesign.shared"
@@ -30,7 +36,7 @@ kotlin {
        minSdk = libs.versions.android.minSdk.get().toInt()
     
        compilerOptions {
-           jvmTarget = JvmTarget.JVM_11
+           jvmTarget = JvmTarget.JVM_17
        }
        androidResources {
            enable = true
@@ -55,6 +61,14 @@ kotlin {
             implementation(libs.sceneview)     // 3D model viewer
             implementation(libs.arcore)
             implementation(libs.arsceneview)
+
+
+            implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.googleid)
+//
+//            implementation(libs.firebase.storage)
+//            implementation(libs.kotlinx.coroutines.play.services)
+
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -88,18 +102,26 @@ kotlin {
             // Alternatively - without an Android dependency.
             implementation(libs.datastore)
 
+            implementation(libs.gitlive.firebase.firestore)
+            implementation(libs.gitlive.firebase.storage)
+            implementation(libs.gitlive.firebase.auth)
+
+            //implementation(libs.firebase.storage) // gitlive-firebase-storage
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.native.driver)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+
         }
     }
 }
 
 dependencies {
+
     androidRuntimeClasspath(libs.compose.uiTooling)
 }
 

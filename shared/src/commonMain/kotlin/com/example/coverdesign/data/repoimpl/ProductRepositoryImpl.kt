@@ -9,14 +9,15 @@ import com.example.coverdesign.data.local.toDomain
 import com.example.coverdesign.data.local.toEntity
 import com.example.coverdesign.data.remote.service.ProductApiService
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.repo.ProductRepository
 import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.domain.util.currentEpochMillis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -93,7 +94,7 @@ class ProductRepositoryImpl(
         }
 
     override suspend fun saveConfig(config: ProductConfig): Unit = //TODO remove Unit
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             db.productConfigQueries.insertOrReplaceConfig(config.toEntity())
         }
 

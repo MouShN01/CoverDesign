@@ -1,102 +1,210 @@
 package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.example.coverdesign.domain.model.Credentials
-import com.example.coverdesign.domain.repo.AuthRepository
-import com.example.coverdesign.domain.util.onError
-import com.example.coverdesign.domain.util.onSuccess
+import com.example.coverdesign.data.remote.GoogleAuthenticator
+import com.example.coverdesign.domain.model.AppUser
+import com.example.coverdesign.domain.model.UserRole
+import com.example.coverdesign.domain.repo.FireAuthRepository
+import com.example.coverdesign.domain.util.Resource
+import com.example.coverdesign.domain.util.currentEpochMillis
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
 import com.example.coverdesign.ui.viewmodel.base.UiEvent
 import com.example.coverdesign.ui.viewmodel.base.UiState
+import dev.gitlive.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 
-// shared/commonMain/ui/viewmodel/AuthViewModel.kt
+
 class AuthViewModel(
-    private val authRepo: AuthRepository
+    private val authRepo: FireAuthRepository,
+    private val googleAuthenticator: GoogleAuthenticator
 ) : BaseViewModel<AuthUiState, AuthUiEvent>() {
 
     override fun initialState() = AuthUiState()
 
+    init {
+        // observe Firebase auth state — keeps currentUser in sync
+        viewModelScope.launch {
+            authRepo.currentUser.collect { user ->
+                setState { copy(currentUser = user) }
+                if (user != null) sendEvent(AuthUiEvent.NavigateToHome)
+            }
+        }
+    }
+
     fun onAction(action: AuthAction) {
         when (action) {
-            is AuthAction.UpdateEmail    -> setState { copy(email = action.value) }
-            is AuthAction.UpdatePassword -> setState { copy(password = action.value) }
-            is AuthAction.UpdateName     -> setState { copy(name = action.value) }
-            is AuthAction.TogglePassword -> setState { copy(passwordVisible = !passwordVisible) }
-            is AuthAction.Login          -> login()
-            is AuthAction.Register       -> register()
-            else -> {}
+            is AuthAction.SignInWithEmail -> signInWithEmail(action.email, action.password)
+            is AuthAction.RegisterWithEmail -> registerWithEmail(
+                action.email, action.password, action.fullName, action.phone
+            )
+
+            is AuthAction.SignInWithGoogle -> signInWithGoogle(action.context)
+            is AuthAction.SignOut -> signOut()
+            is AuthAction.ResetPassword -> resetPassword(action.email)
+            is AuthAction.ClearError -> setState { copy(error = null) }
+            is AuthAction.ToggleMode -> setState { copy(isRegisterMode = !isRegisterMode) }
         }
     }
 
-    private fun login() {
-        val state = uiState.value
-        if (!validateInputs(state.email, state.password)) return
+    // ── Email / password ──────────────────────────────────────────────────────
 
+    private fun signInWithEmail(email: String, password: String) {
+        if (!validateEmailPassword(email, password)) return
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
-            authRepo.login(Credentials(state.email, state.password))
-                .onSuccess {
-                    setState { copy(isLoading = false) }
-                    sendEvent(AuthUiEvent.Success)
+            when (val result = authRepo.signInWithEmail(email, password)) {
+                is Resource.Success -> setState { copy(isLoading = false) }
+                is Resource.Error -> setState {
+                    copy(
+                        isLoading = false, error = result.message
+                    )
                 }
-                .onError { message, _ ->
-                    setState { copy(isLoading = false, error = message) }
-                }
+
+                else -> {}
+            }
         }
     }
 
-    private fun register() {
-        val state = uiState.value
-        if (!validateInputs(state.email, state.password)) return
-
+    private fun registerWithEmail(
+        email: String, password: String, fullName: String, phone: String
+    ) {
+        if (!validateEmailPassword(email, password)) return
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
-            // for now same login call — backend registration added later
-            authRepo.login(Credentials(state.email, state.password))
-                .onSuccess {
+            when (val result = authRepo.registerWithEmail(email, password)) {
+                is Resource.Success -> {
+                    // create Firestore user profile with name + phone + default CUSTOMER role
+                    val user = result.data
+                    authRepo.createUserProfile(
+                        AppUser(
+                            uid = user.uid,
+                            email = email,
+                            displayName = fullName,
+                            phone = phone,
+                            role = UserRole.CUSTOMER,
+                            createdAt = currentEpochMillis()
+                        )
+                    )
                     setState { copy(isLoading = false) }
-                    sendEvent(AuthUiEvent.Success)
                 }
-                .onError { message, _ ->
-                    setState { copy(isLoading = false, error = message) }
+
+                is Resource.Error -> setState {
+                    copy(
+                        isLoading = false, error = result.message
+                    )
                 }
+
+                else -> {}
+            }
         }
     }
 
-    private fun validateInputs(email: String, password: String): Boolean {
-        val error = when {
-            email.isBlank()              -> "Email is required"
-            !email.contains("@")         -> "Enter a valid email"
-            password.isBlank()           -> "Password is required"
-            password.length < 6          -> "Password must be at least 6 characters"
-            else                         -> null
+    // ── Google Sign-In ────────────────────────────────────────────────────────
+    // Step 1: GoogleAuthenticator.getIdToken() — platform-side (Credential Manager)
+    // Step 2: authRepo.signInWithGoogle(idToken) — Firebase via GitLive
+
+    private fun signInWithGoogle(context: Any) {
+        viewModelScope.launch {
+            setState { copy(isLoading = true, error = null) }
+            try {
+                val idToken = googleAuthenticator.getIdToken(context)
+                when (val result = authRepo.signInWithGoogle(idToken)) {
+                    is Resource.Success -> setState { copy(isLoading = false) }
+                    is Resource.Error -> setState {
+                        copy(
+                            isLoading = false, error = result.message
+                        )
+                    }
+
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                setState {
+                    copy(
+                        isLoading = false, error = e.message ?: "Google sign-in failed"
+                    )
+                }
+            }
         }
-        if (error != null) setState { copy(error = error) }
-        return error == null
     }
+
+    private fun signOut() {
+        viewModelScope.launch {
+            authRepo.signOut()
+            setState { copy(currentUser = null) }
+            sendEvent(AuthUiEvent.NavigateToLogin)
+        }
+    }
+
+    private fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            setState { copy(error = "Enter your email address to reset your password") }
+            return
+        }
+        viewModelScope.launch {
+            setState { copy(isLoading = true, error = null) }
+            when (val result = authRepo.sendPasswordReset(email)) {
+                is Resource.Success -> setState {
+                    copy(isLoading = false, resetEmailSent = true)
+                }
+
+                is Resource.Error -> setState {
+                    copy(isLoading = false, error = result.message)
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    private fun validateEmailPassword(email: String, password: String): Boolean {
+        return when {
+            email.isBlank() -> {
+                setState { copy(error = "Email cannot be empty") }; false
+            }
+
+            !email.contains('@') -> {
+                setState { copy(error = "Enter a valid email address") }; false
+            }
+
+            password.length < 6 -> {
+                setState { copy(error = "Password must be at least 6 characters") }; false
+            }
+
+            else -> true
+        }
+    }
+
+
 }
 
+
 // ── State ─────────────────────────────────────────────────────────────────────
+
 data class AuthUiState(
-    val email           : String  = "",
-    val password        : String  = "",
-    val name            : String  = "",
-    val passwordVisible : Boolean = false,
-    val isLoading       : Boolean = false,
-    val error           : String? = null
+    val currentUser: FirebaseUser? = null,
+    val isLoading: Boolean = false,
+    val isRegisterMode: Boolean = false,
+    val error: String? = null,
+    val resetEmailSent: Boolean = false
 ) : UiState
 
+// ── Events ────────────────────────────────────────────────────────────────────
+
 sealed class AuthUiEvent : UiEvent {
-    object Success : AuthUiEvent()
+    object NavigateToHome : AuthUiEvent()
+    object NavigateToLogin : AuthUiEvent()
 }
 
 sealed class AuthAction {
-    data class UpdateEmail(val value: String)    : AuthAction()
-    data class UpdatePassword(val value: String) : AuthAction()
-    data class UpdateName(val value: String)     : AuthAction()
-    object TogglePassword                        : AuthAction()
-    object Login                                 : AuthAction()
-    object Register                              : AuthAction()
-    object Logout                              : AuthAction()
+    data class SignInWithEmail(val email: String, val password: String) : AuthAction()
+    data class RegisterWithEmail(
+        val email: String, val password: String, val fullName: String, val phone: String
+    ) : AuthAction()
+
+    data class  SignInWithGoogle(val context: Any) : AuthAction()
+    object SignOut : AuthAction()
+    data class ResetPassword(val email: String) : AuthAction()
+    object ClearError : AuthAction()
+    object ToggleMode : AuthAction()
 }

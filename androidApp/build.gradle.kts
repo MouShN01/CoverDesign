@@ -4,11 +4,12 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.googleGmsGoogleServices)
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_11
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 dependencies {
@@ -26,6 +27,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.compose.material.icons.core)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
     debugImplementation(libs.compose.uiTooling)
     implementation(libs.androidx.navigation.compose)
 
@@ -33,6 +38,12 @@ dependencies {
     implementation(libs.arsceneview)   // AR camera + model overlay
     implementation(libs.arcore)        // ARCore tracking
     implementation(libs.accompanist.permissions)
+
+    //implementation(libs.firebase.storage.ktx)
+    implementation(platform(libs.firebase.bom))
+//    implementation(libs.firebase.storage)
+//    implementation(libs.firebase.firestore)
+    //implementation(libs.firebase.firestore)
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
@@ -60,7 +71,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }

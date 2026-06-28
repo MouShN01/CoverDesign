@@ -39,11 +39,14 @@ fun ProductCategory.resolveArMode(photoUri: String?, measurements: Measurement):
         ProductCategory.ACCESSORY      -> ArMode.OnUserPhoto(photoUri)
 
         // Clothing / footwear — fit on body silhouette with measurements
+//        ProductCategory.CLOTHING,
+//        ProductCategory.FOOTWEAR       -> ArMode.OnBodySilhouette(measurements)
+//
         ProductCategory.CLOTHING,
-        ProductCategory.FOOTWEAR       -> ArMode.OnBodySilhouette(measurements)
+        ProductCategory.FOOTWEAR       -> ArMode.OnUserPhoto(photoUri)
 
         // 3D-print custom items — body silhouette by default
-        ProductCategory.THREE_D_PRINT  -> ArMode.OnBodySilhouette(measurements)
+        ProductCategory.THREE_D_PRINT  -> ArMode.InRoomSpace  // was OnBodySilhouette(measurements)
 
         // Interior decor — place in real room space
         ProductCategory.INTERIOR_DECOR -> ArMode.InRoomSpace

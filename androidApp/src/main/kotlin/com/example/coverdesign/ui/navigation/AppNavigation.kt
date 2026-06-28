@@ -15,11 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.coverdesign.domain.repo.AuthRepository
+import com.example.coverdesign.domain.repo.FireAuthRepository
 import org.koin.compose.koinInject
 
 // androidApp/ui/navigation/AppNavigation.kt
@@ -91,16 +92,15 @@ fun AppScaffold() {
         }
     ) { padding ->
 
-        val authRepo: AuthRepository = koinInject()
-//        val isAuthenticated by authRepo.isAuthenticated() // TODO Auth
-//            .collectAsStateWithLifecycle(initialValue = false)
-        // auth flow — no bottom bar
-        val isAuthenticated = true
+        val authRepo: FireAuthRepository = koinInject()
+        val isAuthenticated by authRepo.isAuthenticated() // TODO Auth
+            .collectAsStateWithLifecycle(initialValue = false)
+
+        //val isAuthenticated = true
 
         NavHost(
             navController = navController,
             startDestination = if (isAuthenticated) Screen.Main.route else Screen.Auth.route,
-            //startDestination = Screen.ArTryOn.route,
             modifier = Modifier.padding(padding)
         ) {
             authGraph(navController)

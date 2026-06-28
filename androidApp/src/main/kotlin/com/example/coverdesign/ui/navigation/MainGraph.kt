@@ -8,9 +8,9 @@ import androidx.navigation.compose.navigation
 import com.example.coverdesign.ui.screens.CatalogScreen
 import com.example.coverdesign.ui.screens.OrderSummaryScreen
 import com.example.coverdesign.ui.screens.OrdersListScreen
-import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.ProfileScreen
 import com.example.coverdesign.ui.screens.ar.ARScreen
+import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.preview.ModelPreviewScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode

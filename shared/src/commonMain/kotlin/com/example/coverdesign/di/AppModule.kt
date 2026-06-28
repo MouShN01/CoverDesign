@@ -11,14 +11,12 @@ import com.example.coverdesign.data.remote.service.AuthApiService
 import com.example.coverdesign.data.remote.service.Model3DApiService
 import com.example.coverdesign.data.remote.service.OrderApiService
 import com.example.coverdesign.data.remote.service.ProductApiService
-import com.example.coverdesign.data.repoimpl.AuthRepositoryImpl
-import com.example.coverdesign.data.repoimpl.AuthRepositoryImplTest
-import com.example.coverdesign.data.repoimpl.Model3DRepositoryImpl
+import com.example.coverdesign.data.repoimpl.FireAuthRepositoryImpl
 import com.example.coverdesign.data.repoimpl.Model3DRepositoryImplTest
 import com.example.coverdesign.data.repoimpl.OrderRepositoryImpl
 import com.example.coverdesign.data.repoimpl.ProductRepositoryImpl
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.repo.AuthRepository
+import com.example.coverdesign.domain.repo.FireAuthRepository
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.repo.OrderRepository
 import com.example.coverdesign.domain.repo.ProductRepository
@@ -30,6 +28,8 @@ import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
 import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
+import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
+import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.validator.MeasurementValidator
 import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
@@ -71,17 +71,19 @@ val networkModule = module {
     singleOf(::Model3DApiService)
     singleOf(::OrderApiService)
     singleOf(::AuthApiService)
+
 }
 
 val repositoryModule = module {
-    single<ProductRepository>  { ProductRepositoryImpl(api = get(), db = get()) }
-    single<Model3DRepository>  { Model3DRepositoryImpl(api = get(), db = get()) }
-    single<Model3DRepository>  { Model3DRepositoryImplTest(api = get(), db = get()) }
-    single<OrderRepository>    { OrderRepositoryImpl(api = get(), db = get()) }
-    single<AuthRepository>     { AuthRepositoryImpl(api = get(), tokenStorage = get()) }
-    single<AuthRepository> {
-        AuthRepositoryImplTest(tokenStorage = get())
-    }
+    single<ProductRepository> { ProductRepositoryImpl(api = get(), db = get()) }
+    single<Model3DRepository> { Model3DRepositoryImplTest(api = get(), db = get()) }
+    single<OrderRepository> { OrderRepositoryImpl(api = get(), db = get()) }
+//    single<AuthRepository> {
+//        AuthRepositoryImplTest(tokenStorage = get())
+//    }
+    single<FireAuthRepository> { FireAuthRepositoryImpl() }
+
+
 //single<ArSessionRepository>{ ArSessionRepositoryImpl() }
 }
 
@@ -103,6 +105,8 @@ val useCaseModule = module {
 
     // FR7
     factory { UpdateConfigUseCase(repo = get(), validator = get()) }
+    factory { UploadTextureImageUseCase(storageRepo = get()) }
+    factory { UploadReferencePhotoUseCase(storageRepo = get()) }
 
     factoryOf(::CreateConfigFromProductUseCase)
 
@@ -119,23 +123,18 @@ val useCaseModule = module {
     singleOf(::MeasurementValidator)
 }
 val viewModelModule = module {
-    viewModel { CatalogViewModel(getCatalog = get()) }
-//    viewModel {
-//        ProductConfigViewModel(
-//            configureProduct = get(),
-//            updateConfig = get(),
-//            calculatePrice = get(),
-//            getSavedConfig = get()
-//        )
-//    }
+
     viewModel {
         ProductConfigViewModel(
-            productRepo    = get(),
-            calculatePrice = get(),
-            generateModel  = get(),
-            validator      = get()
+            productRepo = get(),
+            generateModel = get(),
+            validator = get(),
+            uploadTextureImage = get(),
+            uploadUserImage = get()
         )
     }
+    viewModel { CatalogViewModel(getCatalog = get()) }
+
     viewModel {
         ModelPreviewViewModel(
             generateModel = get(),
@@ -157,7 +156,7 @@ val viewModelModule = module {
         )
     }
     viewModel { HomeViewModel(getOrderSummary = get(), authRepo = get()) }
-    viewModel { AuthViewModel(authRepo = get()) }
+    viewModel { AuthViewModel(get(), get ()) }
 
 }
 

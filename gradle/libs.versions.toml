@@ -13,10 +13,13 @@ androidx-testExt = "1.3.0"
 coilComposeVersion = "3.5.0"
 composeMultiplatform = "1.11.0"
 composeIcons = "1.7.3"
+firebaseFirestore = "2.4.0"
 junit = "4.13.2"
 koinAndroidxCompose = "3.5.x"
 kotlin = "2.4.0"
 kotlinx-coroutines = "1.11.0"
+kotlinxCoroutinesPlayServices = "1.11.0"
+kotlinxCoroutinesPlayServicesVersion = "1.11.0"
 lifecycleRuntimeCompose = "2.8.x"
 material3 = "1.11.0-alpha07"
 
@@ -32,17 +35,36 @@ biometric = "1.2.0-alpha05"
 material3Version = "1.4.0"
 sceneview  = "4.18.0"
 arcore     = "1.54.0"
+skydovesNavGraph = "0.2.0"
+googleGmsGoogleServices = "4.5.0"
+firebase-bom = "34.15.0"
+firebaseStorageKtx = "22.0.1"
+firebaseAuth = "24.1.0"
+credentials = "1.6.0"
+credentialsPlayServicesAuth = "1.6.0"
+googleid = "1.2.0"
+
 
 [libraries]
 # gradle/libs.versions.toml
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-storage = { module = "com.google.firebase:firebase-storage" }
+firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+
+
+gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseFirestore" }
+gitlive-firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "firebaseFirestore" }
+gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseFirestore" }
+
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServicesVersion" }
 sceneview          = { module = "io.github.sceneview:sceneview",   version.ref = "sceneview" }
 arsceneview        = { module = "io.github.sceneview:arsceneview", version.ref = "sceneview" }
 arcore             = { module = "com.google.ar:core",              version.ref = "arcore" }
 accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 coil3-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
 coil3-coil-network = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilComposeVersion"}
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -71,7 +93,6 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "dateTimeVersion" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -88,7 +109,10 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "b
 compose-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "composeIcons" }
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeIcons" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
-
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -97,5 +121,8 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+
+
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
+googleGmsGoogleServices = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }

@@ -43,7 +43,7 @@ fun TextureDto.toDomain() = Texture(
 fun ProductConfigDto.toDomain() = ProductConfig(
     id = id,
     productId = productId,
-    productCategory = ProductCategory.valueOf(productType.uppercase()),
+    productCategory = ProductCategory.valueOf(productCategory.uppercase()),
     measurement = Measurement(
         height = heightMm,
         width = widthMm,
@@ -57,7 +57,7 @@ fun ProductConfigDto.toDomain() = ProductConfig(
     texture = Texture(
         id = textureId,
         name = textureName,
-        previewUrl = "",
+        previewUrl = texturePreviewUrl,
         description = textureDescription.orEmpty()
     ),
     inscription = inscription,
@@ -132,7 +132,7 @@ fun OrderDto.toDomain() = Order(
 fun ProductConfig.toDto() = ProductConfigDto(
     id = id,
     productId = productId,
-    productType = productCategory.name.lowercase(),
+    productCategory = productCategory.name.lowercase(),
     heightMm = measurement.height,
     widthMm = measurement.width,
     depthMm = measurement.depth,
@@ -143,13 +143,14 @@ fun ProductConfig.toDto() = ProductConfigDto(
     material = material.name.lowercase(),
     textureId = texture.id,
     textureName = texture.name,
+    texturePreviewUrl = texture.previewUrl,
     textureDescription = texture.description ?: "None",
     inscription = inscription,
     // userPhotoUri intentionally excluded — never sent to backend
     additionalElements = additionalElements.map { it.name.lowercase() },
     quantity = quantity,
     createdAt = createdAt,
-    additionalNotes = additionalNotes
+    additionalNotes = additionalNotes,
 )
 
 fun Model3DDto.toDomain() = Model3D(

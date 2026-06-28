@@ -2,7 +2,7 @@ package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.Order
-import com.example.coverdesign.domain.repo.AuthRepository
+import com.example.coverdesign.domain.repo.FireAuthRepository
 import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
 import com.example.coverdesign.ui.viewmodel.base.UiEvent
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val getOrderSummary : GetOrderSummaryUseCase,
-    private val authRepo        : AuthRepository
+    private val authRepo        : FireAuthRepository
 ) : BaseViewModel<HomeUiState, HomeUiEvent>() {
 
     override fun initialState() = HomeUiState()
@@ -40,7 +40,7 @@ class HomeViewModel(
     }
 
     private fun logout() {
-        viewModelScope.launch { authRepo.logout() }
+        viewModelScope.launch { authRepo.signOut() }
     }
 }
 

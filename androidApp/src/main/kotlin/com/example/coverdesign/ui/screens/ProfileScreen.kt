@@ -113,7 +113,7 @@ fun ProfileScreen(
 
             // logout
             OutlinedButton(
-                onClick  = { viewModel.onAction(AuthAction.Logout) },
+                onClick  = { viewModel.onAction(AuthAction.SignOut) },
                 modifier = Modifier.fillMaxWidth(),
                 shape    = RoundedCornerShape(12.dp),
                 colors   = ButtonDefaults.outlinedButtonColors(

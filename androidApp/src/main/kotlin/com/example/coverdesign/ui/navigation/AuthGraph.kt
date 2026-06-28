@@ -15,7 +15,6 @@ fun NavGraphBuilder.authGraph(
         route = Screen.Auth.route,
         startDestination = Screen.Login.route
     ) {
-
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess       = {
@@ -35,7 +34,7 @@ fun NavGraphBuilder.authGraph(
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onNavigateToLogin  = { navController.popBackStack() }
+                onNavigateBack  = { navController.popBackStack() }
             )
         }
     }

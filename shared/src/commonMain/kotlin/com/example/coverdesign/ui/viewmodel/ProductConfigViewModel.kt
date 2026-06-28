@@ -12,8 +12,10 @@ import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.model.pricing.PricingEngine
 import com.example.coverdesign.domain.repo.ProductRepository
-import com.example.coverdesign.domain.usecase.CalculatePriceUseCase
+import com.example.coverdesign.domain.repo.UploadState
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
+import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
+import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
 import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.domain.util.currentEpochMillis
 import com.example.coverdesign.domain.util.generateUuid
@@ -23,14 +25,17 @@ import com.example.coverdesign.domain.validator.MeasurementValidator
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
 import com.example.coverdesign.ui.viewmodel.base.UiEvent
 import com.example.coverdesign.ui.viewmodel.base.UiState
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 
 class ProductConfigViewModel(
-    private val productRepo    : ProductRepository,
-    private val calculatePrice : CalculatePriceUseCase,
-    private val generateModel  : GenerateModelUseCase,
-    private val validator      : MeasurementValidator
+    private val productRepo: ProductRepository,
+    private val uploadTextureImage: UploadTextureImageUseCase,
+    private val uploadUserImage: UploadReferencePhotoUseCase,
+    private val generateModel: GenerateModelUseCase,
+    private val validator: MeasurementValidator
 ) : BaseViewModel<ProductConfigUiState, ProductConfigUiEvent>() {
 
     override fun initialState() = ProductConfigUiState()
@@ -38,25 +43,26 @@ class ProductConfigViewModel(
     @OptIn(ExperimentalStdlibApi::class)
     fun onAction(action: ProductConfigAction) {
         when (action) {
-            is ProductConfigAction.Enter               -> onEnter(action.mode)
+            is ProductConfigAction.Enter -> onEnter(action.mode)
             is ProductConfigAction.ResumePreviousConfig -> resumeConfig(action.config)
-            is ProductConfigAction.StartFreshConfig     -> startFresh(action.product)
-            is ProductConfigAction.UpdateMeasurement    -> onMeasurementUpdated(action.measurement)
-            is ProductConfigAction.UpdateMaterial       -> onFieldUpdated { copy(material = action.material) }
-            is ProductConfigAction.UpdateColor          -> onFieldUpdated { copy(color = action.color) }
-            is ProductConfigAction.UpdateTexture        -> onFieldUpdated { copy(texture = action.texture) }
-            is ProductConfigAction.UpdateInscription    -> onInscriptionUpdated(action.text)
-            is ProductConfigAction.UpdateSizeLabel      -> onFieldUpdated { copy(sizeLabel = action.label) }
-            is ProductConfigAction.UpdateQuantity       -> onQuantityUpdated(action.qty)
-            is ProductConfigAction.AddElement           -> onElementToggled(action.element, add = true)
-            is ProductConfigAction.RemoveElement        -> onElementToggled(action.element, add = false)
-            is ProductConfigAction.SetUserPhoto         -> onFieldUpdated { copy(userPhotoUri = action.uri) }
-            is ProductConfigAction.RequestPriceUpdate   -> onPriceRequested()
-            is ProductConfigAction.SaveAndProceed       -> onSaveAndProceed()
-            is ProductConfigAction.UpdateTextureImage   -> onFieldUpdated {copy( texture = texture.copy(
-                previewUrl = action.uri
-            ))}
+            is ProductConfigAction.StartFreshConfig -> startFresh(action.product)
+            is ProductConfigAction.UpdateMeasurement -> onMeasurementUpdated(action.measurement)
+            is ProductConfigAction.UpdateMaterial -> onFieldUpdated { copy(material = action.material) }
+            is ProductConfigAction.UpdateColor -> onFieldUpdated { copy(color = action.color) }
+            is ProductConfigAction.UpdateTexture -> onFieldUpdated { copy(texture = action.texture) }
+            is ProductConfigAction.UpdateInscription -> onInscriptionUpdated(action.text)
+            is ProductConfigAction.UpdateSizeLabel -> onFieldUpdated { copy(sizeLabel = action.label) }
+            is ProductConfigAction.UpdateQuantity -> onQuantityUpdated(action.qty)
+            is ProductConfigAction.AddElement -> onElementToggled(action.element, add = true)
+            is ProductConfigAction.RemoveElement -> onElementToggled(action.element, add = false)
+            is ProductConfigAction.UpdateUserPhoto -> onFieldUpdated { copy(userPhotoUri = action.imageURL) }
+            is ProductConfigAction.RequestPriceUpdate -> onPriceRequested()
+            is ProductConfigAction.SaveAndProceed -> onSaveAndProceed()
+            is ProductConfigAction.ClearError -> setState { copy(error = null) }
+
             else -> {}
+//            is ProductConfigAction.Init -> TODO()
+//            is ProductConfigAction.SetProduct -> TODO()
         }
     }
 
@@ -73,9 +79,9 @@ class ProductConfigViewModel(
                         val product = productRepo.getProduct(config.productId)
                         setState {
                             copy(
-                                currentConfig   = config,
+                                currentConfig = config,
                                 selectedProduct = (product as? Resource.Success)?.data,
-                                isLoading       = false
+                                isLoading = false
                             )
                         }
                     } else {
@@ -88,7 +94,8 @@ class ProductConfigViewModel(
                     productRepo.getProduct(mode.productId)
                         .onSuccess { product ->
                             val previousConfigs = productRepo.getConfigsForProduct(product.id)
-                            val lastConfig = previousConfigs.firstOrNull()  // most recent, query is DESC
+                            val lastConfig =
+                                previousConfigs.firstOrNull()  // most recent, query is DESC
 
                             setState { copy(isLoading = false, selectedProduct = product) }
 
@@ -115,19 +122,19 @@ class ProductConfigViewModel(
     // ── user answered: "no, start fresh" ───────────────────────────────────────
     private fun startFresh(product: Product) {
         val draft = ProductConfig(
-            id                 = generateUuid(),
-            productId          = product.id,
-            productCategory    = product.category,
-            measurement        = Measurement(0.0, 0.0, 0.0),
-            sizeLabel          = null,
-            color              = ProductColor("", "#000000"),
-            material           = product.availableMaterials.firstOrNull() ?: Material.PLA,
-            texture            = product.availableTextures.first(),
-            inscription        = "",
-            userPhotoUri       = null,
+            id = generateUuid(),
+            productId = product.id,
+            productCategory = product.category,
+            measurement = Measurement(0.0, 0.0, 0.0),
+            sizeLabel = null,
+            color = ProductColor("", "#000000"),
+            material = product.availableMaterials.firstOrNull() ?: Material.PLA,
+            texture = product.availableTextures.first(),
+            inscription = "",
+            userPhotoUri = null,
             additionalElements = emptyList(),
-            quantity           = 1,
-            createdAt          = currentEpochMillis()
+            quantity = 1,
+            createdAt = currentEpochMillis()
         )
         setState { copy(currentConfig = draft, pendingResumePrompt = null) }
     }
@@ -181,9 +188,90 @@ class ProductConfigViewModel(
 //        }
     }
 
+    private suspend fun uploadTexture(localUri: String, configId: String, userId: String) {
+        uploadTextureImage(localUri, configId, userId)
+            .collect { state ->
+                when (state) {
+                    is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
+                    is UploadState.Success -> {
+                        onFieldUpdated {
+                            copy(
+                                texture = texture.copy(previewUrl = state.downloadUrl)
+                            )
+                        }
+                    }
+
+                    is UploadState.Error -> setState { copy(error = state.message) }
+                }
+            }
+
+    }
+      private suspend fun uploadImage(localUri: String, configId: String, userId: String) {
+        uploadUserImage(localUri, configId, userId)
+            .collect { state ->
+                when (state) {
+                    is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
+                    is UploadState.Success -> {
+                        onFieldUpdated {
+                            copy(
+                                userPhotoUri = state.downloadUrl
+                            )
+                        }
+                    }
+
+                    is UploadState.Error -> setState { copy(error = state.message) }
+                }
+            }
+
+    }
+
+//
+//    private fun onSaveAndProceedWithCustomTexture() {
+//        val config = uiState.value.currentConfig ?: return
+//        val previewUrl = config.texture.previewUrl ?: return
+//
+//        val userId = Firebase.auth.currentUser?.uid ?: run {
+//            setState { copy(error = "You must be signed in to save your configuration") }
+//            return
+//        }
+//
+//        viewModelScope.launch {
+//            setState { copy(isSaving = true, error = null) }
+//
+//
+//            productRepo.saveConfig(config)
+//            generateModel(config)
+//                .onSuccess {
+//                    setState { copy(isSaving = false) }
+//                    sendEvent(ProductConfigUiEvent.NavigateToPreview(config.id))
+//                }
+//                .onError { message, _ ->
+//                    setState { copy(isSaving = false, error = message) }
+//                }
+//        }
+//    }
+
     private fun onSaveAndProceed() {
+        println("onSaveAndProceed")
+        val userId = Firebase.auth.currentUser?.uid ?: run {
+            setState { copy(error = "You must be signed in to save your configuration") }
+            return
+        }
+
+        //Log.d("TAG", "onSaveAndProceed: ")
+
         val config = uiState.value.currentConfig ?: return
+        val previewUrl = config.texture.previewUrl ?: return
+
         viewModelScope.launch {
+            if (uploadTextureImage.needsUpload(config.texture.previewUrl)) {
+                uploadTexture(previewUrl, config.id, userId)
+            }
+
+            if (uploadUserImage.needsUpload(config.userPhotoUri)) {
+                uploadImage(config.userPhotoUri!!, config.id, userId)
+            }
+
             setState { copy(isSaving = true, error = null) }
             productRepo.saveConfig(config)
             generateModel(config)
@@ -200,18 +288,19 @@ class ProductConfigViewModel(
 
 // ── State ─────────────────────────────────────────────────────────────────────
 data class ProductConfigUiState(
-    val selectedProduct   : Product?       = null,
-    val currentConfig     : ProductConfig? = null,
-    val priceEstimate     : PriceEstimate? = null,
-    val isLoading         : Boolean        = false,
-    val isSaving          : Boolean        = false,
-    val isPriceLoading    : Boolean        = false,
-    val measurementError  : String?        = null,
-    val inscriptionError  : String?        = null,
-    val quantityError     : String?        = null,
-    val priceError        : String?        = null,
-    val error             : String?        = null,
-    val pendingResumePrompt : ProductConfig?  = null,
+    val selectedProduct: Product? = null,
+    val currentConfig: ProductConfig? = null,
+    val priceEstimate: PriceEstimate? = null,
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
+    val isPriceLoading: Boolean = false,
+    val measurementError: String? = null,
+    val inscriptionError: String? = null,
+    val quantityError: String? = null,
+    val priceError: String? = null,
+    val error: String? = null,
+    val pendingResumePrompt: ProductConfig? = null,
+    val uploadProgress: Int? = null,
 ) : UiState
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -222,29 +311,31 @@ sealed class ProductConfigUiEvent : UiEvent {
 // ── Actions ───────────────────────────────────────────────────────────────────
 sealed class ProductConfigAction {
     data class Init(val productId: String) : ProductConfigAction()
-    data class SetProduct(val product: Product)              : ProductConfigAction()
+    data class SetProduct(val product: Product) : ProductConfigAction()
     data class UpdateMeasurement(val measurement: Measurement) : ProductConfigAction()
-    data class UpdateMaterial(val material: Material)        : ProductConfigAction()
-    data class UpdateColor(val color: ProductColor)          : ProductConfigAction()
-    data class UpdateTexture(val texture: Texture)          : ProductConfigAction()
-    data class UpdateInscription(val text: String)           : ProductConfigAction()
-    data class UpdateSizeLabel(val label: SizeLabel?)        : ProductConfigAction()
-    data class UpdateQuantity(val qty: Int)                  : ProductConfigAction()
-    data class AddElement(val element: AdditionalElement)    : ProductConfigAction()
+    data class UpdateMaterial(val material: Material) : ProductConfigAction()
+    data class UpdateColor(val color: ProductColor) : ProductConfigAction()
+    data class UpdateTexture(val texture: Texture) : ProductConfigAction()
+    data class UpdateInscription(val text: String) : ProductConfigAction()
+    data class UpdateSizeLabel(val label: SizeLabel?) : ProductConfigAction()
+    data class UpdateQuantity(val qty: Int) : ProductConfigAction()
+    data class AddElement(val element: AdditionalElement) : ProductConfigAction()
     data class RemoveElement(val element: AdditionalElement) : ProductConfigAction()
-    data class SetUserPhoto(val uri: String?)                : ProductConfigAction()
-    data class Enter(val mode: ConfigEntryMode)                 : ProductConfigAction()
-    data class ResumePreviousConfig(val config: ProductConfig)  : ProductConfigAction()
-    data class StartFreshConfig(val product: Product)           : ProductConfigAction()
-    data class UpdateTextureImage(val uri: String?) : ProductConfigAction()
+    data class Enter(val mode: ConfigEntryMode) : ProductConfigAction()
+    data class ResumePreviousConfig(val config: ProductConfig) : ProductConfigAction()
+    data class StartFreshConfig(val product: Product) : ProductConfigAction()
+    //data class UpdateTextureImage(val uri: String?) : ProductConfigAction()
 
-    data class UpdateUserPhoto(val imageURL: String?)    : ProductConfigAction()
-    object SaveAndProceed                                    : ProductConfigAction()
-    object RequestPriceUpdate                                : ProductConfigAction()
+    data class UpdateUserPhoto(val imageURL: String?) : ProductConfigAction()
+    object SaveAndProceed : ProductConfigAction()
+    object RequestPriceUpdate : ProductConfigAction()
+    object ClearError : ProductConfigAction() {
 
+    }
 
 
 }
+
 // shared/commonMain/ui/viewmodel/ProductConfigViewModel.kt
 sealed class ConfigEntryMode {
     data class FromProduct(val productId: String) : ConfigEntryMode()
