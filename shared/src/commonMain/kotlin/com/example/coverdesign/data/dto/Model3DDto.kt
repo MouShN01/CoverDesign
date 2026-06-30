@@ -16,21 +16,24 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Model3DDto(
-    @SerialName("id")                val id: String,
-    @SerialName("product_id")        val productId: String,
-    @SerialName("model_url")         val modelUrl: String,
+    @SerialName("id") val id: String,
+    @SerialName("product_id") val productId: String,
+    @SerialName("model_url") val modelUrl: String,
     @SerialName("preview_image_url") val previewImageUrl: String = "",
-    @SerialName("status")            val status: String,
-    @SerialName("generated_at")      val generatedAt: Long
+    @SerialName("status") val status: String,
+    @SerialName("generated_at") val generatedAt: Long
 )
 
+@Serializable
 data class AdaptedModel3DDto(
-    @SerialName("id")                      val id: String,
-    @SerialName("config_id")               val configId: String,
-    @SerialName("base_model_id")           val baseModelId: String,
-    @SerialName("model_url")               val modelUrl: String,
-    @SerialName("preview_image_url")       val previewImageUrl: String = "",
-    @SerialName("status")                  val status: String,
-    @SerialName("generated_at")            val generatedAt: Long,
-    @SerialName("estimated_wait_seconds")  val estimatedWaitSeconds: Int? = null
+    @SerialName("task_id") val taskId: String,
+    @SerialName("config_id") val configId: String,
+    @SerialName("base_model_id") val baseModelId: String, //productID
+    @SerialName("model_url") val modelUrl: String? = null,
+    @SerialName("preview_image_url") val previewImageUrl: String? = null,
+    @SerialName("status") val status: String,
+    @SerialName("generated_at") val generatedAt: Long,
+    @SerialName("estimated_wait_seconds") val estimatedWaitSeconds: Int? = null,
+    @SerialName("progress") val progress: Int,
+    @SerialName("error") val error: String?
 )

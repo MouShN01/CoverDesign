@@ -9,17 +9,26 @@ class UploadTextureImageUseCase(
     private val storageRepo: StorageRepository
 ) {
     operator fun invoke(
-        localUri : String,
-        configId : String,
-        userId   : String
+        localUri: String,
+        configId: String,
+        userId: String
     ): Flow<UploadState> =
         storageRepo.uploadTextureImage(
             localUri = localUri,
             configId = configId,
-            userId   = userId
+            userId = userId
         )
-    fun needsUpload(previewUrl: String?): Boolean =
-        previewUrl != null &&
-                !previewUrl.startsWith("http://") &&
-                !previewUrl.startsWith("https://")
+
+    fun needsUpload(previewUrl: String?): Boolean {
+        if (previewUrl.isNullOrBlank()) return false
+        if (previewUrl.startsWith("http://") ||
+            previewUrl.startsWith("https://")
+        ) {
+            return false
+        }
+
+        return previewUrl.startsWith("content://")
+                || previewUrl.startsWith("file://")
+
+    }
 }

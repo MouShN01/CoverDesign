@@ -1,10 +1,20 @@
 package com.example.coverdesign.ui.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun AppBottomNavBar(
@@ -28,3 +38,37 @@ fun AppBottomNavBar(
         }
     }
 }
+
+sealed class BottomNavItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+    val iconSelected: ImageVector = icon
+) {
+    object Home : BottomNavItem(
+        "home", "Home", Icons.Outlined.Home,
+        Icons.Filled.Home
+    )
+
+    object Catalog : BottomNavItem(
+        "catalog", "Catalog", Icons.Outlined.ViewInAr,
+        Icons.Filled.ViewInAr
+    )
+
+    object Orders : BottomNavItem(
+        "orders", "Orders", Icons.Outlined.ShoppingBag,
+        Icons.Filled.ShoppingBag
+    )
+
+    object Profile : BottomNavItem(
+        "profile", "Profile", Icons.Outlined.Person,
+        Icons.Filled.Person
+    )
+}
+
+val bottomNavItems = listOf(
+    BottomNavItem.Home,
+    BottomNavItem.Catalog,
+    BottomNavItem.Orders,
+    BottomNavItem.Profile
+)

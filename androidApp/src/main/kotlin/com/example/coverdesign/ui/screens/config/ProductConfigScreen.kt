@@ -98,7 +98,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProductConfigScreen(
     entryMode: ConfigEntryMode,
     viewModel: ProductConfigViewModel = koinViewModel(),
-    onProceed: (configId: String) -> Unit,
+    onProceed: (taskId: String, configId: String) -> Unit,
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,21 +109,31 @@ fun ProductConfigScreen(
     }
 
     LaunchedEffect(state.error) {
-        state.error?.let { message ->
+        if (state.currentConfig != null && state.error != null) {
             snackbarHostState.showSnackbar(
-                message = message,
+                message = state.error.toString(),
                 duration = SnackbarDuration.Long
             )
             viewModel.onAction(ProductConfigAction.ClearError)
         }
     }
+
+//    LaunchedEffect(state.error) {
+//        state.error?.let { message ->
+//            snackbarHostState.showSnackbar(
+//                message = message,
+//                duration = SnackbarDuration.Long
+//            )
+//            viewModel.onAction(ProductConfigAction.ClearError)
+//        }
+//    }
     LaunchedEffect(state.isSaving) {
         if (!state.isSaving) snackbarHostState.currentSnackbarData?.dismiss()
     }
 
     EventHandler(viewModel.events) { event ->
         when (event) {
-            is ProductConfigUiEvent.NavigateToPreview -> onProceed(event.configId)
+            is ProductConfigUiEvent.NavigateToPreview -> onProceed(event.taskId, event.configId)
         }
     }
 

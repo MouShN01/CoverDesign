@@ -1,22 +1,22 @@
 package com.example.coverdesign.data.remote.client
 
 // data/remote/client/HttpClientFactory.kt
-import com.example.coverdesign.data.dto.RefreshRequestDto
-import com.example.coverdesign.data.dto.TokenDto
-import com.example.coverdesign.data.dto.toDomain
 import com.example.coverdesign.data.remote.interceptor.TokenStorage
+import com.example.coverdesign.domain.model.Token
 import com.example.coverdesign.domain.util.getPlatformName
-import io.ktor.client.*
-import io.ktor.client.call.body
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.serialization.kotlinx.json.*
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import org.koin.core.logger.Logger
 
 fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
 
@@ -29,11 +29,11 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
         })
     }
 
-    // ── Logging (debug only) ────────────────────────────────────────────────
-//    install(Logging) {
-//        logger = Logger.DEFAULT
-//        level  = LogLevel.BODY        // switch to NONE for release builds
-//    }
+//     ── Logging (debug only) ────────────────────────────────────────────────
+    install(Logging) {
+        level = LogLevel.ALL
+       // level  = LogLevel.BODY        // switch to NONE for release builds
+    }
 
     // ── Timeouts ────────────────────────────────────────────────────────────
     install(HttpTimeout) {
@@ -53,25 +53,54 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
                 )
             }
             refreshTokens {
-                // called automatically by Ktor on 401
-                val current = tokenStorage.getToken()
-                    ?: return@refreshTokens null
+                println("Refreshing Firebase token...")
+                val user = Firebase.auth.currentUser
+                    ?: run { tokenStorage.clearToken(); return@refreshTokens null }
 
-                val response = client.post(ApiConstants.Endpoints.REFRESH) {
-                    setBody(RefreshRequestDto(current.refreshToken))
-                    markAsRefreshTokenRequest()     // prevents infinite loop
-                }
+               // val mUser: FirebaseUser = FirebaseAuth.getInstance().getCurrentUser()
+//                user.getIdToken(true)
+//                    .addOnCompleteListener(object : OnCompleteListener<GetTokenResult?>() {
+//                        fun onComplete(@NonNull task: Task<GetTokenResult?>) {
+//                            if (task.isSuccessful()) {
+//                                val idToken: String? = task.getResult().getToken()
+//                                // Send token to your backend via HTTPS
+//                                // ...
+//                            } else {
+//                                // Handle error -> task.getException();
+//                            }
+//                        }
+//                    })
+                val freshToken = user.getIdToken(forceRefresh = false) //was true
+                    ?: run { tokenStorage.clearToken(); return@refreshTokens null }
 
-                if (response.status.value == 200) {
-                    val newTokenDto = response.body<TokenDto>()
-                    val newToken = newTokenDto.toDomain()
-                    tokenStorage.saveToken(newToken)
-                    BearerTokens(newToken.accessToken, newToken.refreshToken)
-                } else {
-                    tokenStorage.clearToken()       // force re-login
-                    null
-                }
+                val newToken = Token(accessToken = freshToken, refreshToken = "")
+                tokenStorage.saveToken(newToken)
+
+                BearerTokens(
+                    accessToken  = freshToken,
+                    refreshToken = ""   // Firebase doesn't use refresh tokens directly
+                )
             }
+//            refreshTokens {
+//                // called automatically by Ktor on 401
+//                val current = tokenStorage.getToken()
+//                    ?: return@refreshTokens null
+//
+//                val response = client.post(ApiConstants.Endpoints.REFRESH) {
+//                    setBody(RefreshRequestDto(current.refreshToken))
+//                    markAsRefreshTokenRequest()     // prevents infinite loop
+//                }
+//
+//                if (response.status.value == 200) {
+//                    val newTokenDto = response.body<TokenDto>()
+//                    val newToken = newTokenDto.toDomain()
+//                    tokenStorage.saveToken(newToken)
+//                    BearerTokens(newToken.accessToken, newToken.refreshToken)
+//                } else {
+//                    tokenStorage.clearToken()       // force re-login
+//                    null
+//                }
+//            }
         }
     }
 

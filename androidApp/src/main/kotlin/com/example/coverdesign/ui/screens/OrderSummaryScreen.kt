@@ -41,7 +41,6 @@ import com.example.coverdesign.ui.viewmodel.OrderSummaryUiEvent
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
-// androidApp/ui/screens/order/OrderSummaryScreen.kt
 @Composable
 fun OrderSummaryScreen(
     configId         : String,

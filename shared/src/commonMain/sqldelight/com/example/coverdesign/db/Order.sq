@@ -1,6 +1,3 @@
--- shared/commonMain/sqldelight/com/yourpackage/db/Order.sq
--- shared/commonMain/sqldelight/com/yourpackage/db/Order.sq
-
 CREATE TABLE OrderEntity (
     id                     TEXT    NOT NULL PRIMARY KEY,
     configId               TEXT    NOT NULL,
@@ -33,7 +30,8 @@ CREATE TABLE OrderEntity (
     totalPrice             REAL    NOT NULL,   -- subtotal × quantity
 
     status                 TEXT    NOT NULL,
-    createdAt              INTEGER NOT NULL
+    createdAt              INTEGER NOT NULL,
+    FOREIGN KEY (configId) REFERENCES ProductConfigEntity(id) ON DELETE CASCADE
 );
 
 insertOrder:

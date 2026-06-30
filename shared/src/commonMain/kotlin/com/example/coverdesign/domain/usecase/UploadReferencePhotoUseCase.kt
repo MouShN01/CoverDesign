@@ -27,8 +27,16 @@ class UploadReferencePhotoUseCase(
             userId   = userId
         )
 
-    fun needsUpload(photoUri: String?): Boolean =
-        photoUri != null &&
-                !photoUri.startsWith("http://") &&
-                !photoUri.startsWith("https://")
+    fun needsUpload(previewUrl: String?): Boolean {
+        if (previewUrl.isNullOrBlank()) return false
+        if (previewUrl.startsWith("http://") ||
+            previewUrl.startsWith("https://")
+        ) {
+            return false
+        }
+
+        return previewUrl.startsWith("content://")
+                || previewUrl.startsWith("file://")
+
+    }
 }

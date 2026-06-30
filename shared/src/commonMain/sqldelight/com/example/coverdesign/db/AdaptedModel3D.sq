@@ -1,17 +1,16 @@
--- shared/commonMain/sqldelight/com/yourpackage/db/AdaptedModel3D.sq
-
--- ADAPTED model — one per ProductConfig, result of the GenAI pipeline (FR4)
 CREATE TABLE AdaptedModel3DEntity (
     id                   TEXT    NOT NULL PRIMARY KEY,
     configId             TEXT    NOT NULL UNIQUE,
     baseModelId          TEXT    NOT NULL,   -- which base model this was adapted from
-    modelUrl             TEXT    NOT NULL,
-    previewImageUrl      TEXT    NOT NULL DEFAULT '',
+    modelUrl             TEXT,
+    previewImageUrl      TEXT,
     status               TEXT    NOT NULL DEFAULT 'PENDING',
     generatedAt          INTEGER NOT NULL,
+    error                TEXT,
+    progress             INTEGER NOT NULL DEFAULT 0,
     estimatedWaitSeconds INTEGER,
     FOREIGN KEY (configId) REFERENCES ProductConfigEntity(id) ON DELETE CASCADE,
-    FOREIGN KEY (baseModelId) REFERENCES Model3DEntity(id) ON DELETE CASCADE
+    FOREIGN KEY (baseModelId) REFERENCES ProductEntity(id) ON DELETE CASCADE
 );
 
 insertOrReplaceAdaptedModel:

@@ -11,7 +11,7 @@ import com.example.coverdesign.domain.util.Resource
 class VirtualTryOnUseCase(
     private val model3DRepo: Model3DRepository
 ) {
-    suspend fun loadModelForTryOn(configId: String): Resource<AdaptedModel3D> =
+    suspend fun loadModelForTryOn(configId: String): Resource<AdaptedModel3D?> =
         model3DRepo.getAdaptedModel(configId)
 
     fun isArSupported(): Boolean = ArCapability.isSupported()

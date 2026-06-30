@@ -3,12 +3,13 @@ package com.example.coverdesign.domain.model
 
 // base model — fixed, tied to a product, never changes
 data class Model3D(
-    val id: String,
+    val configId: String,
     val productId: String,
     val modelUrl: String,
     val previewImageUrl: String,
     val status: ModelStatus,
-    val generatedAt: Long
+    val generatedAt: Long,
+    //val estimatedWaitSeconds: Int? = null,
 )
 
 enum class ModelStatus { PENDING, GENERATING, READY, FAILED }

@@ -84,23 +84,23 @@ fun ProductConfig.toEntity(): ProductConfigEntity = ProductConfigEntity(
 // ─────────────────────────────────────────────────────────────────────────────
 
 fun OrderEntity.toDomain(): Order = Order(
-    id     = id,
+    id = id,
     config = json.decodeFromString<ProductConfig>(configJson),
     priceEstimate = PriceEstimate(
-        configId             = configId,
-        currency             = currency,
-        basePrice            = basePrice,
-        materialSurcharges   = json.decodeFromString(mapSerializer, materialSurchargesJson),
-        textureSurcharge     = textureSurcharge,
+        configId = configId,
+        currency = currency,
+        basePrice = basePrice,
+        materialSurcharges = json.decodeFromString(mapSerializer, materialSurchargesJson),
+        textureSurcharge = textureSurcharge,
         inscriptionSurcharge = inscriptionSurcharge,
-        elementSurcharges    = json.decodeFromString(mapSerializer, elementSurchargesJson),
-        sizeMultiplier       = sizeMultiplier,
-        sizeMultiplierLabel  = sizeMultiplierLabel,
-        quantity             = quantity.toInt(),
-        subtotal             = subtotal,
-        total                = totalPrice
+        elementSurcharges = json.decodeFromString(mapSerializer, elementSurchargesJson),
+        sizeMultiplier = sizeMultiplier,
+        sizeMultiplierLabel = sizeMultiplierLabel,
+        quantity = quantity.toInt(),
+        subtotal = subtotal,
+        total = totalPrice
     ),
-    status    = OrderStatus.valueOf(status),
+    status = OrderStatus.valueOf(status),
     createdAt = createdAt
 )
 
@@ -110,23 +110,24 @@ fun OrderEntity.toDomain(): Order = Order(
 private val mapSerializer = MapSerializer(String.serializer(), Double.serializer())
 
 fun Order.toEntity(): OrderEntity = OrderEntity(
-    id                     = id,
-    configId               = config.id,
-    configJson             = json.encodeToString(ProductConfig.serializer(), config),
-    currency               = priceEstimate.currency,
-    basePrice              = priceEstimate.basePrice,
+    id = id,
+    configId = config.id,
+    configJson = json.encodeToString(ProductConfig.serializer(), config),
+    currency = priceEstimate.currency,
+    basePrice = priceEstimate.basePrice,
     materialSurchargesJson = json.encodeToString(mapSerializer, priceEstimate.materialSurcharges),
-    textureSurcharge       = priceEstimate.textureSurcharge,
-    inscriptionSurcharge   = priceEstimate.inscriptionSurcharge,
-    elementSurchargesJson  = json.encodeToString(mapSerializer, priceEstimate.elementSurcharges),
-    sizeMultiplier         = priceEstimate.sizeMultiplier,
-    sizeMultiplierLabel    = priceEstimate.sizeMultiplierLabel,
-    quantity               = priceEstimate.quantity.toLong(),
-    subtotal               = priceEstimate.subtotal,
-    totalPrice             = priceEstimate.total,
-    status                 = status.name,
-    createdAt              = createdAt
+    textureSurcharge = priceEstimate.textureSurcharge,
+    inscriptionSurcharge = priceEstimate.inscriptionSurcharge,
+    elementSurchargesJson = json.encodeToString(mapSerializer, priceEstimate.elementSurcharges),
+    sizeMultiplier = priceEstimate.sizeMultiplier,
+    sizeMultiplierLabel = priceEstimate.sizeMultiplierLabel,
+    quantity = priceEstimate.quantity.toLong(),
+    subtotal = priceEstimate.subtotal,
+    totalPrice = priceEstimate.total,
+    status = status.name,
+    createdAt = createdAt
 )
+
 // ── Product (catalog cache) ───────────────────────────────────────────────
 fun ProductEntity.toDomain(): Product = Product(
     id = id,
@@ -151,8 +152,9 @@ fun Product.toEntity(cachedAt: Long): ProductEntity = ProductEntity(
     imageUrl = imageUrl,
     cachedAt = cachedAt
 )
+
 fun Model3DEntity.toDomain() = Model3D(
-    id = id,
+    configId = id,
     modelUrl = modelUrl,
     previewImageUrl = previewImageUrl,
     status = ModelStatus.valueOf(status),
@@ -161,24 +163,33 @@ fun Model3DEntity.toDomain() = Model3D(
 )
 
 fun Model3D.toEntity(productId: String) = Model3DEntity(
-    id                   = id,
-    productId            = productId,
-    modelUrl             = modelUrl,
-    previewImageUrl      = previewImageUrl ?: "3D/${modelUrl}",
-    status               = status.name,
-    generatedAt          = generatedAt,
+    id = configId,
+    productId = productId,
+    modelUrl = modelUrl,
+    previewImageUrl = previewImageUrl ?: "3D/${modelUrl}",
+    status = status.name,
+    generatedAt = generatedAt,
 )
 
 fun AdaptedModel3DEntity.toDomain() = AdaptedModel3D(
-    id = id, configId = configId, baseModelId = baseModelId,
+    id = id, configId = configId,
+    baseModelId = baseModelId,
     modelUrl = modelUrl, previewImageUrl = previewImageUrl,
     status = ModelStatus.valueOf(status), generatedAt = generatedAt,
-    estimatedWaitSeconds = estimatedWaitSeconds?.toInt()
+    estimatedWaitSeconds = estimatedWaitSeconds?.toInt(),
+    error = error,
+    progress = progress,
 )
 
 fun AdaptedModel3D.toEntity() = AdaptedModel3DEntity(
-    id = id, configId = configId, baseModelId = baseModelId,
-    modelUrl = modelUrl, previewImageUrl = previewImageUrl,
-    status = status.name, generatedAt = generatedAt,
-    estimatedWaitSeconds = estimatedWaitSeconds?.toLong()
+    id = id,
+    configId = configId,
+    baseModelId = baseModelId,
+    modelUrl = modelUrl,
+    previewImageUrl = previewImageUrl,
+    status = status.name,
+    generatedAt = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds?.toLong(),
+    error = error,
+    progress = progress
 )

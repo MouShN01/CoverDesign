@@ -33,7 +33,7 @@ class ArTryOnViewModel(
             }
             virtualTryOn.loadModelForTryOn(configId)
                 .onSuccess { adapted ->
-                    setState { copy(modelUrl = adapted.modelUrl, isLoading = false) }
+                    setState { copy(modelUrl = adapted?.modelUrl, isLoading = false) }
                 }
                 .onError { message, _ ->
                     setState { copy(isLoading = false, error = message) }

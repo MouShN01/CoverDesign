@@ -1,6 +1,7 @@
 package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.example.coverdesign.data.dto.toDto
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
@@ -91,24 +92,22 @@ class ProductConfigViewModel(
 
                 // Path 1 & 2: came from Catalog — check for a prior draft on this product
                 is ConfigEntryMode.FromProduct -> {
-                    productRepo.getProduct(mode.productId)
-                        .onSuccess { product ->
-                            val previousConfigs = productRepo.getConfigsForProduct(product.id)
-                            val lastConfig =
-                                previousConfigs.firstOrNull()  // most recent, query is DESC
+                    productRepo.getProduct(mode.productId).onSuccess { product ->
+                        val previousConfigs = productRepo.getConfigsForProduct(product.id)
+                        val lastConfig =
+                            previousConfigs.firstOrNull()  // most recent, query is DESC
 
-                            setState { copy(isLoading = false, selectedProduct = product) }
+                        setState { copy(isLoading = false, selectedProduct = product) }
 
-                            if (lastConfig != null) {
-                                // FR3: ask the user, don't silently pick one
-                                setState { copy(pendingResumePrompt = lastConfig) }
-                            } else {
-                                startFresh(product)
-                            }
+                        if (lastConfig != null) {
+                            // FR3: ask the user, don't silently pick one
+                            setState { copy(pendingResumePrompt = lastConfig) }
+                        } else {
+                            startFresh(product)
                         }
-                        .onError { message, _ ->
-                            setState { copy(isLoading = false, error = message) }
-                        }
+                    }.onError { message, _ ->
+                        setState { copy(isLoading = false, error = message) }
+                    }
                 }
             }
         }
@@ -182,84 +181,90 @@ class ProductConfigViewModel(
 
     private suspend fun uploadTexture(localUri: String, configId: String, userId: String) {
         println("onSaveAndProceed Uploading texture")
-        uploadTextureImage(localUri, configId, userId)
-            .collect { state ->
-                when (state) {
-                    is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
-                    is UploadState.Success -> {
-                        onFieldUpdated {
-                            println("onSaveAndProceed texture ${state.downloadUrl}")
-                            copy(
-                                texture = texture.copy(previewUrl = state.downloadUrl)
-                            )
-                        }
+        uploadTextureImage(localUri, configId, userId).collect { state ->
+            when (state) {
+                is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
+                is UploadState.Success -> {
+                    onFieldUpdated {
+                        println("onSaveAndProceed texture ${state.downloadUrl}")
+                        copy(
+                            texture = texture.copy(previewUrl = state.downloadUrl)
+                        )
                     }
-
-                    is UploadState.Error -> setState { copy(error = state.message) }
                 }
-            }
 
-    }
-      private suspend fun uploadImage(localUri: String, configId: String, userId: String) {
-          println("onSaveAndProceed Uploading image")
-        uploadUserImage(localUri, configId, userId)
-            .collect { state ->
-                when (state) {
-                    is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
-                    is UploadState.Success -> {
-                        onFieldUpdated {
-                            println("onSaveAndProceed image ${state.downloadUrl}")
-                            copy(
-                                userPhotoUri = state.downloadUrl
-                            )
-                        }
-                    }
-
-                    is UploadState.Error -> setState { copy(error = state.message) }
-                }
+                is UploadState.Error -> setState { copy(error = state.message) }
             }
+        }
 
     }
 
+    private suspend fun uploadImage(localUri: String, configId: String, userId: String) {
+        println("onSaveAndProceed Uploading image")
+        uploadUserImage(localUri, configId, userId).collect { state ->
+            when (state) {
+                is UploadState.Progress -> setState { copy(uploadProgress = state.percent) }
+                is UploadState.Success -> {
+                    onFieldUpdated {
+                        println("onSaveAndProceed image ${state.downloadUrl}")
+                        copy(
+                            userPhotoUri = state.downloadUrl
+                        )
+                    }
+                }
+
+                is UploadState.Error -> setState { copy(error = state.message) }
+            }
+        }
+
+    }
 
     private fun onSaveAndProceed() {
+        //    try {
         val userId = Firebase.auth.currentUser?.uid ?: run {
             setState { copy(error = "You must be signed in to save your configuration") }
             return
         }
 
+        // snapshot for upload checks only — re-read after uploads complete
         val config = uiState.value.currentConfig ?: return
-        val previewUrl = config.texture.previewUrl ?: return
-
+        val previewUrl = config.texture.previewUrl
         viewModelScope.launch {
+            setState { copy(isSaving = true, error = null) }
             if (uploadTextureImage.needsUpload(config.texture.previewUrl)) {
-                uploadTexture(previewUrl, config.id, userId)
+                uploadTexture(previewUrl!!, config.id, userId)
             }
-
             if (uploadUserImage.needsUpload(config.userPhotoUri)) {
                 uploadImage(config.userPhotoUri!!, config.id, userId)
             }
-
             val updatedConfig = uiState.value.currentConfig ?: run {
                 setState { copy(isSaving = false, error = "Config lost after upload") }
                 return@launch
             }
+            /**
+            WE do not save to FB so far - server does with finite OREDER info
+             * */
+//            cloudRepo.saveConfig(updatedConfig, userId)
+//                .onError { msg, _ -> println("Firestore saveConfig failed: $msg") }
 
             productRepo.saveConfig(updatedConfig)
-            println("onSaveAndProceed Config was saved")
-            generateModel(config)
-                .onSuccess {
-                    setState { copy(isSaving = false) }
-                    sendEvent(ProductConfigUiEvent.NavigateToPreview(config.id))
-                }
-                .onError { message, _ ->
+
+            // ── Step 5: Submit 3D generation → receive taskId  ────
+            generateModel(updatedConfig.toDto()).onSuccess { task ->
+                //TODO save locally an instance
+                setState { copy(isSaving = false, uploadProgress = null) }
+                sendEvent(ProductConfigUiEvent.NavigateToPreview(task, config.id))
+            }.onError { message, _ ->
+                println("loadAdaptedModel Error $message")
+                uiState.value.error.let {
                     setState { copy(isSaving = false, error = message) }
                 }
+            }
         }
     }
+
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
 data class ProductConfigUiState(
     val selectedProduct: Product? = null,
     val currentConfig: ProductConfig? = null,
@@ -278,7 +283,8 @@ data class ProductConfigUiState(
 
 // ── Events ────────────────────────────────────────────────────────────────────
 sealed class ProductConfigUiEvent : UiEvent {
-    data class NavigateToPreview(val configId: String) : ProductConfigUiEvent()
+    data class NavigateToPreview(val taskId: String, val configId: String) : ProductConfigUiEvent()
+    //data class NavigateToPreview(val adaptedModel: AdaptedModel3D) : ProductConfigUiEvent()
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -302,14 +308,11 @@ sealed class ProductConfigAction {
     data class UpdateUserPhoto(val imageURL: String?) : ProductConfigAction()
     object SaveAndProceed : ProductConfigAction()
     object RequestPriceUpdate : ProductConfigAction()
-    object ClearError : ProductConfigAction() {
-
-    }
+    object ClearError : ProductConfigAction()
 
 
 }
 
-// shared/commonMain/ui/viewmodel/ProductConfigViewModel.kt
 sealed class ConfigEntryMode {
     data class FromProduct(val productId: String) : ConfigEntryMode()
     data class FromExistingConfig(val configId: String) : ConfigEntryMode()

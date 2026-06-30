@@ -16,20 +16,21 @@ import kotlinx.serialization.Serializable
 
 class FireAuthRepositoryImpl : FireAuthRepository {
     private val auth = Firebase.auth
-
     override val currentUser: Flow<FirebaseUser?> =
         auth.authStateChanged   // emits on sign-in / sign-out
+    // call this after any successful sign-in
+
     private val firestore = Firebase.firestore
 
     // Firestore document model — separate from domain so field names are explicit
     @Serializable
     private data class UserDocument(
-        val uid         : String = "",
-        val email       : String = "",
-        val displayName : String = "",
-        val phone       : String = "",
-        val role        : String = UserRole.CUSTOMER.name,
-        val createdAt   : Long   = 0L
+        val uid: String = "",
+        val email: String = "",
+        val displayName: String = "",
+        val phone: String = "",
+        val role: String = UserRole.CUSTOMER.name,
+        val createdAt: Long = 0L
     )
 
     private fun usersCollection() = firestore.collection("users")
@@ -37,12 +38,12 @@ class FireAuthRepositoryImpl : FireAuthRepository {
 
     override suspend fun createUserProfile(user: AppUser): Resource<Unit> = try {
         val doc = UserDocument(
-            uid         = user.uid,
-            email       = user.email,
+            uid = user.uid,
+            email = user.email,
             displayName = user.displayName,
-            phone       = user.phone,
-            role        = user.role.name,
-            createdAt   = user.createdAt
+            phone = user.phone,
+            role = user.role.name,
+            createdAt = user.createdAt
         )
         // set() replaces the whole document — safe for a brand-new user
         usersCollection().document(user.uid).set(doc)
@@ -69,15 +70,15 @@ class FireAuthRepositoryImpl : FireAuthRepository {
             return Resource.Error("profile_not_found")
         }
 
-        val doc  = snapshot.data<UserDocument>()
+        val doc = snapshot.data<UserDocument>()
         val user = AppUser(
-            uid         = doc.uid,
-            email       = doc.email,
+            uid = doc.uid,
+            email = doc.email,
             displayName = doc.displayName,
-            phone       = doc.phone,
-            role        = runCatching { UserRole.valueOf(doc.role) }
+            phone = doc.phone,
+            role = runCatching { UserRole.valueOf(doc.role) }
                 .getOrDefault(UserRole.CUSTOMER),
-            createdAt   = doc.createdAt
+            createdAt = doc.createdAt
         )
         Resource.Success(user)
     } catch (e: Exception) {
@@ -98,11 +99,11 @@ class FireAuthRepositoryImpl : FireAuthRepository {
         if (isNewUser) {
             createUserProfile(
                 AppUser(
-                    uid         = user.uid,
-                    email       = user.email ?: "",
+                    uid = user.uid,
+                    email = user.email ?: "",
                     displayName = user.displayName ?: "",
-                    role        = UserRole.CUSTOMER,   // default role
-                    createdAt   = currentEpochMillis()
+                    role = UserRole.CUSTOMER,   // default role
+                    createdAt = currentEpochMillis()
                 )
             )
         }
@@ -135,11 +136,11 @@ class FireAuthRepositoryImpl : FireAuthRepository {
         if (isNewUser) {
             createUserProfile(
                 AppUser(
-                    uid         = user.uid,
-                    email       = user.email ?: "",
+                    uid = user.uid,
+                    email = user.email ?: "",
                     displayName = user.displayName ?: "",
-                    role        = UserRole.CUSTOMER,   // default role
-                    createdAt   = currentEpochMillis()
+                    role = UserRole.CUSTOMER,   // default role
+                    createdAt = currentEpochMillis()
                 )
             )
         }

@@ -22,13 +22,15 @@ CREATE TABLE ProductConfigEntity (
 
     -- Персоналізація
     inscription         TEXT    NOT NULL DEFAULT '',
-    userPhotoUri        TEXT,               -- local device URI, never sent to DB
+    userPhotoUri        TEXT,
     additionalElementsJson TEXT NOT NULL DEFAULT '[]',
 
     -- Замовлення
     quantity            INTEGER NOT NULL DEFAULT 1,
     additionalNotes     TEXT    NOT NULL DEFAULT '',
-    createdAt           INTEGER NOT NULL
+    createdAt           INTEGER NOT NULL,
+    FOREIGN KEY (productId) REFERENCES ProductEntity(id) ON DELETE CASCADE
+
 );
 
 insertOrReplaceConfig:

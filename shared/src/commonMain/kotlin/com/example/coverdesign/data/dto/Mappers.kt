@@ -4,7 +4,6 @@ import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
@@ -23,20 +22,20 @@ import com.example.coverdesign.domain.model.pricing.PriceEstimate
 
 
 fun ProductDto.toDomain() = Product(
-    id                 = id,
-    name               = name,
-    description        = description,
-    basePrice          = basePrice,
-    category           = ProductCategory.valueOf(category.uppercase()),
+    id = id,
+    name = name,
+    description = description,
+    basePrice = basePrice,
+    category = ProductCategory.valueOf(category.uppercase()),
     availableMaterials = materials.map { Material.valueOf(it.uppercase()) },
-    availableTextures  = textures.map { it.toDomain() },
-    imageUrl           = imageUrl
+    availableTextures = textures.map { it.toDomain() },
+    imageUrl = imageUrl
 )
 
 fun TextureDto.toDomain() = Texture(
-    id          = id,
-    name        = name,
-    previewUrl  = previewUrl,
+    id = id,
+    name = name,
+    previewUrl = previewUrl,
     description = description
 )
 
@@ -75,33 +74,33 @@ fun ProductConfigDto.toDomain() = ProductConfig(
 // ─────────────────────────────────────────────────────────────────────────────
 
 fun PriceEstimateDto.toDomain() = PriceEstimate(
-    configId             = configId,
-    currency             = currency,
-    basePrice            = basePrice,
-    materialSurcharges   = materialSurcharges,
-    textureSurcharge     = textureSurcharge,
+    configId = configId,
+    currency = currency,
+    basePrice = basePrice,
+    materialSurcharges = materialSurcharges,
+    textureSurcharge = textureSurcharge,
     inscriptionSurcharge = inscriptionSurcharge,
-    elementSurcharges    = elementSurcharges,
-    sizeMultiplier       = sizeMultiplier,
-    sizeMultiplierLabel  = sizeMultiplierLabel,
-    quantity             = quantity,
-    subtotal             = subtotal,
-    total                = total
+    elementSurcharges = elementSurcharges,
+    sizeMultiplier = sizeMultiplier,
+    sizeMultiplierLabel = sizeMultiplierLabel,
+    quantity = quantity,
+    subtotal = subtotal,
+    total = total
 )
 
 fun PriceEstimate.toDto() = PriceEstimateDto(
-    configId             = configId,
-    currency             = currency,
-    basePrice            = basePrice,
-    materialSurcharges   = materialSurcharges,
-    textureSurcharge     = textureSurcharge,
+    configId = configId,
+    currency = currency,
+    basePrice = basePrice,
+    materialSurcharges = materialSurcharges,
+    textureSurcharge = textureSurcharge,
     inscriptionSurcharge = inscriptionSurcharge,
-    elementSurcharges    = elementSurcharges,
-    sizeMultiplier       = sizeMultiplier,
-    sizeMultiplierLabel  = sizeMultiplierLabel,
-    quantity             = quantity,
-    subtotal             = subtotal,
-    total                = total
+    elementSurcharges = elementSurcharges,
+    sizeMultiplier = sizeMultiplier,
+    sizeMultiplierLabel = sizeMultiplierLabel,
+    quantity = quantity,
+    subtotal = subtotal,
+    total = total
 )
 //
 //fun Model3DDto.toDomain() = Model3D(
@@ -112,17 +111,17 @@ fun PriceEstimate.toDto() = PriceEstimateDto(
 //)
 
 fun TokenDto.toDomain() = Token(
-    accessToken  = accessToken,
+    accessToken = accessToken,
     refreshToken = refreshToken,
-    expiresAt    = expiresAt
+    //expiresAt    = expiresAt
 )
 
 fun OrderDto.toDomain() = Order(
-    id            = id,
-    config        = config.toDomain(),
+    id = id,
+    config = config.toDomain(),
     priceEstimate = price.toDomain(),
-    status        = OrderStatus.valueOf(status.uppercase()),
-    createdAt     = createdAt
+    status = OrderStatus.valueOf(status.uppercase()),
+    createdAt = createdAt
 )
 
 // ═══════════════════════════════════════════════════════════════════
@@ -153,22 +152,26 @@ fun ProductConfig.toDto() = ProductConfigDto(
     additionalNotes = additionalNotes,
 )
 
-fun Model3DDto.toDomain() = Model3D(
-    id              = id,
-    productId       = productId,
-    modelUrl        = modelUrl,
-    previewImageUrl = previewImageUrl,
-    status          = ModelStatus.valueOf(status.uppercase()),
-    generatedAt     = generatedAt
-)
+//fun Model3DDto.toDomain() = Model3D(
+//    configId = id,
+//    productId = productId,
+//    modelUrl = modelUrl,
+//    previewImageUrl = previewImageUrl,
+//    status = ModelStatus.valueOf(status.uppercase()),
+//    generatedAt = generatedAt,
+//    //taskId = task,
+//    //estimatedWaitSeconds = estimatedWaitSeconds
+//)
 
 fun AdaptedModel3DDto.toDomain() = AdaptedModel3D(
-    id                   = id,
-    configId             = configId,
-    baseModelId          = baseModelId,
-    modelUrl             = modelUrl,
-    previewImageUrl      = previewImageUrl,
-    status               = ModelStatus.valueOf(status.uppercase()),
-    generatedAt          = generatedAt,
-    estimatedWaitSeconds = estimatedWaitSeconds
+    id = taskId,
+    configId = configId,
+    baseModelId = baseModelId,
+    modelUrl = modelUrl.toString(),
+    previewImageUrl = previewImageUrl.toString(),
+    status = ModelStatus.valueOf(status.uppercase()),
+    generatedAt = generatedAt,
+    estimatedWaitSeconds = estimatedWaitSeconds,
+    progress = progress.toLong(),
+    error = error
 )

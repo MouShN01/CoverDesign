@@ -9,7 +9,6 @@ import com.example.coverdesign.domain.model.Credentials
 import com.example.coverdesign.domain.model.Token
 import com.example.coverdesign.domain.repo.AuthRepository
 import com.example.coverdesign.domain.util.Resource
-import com.example.coverdesign.domain.util.currentEpochMillis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,7 +62,7 @@ class AuthRepositoryImplTest(
         // restore session on app start
         kotlinx.coroutines.GlobalScope.launch {
             val token = tokenStorage.getToken()
-            _isAuthenticated.value = token != null && !token.isExpired()
+            _isAuthenticated.value = token != null  //&& !token.isExpired()
         }
     }
 
@@ -76,7 +75,7 @@ class AuthRepositoryImplTest(
             val fakeToken = Token(
                 accessToken  = "stub-access-token",
                 refreshToken = "stub-refresh-token",
-                expiresAt    = currentEpochMillis() + 7 * 24 * 60 * 60 * 1000L // 7 days
+                //expiresAt    = currentEpochMillis() + 7 * 24 * 60 * 60 * 1000L // 7 days
             )
             tokenStorage.saveToken(fakeToken)
             _isAuthenticated.value = true

@@ -1,6 +1,5 @@
 package com.example.coverdesign.ui.navigation
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -14,9 +13,6 @@ import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.preview.ModelPreviewScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
-import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
-import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
-import org.koin.compose.viewmodel.koinViewModel
 
 fun NavGraphBuilder.mainGraph(
     navController: NavHostController
@@ -30,52 +26,46 @@ fun NavGraphBuilder.mainGraph(
         // ── bottom nav roots ──────────────────────────────────────────
         composable(Screen.Home.route) {
             HomeScreen(
-                onNewOrder      = { navController.navigate(Screen.Catalog.route) },
-                on3DVisualize   = { navController.navigate(Screen.Model3D.route) },
-                onVirtualTryOn  = { navController.navigate(Screen.ArTryOn.createRoute("")) },
-                onOrderClick    = { orderId ->
+                onNewOrder = { navController.navigate(Screen.Catalog.route) },
+                on3DVisualize = { navController.navigate(Screen.Model3D.route) },
+                onVirtualTryOn = { navController.navigate(Screen.ArTryOn.createRoute("")) },
+                onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderDetail.createRoute(orderId))
                 },
-                onSeeAllOrders  = { navController.navigate(Screen.Orders.route) }
+                onSeeAllOrders = { navController.navigate(Screen.Orders.route) }
             )
         }
         // in MainScaffold NavHost
-        composable(Screen.Model3D.route) {
-            CatalogScreen(
-                onProductSelected = { product ->
-                    // navigate to preview loading base model — no config needed
-                    navController.navigate(
-                        Screen.ModelPreview.createRoute(product.id)
-                    )
-                }
-            )
-        }
+//        composable(Screen.Model3D.route) {
+//            CatalogScreen(
+//                onProductSelected = { product ->
+//                    // navigate to preview loading base model — no config needed
+//                    navController.navigate(
+//                        Screen.Model3D.createRoute(productId = product.id)
+//                    )
+//                }
+//            )
+//        }
 
         composable(Screen.ModelPreview.route) { entry ->
-            val id = entry.arguments?.getString("configId") ?: return@composable
+            val configId = entry.arguments?.getString("configId") ?: return@composable
+            val taskId = entry.arguments?.getString("taskId") ?: return@composable
 
             // figure out if this is a productId (from 3D tab) or configId (from config flow)
             // convention: productIds start with "prod-", configIds are UUIDs
-            val isProductId = id.startsWith("prod-")
-
-            val viewModel: ModelPreviewViewModel = koinViewModel()
-
-            LaunchedEffect(id) {
-                if (isProductId) {
-                    viewModel.onAction(ModelPreviewAction.LoadForProduct(id))
-                }
-                // LoadModel is triggered by ProductConfigScreen via SaveAndProceed
-            }
-            LaunchedEffect(id) {
-                if (isProductId) viewModel.onAction(ModelPreviewAction.LoadForProduct(id))
-                else viewModel.onAction(ModelPreviewAction.LoadForConfig(id))
-            }
-
+//            val isProductId = id.startsWith("prod-")
+            println("loadAdaptedModel before ModelPreviewScreen: $configId")
             ModelPreviewScreen(
-                configId = id,
-                onTryOn  = { navController.navigate(Screen.ArTryOn.createRoute(id)) },
-                onOrder  = { navController.navigate(Screen.OrderSummary.createRoute(id)) },
-                onBack   = { navController.popBackStack() }
+                configId = configId,
+                taskId = taskId,
+                onTryOn = { navController.navigate(Screen.ArTryOn.route) },
+                onOrder = {
+                    navController.navigate(
+                        Screen.OrderSummary
+                            .createRoute(configId)
+                    )
+                },
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.Orders.route) {
@@ -102,18 +92,25 @@ fun NavGraphBuilder.mainGraph(
             val productId = entry.arguments?.getString("productId") ?: return@composable
             ProductConfigScreen(
                 entryMode = ConfigEntryMode.FromProduct(productId),
-                onProceed = { id -> navController.navigate(Screen.ModelPreview.createRoute(id)) },
-                onBack    = { navController.popBackStack() }
+                onProceed = { taskId, configId ->
+                    navController.navigate(
+                        Screen.ModelPreview.createRoute(
+                            taskId, configId
+                        )
+                    )
+                },
+                onBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.ProductConfigFromOrder.route) { entry ->
-            val configId = entry.arguments?.getString("configId") ?: return@composable
-            ProductConfigScreen(
-                entryMode = ConfigEntryMode.FromExistingConfig(configId),
-                onProceed = { id -> navController.navigate(Screen.ModelPreview.createRoute(id)) },
-                onBack    = { navController.popBackStack() }
-            )
-        }
+//        composable(Screen.ProductConfigFromOrder.route) { entry ->
+//            val configId = entry.arguments?.getString("configId") ?: return@composable
+//            ProductConfigScreen(
+//                entryMode = ConfigEntryMode.FromExistingConfig(configId),
+//                onProceed = { id -> navController
+//                    .navigate(Screen.ModelPreview.createRoute(id)) },
+//                onBack = { navController.popBackStack() }
+//            )
+//        }
 //        composable(Screen.ProductConfig.route) { entry ->
 //            val productId = entry.arguments?.getString("productId") ?: return@composable
 //            ProductConfigScreen(
@@ -127,7 +124,8 @@ fun NavGraphBuilder.mainGraph(
         composable(Screen.ArTryOn.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             //shared-assets/models/Astronaut.glb
-            val modelUrl = "https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb"
+            val modelUrl =
+                "https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb"
             val helmet = "test_models/damaged_helmet.glb"
             ARScreen(modelUrl = helmet)
 //            ArTryOnScreen(
@@ -140,21 +138,21 @@ fun NavGraphBuilder.mainGraph(
         composable(Screen.OrderSummary.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             OrderSummaryScreen(
-                configId         = configId,
+                configId = configId,
                 onOrderSubmitted = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
-                onBack           = { navController.popBackStack() }
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.OrderDetail.route) { entry ->
             val orderId = entry.arguments?.getString("orderId") ?: return@composable
             OrderSummaryScreen(
-                configId         = orderId,
+                configId = orderId,
                 onOrderSubmitted = { navController.popBackStack() },
-                onBack           = { navController.popBackStack() }
+                onBack = { navController.popBackStack() }
             )
         }
     }

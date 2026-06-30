@@ -43,6 +43,7 @@ firebaseAuth = "24.1.0"
 credentials = "1.6.0"
 credentialsPlayServicesAuth = "1.6.0"
 googleid = "1.2.0"
+animation = "1.11.3"
 
 
 [libraries]
@@ -99,6 +100,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqlDelight" }
 datastore = {module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
@@ -113,6 +115,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

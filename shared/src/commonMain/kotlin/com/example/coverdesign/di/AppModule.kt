@@ -12,7 +12,7 @@ import com.example.coverdesign.data.remote.service.Model3DApiService
 import com.example.coverdesign.data.remote.service.OrderApiService
 import com.example.coverdesign.data.remote.service.ProductApiService
 import com.example.coverdesign.data.repoimpl.FireAuthRepositoryImpl
-import com.example.coverdesign.data.repoimpl.Model3DRepositoryImplTest
+import com.example.coverdesign.data.repoimpl.Model3DRepositoryImpl
 import com.example.coverdesign.data.repoimpl.OrderRepositoryImpl
 import com.example.coverdesign.data.repoimpl.ProductRepositoryImpl
 import com.example.coverdesign.db.AppDatabase
@@ -26,6 +26,7 @@ import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
+import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
 import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
@@ -54,8 +55,8 @@ val databaseModule = module {
     single { get<AppDatabase>().productConfigQueries }
     single { get<AppDatabase>().orderQueries }
     single { get<AppDatabase>().catalogQueries }
-    single { get<AppDatabase>().model3DQueries }    // ← add
-    single { DatabaseSeeder(db = get()) }   // ← add
+    single { get<AppDatabase>().model3DQueries }
+    single { DatabaseSeeder(db = get()) }  
 }
 
 val networkModule = module {
@@ -76,7 +77,7 @@ val networkModule = module {
 
 val repositoryModule = module {
     single<ProductRepository> { ProductRepositoryImpl(api = get(), db = get()) }
-    single<Model3DRepository> { Model3DRepositoryImplTest(api = get(), db = get()) }
+    single<Model3DRepository> { Model3DRepositoryImpl(api = get(), db = get()) }
     single<OrderRepository> { OrderRepositoryImpl(api = get(), db = get()) }
 //    single<AuthRepository> {
 //        AuthRepositoryImplTest(tokenStorage = get())
@@ -95,10 +96,12 @@ val useCaseModule = module {
     factory { ConfigureProductUseCase(repo = get(), validator = get()) }
 
     // FR4
-    factoryOf(::GenerateModelUseCase)
+    factory { GenerateModelUseCase(get ()) }
+    factory { PollModelStatusUseCase(get ()) }
+
 
     // FR5
-    //factoryOf(::GetModelPreviewUseCase)
+    //factoryOf(::GenerateModelUseCase)
 
     // FR6
     factory { VirtualTryOnUseCase(model3DRepo = get()) }
@@ -137,9 +140,9 @@ val viewModelModule = module {
 
     viewModel {
         ModelPreviewViewModel(
-            generateModel = get(),
-            //getModelPreview = get(),
-            model3DRepo = get()
+            generateModel   = get(),
+            pollModelStatus = get(),
+            model3DRepo     = get()
         )
     }
     viewModel {

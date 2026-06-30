@@ -1,21 +1,31 @@
 package com.example.coverdesign.domain.repo
 
+import com.example.coverdesign.data.dto.GenerateModelRequestDto
 import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.Model3D
-import com.example.coverdesign.domain.model.ModelStatus
-import com.example.coverdesign.domain.model.ProductConfig
-import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.util.Resource
-import kotlinx.coroutines.flow.Flow
 
 interface Model3DRepository {
-    // base model — for 3D browse tab
+
+    // ── base model (3D tab — no generation) ──────────────────────────────────
     suspend fun getBaseModelForProduct(productId: String): Resource<Model3D>
 
-    // adapted model — for config pipeline (FR4) and what ModelPreview/AR actually display
-    suspend fun generateAdaptedModel(config: ProductConfig): Resource<AdaptedModel3D>
-    suspend fun getAdaptedModel(configId: String): Resource<AdaptedModel3D>
-    fun getAdaptedModelStatus(adaptedModelId: String): Flow<ModelStatus>
+    // ── generation pipeline ───────────────────────────────────────────────────
 
-    suspend fun getTextures(): Resource<List<Texture>>
+    /** POST — returns taskId immediately */
+    suspend fun submitGeneration(request: GenerateModelRequestDto): Resource<String>
+
+    /** GET — single status poll, called repeatedly by PollModelStatusUseCase */
+    suspend fun getGenerationStatus(taskId: String): Resource<AdaptedModel3D>
+
+    // ── local cache ───────────────────────────────────────────────────────────
+
+    /** Lookup by configId — used when re-opening from history */
+    suspend fun getAdaptedModel(configId: String): Resource<AdaptedModel3D?>
+
+    /** Lookup by taskId — used when resuming mid-generation */
+    //suspend fun getModel(taskId: String): Resource<Model3D?>
+
+    /** Persist / update after each poll */
+    suspend fun saveModel(model: AdaptedModel3D): Resource<Unit>
 }
