@@ -11,7 +11,6 @@ import com.example.coverdesign.ui.viewmodel.base.UiEvent
 import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
-// shared/commonMain/ui/viewmodel/OrderSummaryViewModel.kt
 class OrderSummaryViewModel(
     private val submitOrderUseCase     : SubmitOrderUseCase,
     private val getOrderSummary : GetOrderSummaryUseCase

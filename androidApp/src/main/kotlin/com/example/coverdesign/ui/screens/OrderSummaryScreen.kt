@@ -28,16 +28,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.domain.model.AdditionalElement
+import com.example.coverdesign.domain.model.Material
+import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.ProductColor
+import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.SizeLabel
+import com.example.coverdesign.domain.model.Texture
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.ErrorScreen
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.components.LoadingScreen
 import com.example.coverdesign.ui.screens.config.PriceCard
+import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.viewmodel.OrderSummaryAction
 import com.example.coverdesign.ui.viewmodel.OrderSummaryUiEvent
+import com.example.coverdesign.ui.viewmodel.OrderSummaryUiState
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -57,25 +70,36 @@ fun OrderSummaryScreen(
         }
     }
 
+    OrderSummaryScreenContent(
+        uiState  = state,
+        onBack   = onBack,
+        onSubmit = { viewModel.onAction(OrderSummaryAction.SubmitOrder(it)) }
+    )
+}
+
+@Composable
+private fun OrderSummaryScreenContent(
+    uiState  : OrderSummaryUiState,
+    onBack   : () -> Unit,
+    onSubmit : (Order) -> Unit
+) {
     Scaffold(
         topBar = { AppTopBar(title = "Order Summary", onBack = onBack) },
         bottomBar = {
             SubmitOrderBar(
-                isSubmitting = state.isSubmitting,
-                enabled      = state.order != null && state.submittedOrderId == null,
+                isSubmitting = uiState.isSubmitting,
+                enabled      = uiState.order != null && uiState.submittedOrderId == null,
                 onSubmit     = {
-                    state.order?.let {
-                        viewModel.onAction(OrderSummaryAction.SubmitOrder(it))
-                    }
+                    uiState.order?.let { onSubmit(it) }
                 }
             )
         }
     ) { padding ->
         when {
-            state.isLoading  -> LoadingScreen()
-            state.error != null -> ErrorScreen(state.error!!)
-            state.order != null -> OrderSummaryContent(
-                order    = state.order!!,
+            uiState.isLoading  -> LoadingScreen()
+            uiState.error != null -> ErrorScreen(uiState.error!!)
+            uiState.order != null -> OrderSummaryContent(
+                order    = uiState.order!!,
                 modifier = Modifier.padding(padding)
             )
         }
@@ -190,3 +214,46 @@ private fun SubmitOrderBar(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun OrderSummaryScreenPreview() {
+    AppTheme {
+        OrderSummaryScreenContent(
+            uiState = OrderSummaryUiState(
+                order = sampleOrder
+            ),
+            onBack = {},
+            onSubmit = {}
+        )
+    }
+}
+
+private val sampleOrder = Order(
+    id = "ord_1",
+    adaptedModelId = "mod_1",
+    config = ProductConfig(
+        id = "conf_1",
+        productId = "prod_1",
+        productCategory = ProductCategory.ACCESSORY,
+        measurement = Measurement(100.0, 50.0, 10.0),
+        sizeLabel = SizeLabel.M,
+        color = ProductColor("Black", "#000000"),
+        material = Material.METAL,
+        texture = Texture("txt_1", "Brushed", null, null),
+        inscription = "Custom Text",
+        userPhotoUri = null,
+        additionalElements = listOf(AdditionalElement.LOGO),
+        quantity = 1,
+        createdAt = 0L
+    ),
+    priceEstimate = PriceEstimate(
+        configId = "conf_1",
+        basePrice = 100.0,
+        subtotal = 110.0,
+        total = 110.0,
+        quantity = 1
+    ),
+    status = OrderStatus.DRAFT,
+    createdAt = 0L
+)

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class PollModelStatusUseCase(
-    private val model3dRepo: Model3DRepository
+    private val model3dRepo: Model3DRepository,
 ) {
     companion object {
         private const val DEFAULT_POLL_INTERVAL_MS = 3_000L
@@ -31,10 +31,12 @@ class PollModelStatusUseCase(
                 is Resource.Success if result.data.status == ModelStatus.READY -> {
                     return@flow
                 }
+
                 is Resource.Success if result.data.status == ModelStatus.FAILED -> return@flow
                 is Resource.Error -> {
                     return@flow
                 }
+
                 else -> {}
             }
 

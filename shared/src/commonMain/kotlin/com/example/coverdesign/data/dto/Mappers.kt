@@ -121,7 +121,17 @@ fun OrderDto.toDomain() = Order(
     config = config.toDomain(),
     priceEstimate = price.toDomain(),
     status = OrderStatus.valueOf(status.uppercase()),
-    createdAt = createdAt
+    createdAt = createdAt,
+    adaptedModelId = adaptedModelId
+)
+
+fun Order.toDto() = Order(
+    id = id,
+    config = config,
+    priceEstimate = priceEstimate,
+    status = status,
+    createdAt = createdAt,
+    adaptedModelId = adaptedModelId
 )
 
 // ═══════════════════════════════════════════════════════════════════

@@ -26,7 +26,9 @@ import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
+import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
 import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
+import com.example.coverdesign.domain.usecase.SaveOrderLocallyUseCase
 import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
@@ -98,6 +100,7 @@ val useCaseModule = module {
     // FR4
     factory { GenerateModelUseCase(get ()) }
     factory { PollModelStatusUseCase(get ()) }
+    factory { SaveOrderLocallyUseCase(get()) }
 
 
     // FR5
@@ -105,6 +108,7 @@ val useCaseModule = module {
 
     // FR6
     factory { VirtualTryOnUseCase(model3DRepo = get()) }
+    factory { LinkOrderToAdaptedModelUseCase(orderRepo = get()) }
 
     // FR7
     factory { UpdateConfigUseCase(repo = get(), validator = get()) }
@@ -133,16 +137,17 @@ val viewModelModule = module {
             generateModel = get(),
             validator = get(),
             uploadTextureImage = get(),
-            uploadUserImage = get()
+            uploadUserImage = get(),
+            saveOrderLocally = get(),
         )
     }
     viewModel { CatalogViewModel(getCatalog = get()) }
 
     viewModel {
         ModelPreviewViewModel(
-            generateModel   = get(),
             pollModelStatus = get(),
-            model3DRepo     = get()
+            model3DRepo     = get(),
+            linkOrderToAdaptedModel = get()
         )
     }
     viewModel {

@@ -2,7 +2,6 @@ package com.example.coverdesign.data.local
 
 
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
@@ -30,23 +29,23 @@ class DatabaseSeeder(private val db: AppDatabase) {
     }
 
     // add to DatabaseSeeder.kt, after seeding products + base models
-    private fun seedFakeAdaptedModels() {
-        // pretend the user already configured prod-001 once, so AR/Preview have something to show
-        db.adaptedModel3DQueries.insertOrReplaceAdaptedModel(
-            AdaptedModel3D(
-                id = "adapted-001",
-                configId = "demo-config-001",     // matches a seeded ProductConfigEntity if you add one
-                baseModelId = "model-001",
-                modelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-                previewImageUrl = "",
-                status = ModelStatus.READY,
-                generatedAt = currentEpochMillis(),
-                error = "TODO()",
-                estimatedWaitSeconds = 0,
-                progress = 100,
-            ).toEntity()
-        )
-    }
+//    private fun seedFakeAdaptedModels() {
+//        // pretend the user already configured prod-001 once, so AR/Preview have something to show
+//        db.adaptedModel3DQueries.insertOrReplaceAdaptedModel(
+//            AdaptedModel3D(
+//                id = "adapted-001",
+//                configId = "demo-config-001",     // matches a seeded ProductConfigEntity if you add one
+//                baseModelId = "model-001",
+//                modelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+//                previewImageUrl = "",
+//                status = ModelStatus.READY,
+//                generatedAt = currentEpochMillis(),
+//                error = "TODO()",
+//                estimatedWaitSeconds = 0,
+//                progress = 100,
+//            ).toEntity()
+//        )
+//    }
 
     private fun fakeProducts(): List<Pair<Product, Model3D>> = listOf(
 

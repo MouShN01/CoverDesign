@@ -11,13 +11,13 @@ import com.example.coverdesign.db.AppDatabase
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderId
 import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.domain.repo.OrderRepository
 import com.example.coverdesign.domain.util.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import com.example.coverdesign.domain.repo.OrderRepository
-import kotlinx.coroutines.IO
 
 class OrderRepositoryImpl(
     private val api: OrderApiService,
@@ -46,9 +46,39 @@ class OrderRepositoryImpl(
             }
         }
 
-    override suspend fun saveOrderLocally(order: Order): Unit =
-        withContext(Dispatchers.IO) { //TODO CHECK LATER plus Unit return type
-            db.orderQueries.insertOrder(order.toEntity())
+    override suspend fun linkOrderToAdaptedModel(configId: String, adaptedModelId: String): Resource<Unit> {
+        // find the DRAFT order for this config
+        try {
+            val order = db.orderQueries.selectOrderByConfigId(configId).executeAsOneOrNull()
+                ?: return Resource.Error(
+                    "Order not found for config: $configId",
+                    cause = Exception("Order not found for config: $configId")
+                )
+            db.orderQueries.updateAdaptedModelId(
+                id = order.id,
+                adaptedModelId = adaptedModelId
+            )
+            db.orderQueries.updateOrderStatus(
+                id = order.id,
+                status = OrderStatus.SUBMITTED.name
+            )
+            return Resource.Success(Unit)
+        } catch (e: Exception) {
+            return Resource.Error(
+                message = e.message.toString(),
+                cause = e.cause
+            )
+        }
+    }
+
+    override suspend fun saveOrderLocally(order: Order): Resource<Unit> = /// Resourse Order
+        withContext(Dispatchers.IO) {
+            try {
+                db.orderQueries.insertOrder(order.toEntity())
+                return@withContext Resource.Success(Unit)
+            } catch (e: Exception) {
+                return@withContext Resource.Error(e.message.toString(), e.cause)
+            }
         }
 
     override fun getOrderHistory(): Flow<List<Order>> =

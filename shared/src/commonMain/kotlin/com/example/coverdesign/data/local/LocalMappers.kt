@@ -101,7 +101,8 @@ fun OrderEntity.toDomain(): Order = Order(
         total = totalPrice
     ),
     status = OrderStatus.valueOf(status),
-    createdAt = createdAt
+    createdAt = createdAt,
+    adaptedModelId = adaptedModelId
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,7 +126,8 @@ fun Order.toEntity(): OrderEntity = OrderEntity(
     subtotal = priceEstimate.subtotal,
     totalPrice = priceEstimate.total,
     status = status.name,
-    createdAt = createdAt
+    createdAt = createdAt,
+    adaptedModelId = adaptedModelId
 )
 
 // ── Product (catalog cache) ───────────────────────────────────────────────

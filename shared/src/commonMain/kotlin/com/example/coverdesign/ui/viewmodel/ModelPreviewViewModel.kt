@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.repo.Model3DRepository
-import com.example.coverdesign.domain.usecase.GenerateModelUseCase
+import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
 import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
 import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.domain.util.onError
@@ -31,9 +31,9 @@ import kotlinx.coroutines.launch
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ModelPreviewViewModel(
-    private val generateModel: GenerateModelUseCase,
     private val pollModelStatus: PollModelStatusUseCase,
-    private val model3DRepo: Model3DRepository
+    private val model3DRepo: Model3DRepository,
+    private val linkOrderToAdaptedModel : LinkOrderToAdaptedModelUseCase
 ) : BaseViewModel<ModelPreviewUiState, ModelPreviewUiEvent>() {
 
     override fun initialState() = ModelPreviewUiState()
@@ -54,8 +54,13 @@ class ModelPreviewViewModel(
             is ModelPreviewAction.ProceedToAr ->
                 sendEvent(ModelPreviewUiEvent.NavigateToAr(action.configId))
 
-            is ModelPreviewAction.ProceedToOrder ->
-                sendEvent(ModelPreviewUiEvent.NavigateToOrder(action.configId))
+            is ModelPreviewAction.ProceedToOrder -> {
+                val taskId = uiState.value.adaptedModel?.id ?: return
+                viewModelScope.launch {
+                    linkOrderToAdaptedModel(action.configId, taskId)
+                    sendEvent(ModelPreviewUiEvent.NavigateToOrder(action.configId))
+                }
+            }
         }
     }
 

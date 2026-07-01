@@ -15,6 +15,7 @@ import com.example.coverdesign.domain.model.pricing.PricingEngine
 import com.example.coverdesign.domain.repo.ProductRepository
 import com.example.coverdesign.domain.repo.UploadState
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
+import com.example.coverdesign.domain.usecase.SaveOrderLocallyUseCase
 import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
 import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
 import com.example.coverdesign.domain.util.Resource
@@ -36,7 +37,8 @@ class ProductConfigViewModel(
     private val uploadTextureImage: UploadTextureImageUseCase,
     private val uploadUserImage: UploadReferencePhotoUseCase,
     private val generateModel: GenerateModelUseCase,
-    private val validator: MeasurementValidator
+    private val validator: MeasurementValidator,
+    private val saveOrderLocally: SaveOrderLocallyUseCase
 ) : BaseViewModel<ProductConfigUiState, ProductConfigUiEvent>() {
 
     override fun initialState() = ProductConfigUiState()
@@ -248,6 +250,12 @@ class ProductConfigViewModel(
 //                .onError { msg, _ -> println("Firestore saveConfig failed: $msg") }
 
             productRepo.saveConfig(updatedConfig)
+            saveOrderLocally(updatedConfig, uiState.value.priceEstimate!!).onError { string, throwable ->
+                println("loadAdaptedModel Error $string")
+                uiState.value.error.let {
+                    setState { copy(isSaving = false, error = string) }
+                }
+            }
 
             // ── Step 5: Submit 3D generation → receive taskId  ────
             generateModel(updatedConfig.toDto()).onSuccess { task ->

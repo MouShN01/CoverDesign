@@ -1,6 +1,7 @@
 CREATE TABLE OrderEntity (
     id                     TEXT    NOT NULL PRIMARY KEY,
     configId               TEXT    NOT NULL,
+    adaptedModelId         TEXT,
     -- full config snapshot as JSON — immutable order history
     configJson             TEXT    NOT NULL,
 
@@ -31,7 +32,8 @@ CREATE TABLE OrderEntity (
 
     status                 TEXT    NOT NULL,
     createdAt              INTEGER NOT NULL,
-    FOREIGN KEY (configId) REFERENCES ProductConfigEntity(id) ON DELETE CASCADE
+    FOREIGN KEY (configId) REFERENCES ProductConfigEntity(id) ON DELETE CASCADE,
+    FOREIGN KEY (adaptedModelId) REFERENCES AdaptedModel3DEntity(id) ON DELETE CASCADE
 );
 
 insertOrder:
@@ -50,3 +52,13 @@ updateOrderStatus:
 UPDATE OrderEntity
 SET status = :status
 WHERE id = :id;
+-- called when we have the orderId directly
+updateAdaptedModelId:
+UPDATE OrderEntity
+SET adaptedModelId = :adaptedModelId
+WHERE id = :id;
+
+selectOrderByConfigId:
+SELECT * FROM OrderEntity
+WHERE configId = :configId
+LIMIT 1;

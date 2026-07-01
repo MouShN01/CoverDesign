@@ -6,10 +6,11 @@ import kotlinx.serialization.Serializable
 // data/dto/OrderDto.kt
 @kotlinx.serialization.Serializable
 data class OrderDto(
-    @SerialName("id")         val id: String,
-    @SerialName("config")     val config: ProductConfigDto,
-    @SerialName("price")      val price: PriceEstimateDto,
-    @SerialName("status")     val status: String,
+    @SerialName("id") val id: String,
+    @SerialName("adapted_model_id") val adaptedModelId: String,
+    @SerialName("config") val config: ProductConfigDto,
+    @SerialName("price") val price: PriceEstimateDto,
+    @SerialName("status") val status: String,
     @SerialName("created_at") val createdAt: Long
 )
 
@@ -21,5 +22,5 @@ data class OrderIdDto(
 @Serializable
 data class SubmitOrderRequestDto(
     @SerialName("config_id") val configId: String,
-    @SerialName("notes")     val notes: String
+    @SerialName("notes") val notes: String
 )

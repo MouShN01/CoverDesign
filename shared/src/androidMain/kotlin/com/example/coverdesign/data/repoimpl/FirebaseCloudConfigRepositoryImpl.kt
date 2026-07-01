@@ -221,7 +221,8 @@ class FirebaseCloudConfigRepositoryImpl(
         "total" to priceEstimate.total,
         "currency" to priceEstimate.currency,
         "status" to status.name,
-        "created_at" to createdAt
+        "created_at" to createdAt,
+        "adapted_model_id" to adaptedModelId
     )
 
     @Suppress("UNCHECKED_CAST")
@@ -252,7 +253,8 @@ class FirebaseCloudConfigRepositoryImpl(
                 total = (get("total") as Number).toDouble()
             ),
             status = OrderStatus.valueOf(get("status") as String),
-            createdAt = (get("created_at") as Number).toLong()
+            createdAt = (get("created_at") as Number).toLong(),
+            adaptedModelId = get("adapted_model_id") as? String ?: "",
         )
     }
 }
