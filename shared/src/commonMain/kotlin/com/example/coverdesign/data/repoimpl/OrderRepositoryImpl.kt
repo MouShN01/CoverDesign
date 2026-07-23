@@ -89,14 +89,16 @@ class OrderRepositoryImpl(
 
     override suspend fun getOrderById(id: String): Resource<Order> =
         withContext(Dispatchers.Default) {
-            val local = db.orderQueries.selectOrderById(id).executeAsOneOrNull()
-            if (local != null) Resource.Success(local.toDomain())
-            else {
-                try {
-                    Resource.Success(api.getOrderById(id).toDomain())
-                } catch (e: Exception) {
-                    Resource.Error("Order not found: ${e.message}", e)
-                }
+            val byOrderId = db.orderQueries.selectOrderById(id).executeAsOneOrNull()
+            if (byOrderId != null) return@withContext Resource.Success(byOrderId.toDomain())
+
+            val byConfigId = db.orderQueries.selectOrderByConfigId(id).executeAsOneOrNull()
+            if (byConfigId != null) return@withContext Resource.Success(byConfigId.toDomain())
+
+            try {
+                Resource.Success(api.getOrderById(id).toDomain())
+            } catch (e: Exception) {
+                Resource.Error("Order not found: ${e.message}", e)
             }
         }
 }

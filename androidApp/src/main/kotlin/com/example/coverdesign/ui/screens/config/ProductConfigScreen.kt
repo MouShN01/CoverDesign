@@ -201,7 +201,7 @@ fun ProductConfigScreen(
 private fun isProceedEnabled(config: ProductConfig?): Boolean {
     config ?: return false
     return if (config.productCategory == ProductCategory.CLOTHING) {
-        config.measurement.height in 100.0..220.0
+        config.measurement.height in 100.0..220.0 && !config.userPhotoUri.isNullOrEmpty()
     } else {
         true
     }
@@ -304,7 +304,7 @@ private fun ProductConfigContent(
                 measurement = config.measurement,
                 sizeLabel = config.sizeLabel,
                 measError = state.measurementError,
-                onMeasure = { onAction(ProductConfigAction.UpdateMeasurement(it)) },
+                onMeasure = { onAction(ProductConfigAction.UpdateMeasurement(it, config.productCategory)) },
                 onSize = { onAction(ProductConfigAction.UpdateSizeLabel(it)) }
             )
         }

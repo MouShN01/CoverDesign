@@ -47,17 +47,17 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ModelPreviewScreen(
     configId: String,
-    taskId: String? = null,       // null when re-opening existing model
+    taskId: String? = null,
     viewModel: ModelPreviewViewModel = koinViewModel(),
     onTryOn: () -> Unit,
     onOrder: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    loadAction: ModelPreviewAction = ModelPreviewAction.LoadForConfig(configId, taskId)
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // trigger load on entry
     LaunchedEffect(configId) {
-        viewModel.onAction(ModelPreviewAction.LoadForConfig(configId, taskId))
+        viewModel.onAction(loadAction)
     }
 
     EventHandler(viewModel.events) { event ->

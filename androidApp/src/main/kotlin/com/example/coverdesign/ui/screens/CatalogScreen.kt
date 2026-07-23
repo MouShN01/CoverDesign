@@ -80,7 +80,7 @@ fun CatalogScreen(
 }
 
 @Composable
-private fun CatalogContent(
+internal fun CatalogContent(
     state    : CatalogUiState,
     onAction : (CatalogAction) -> Unit,
     modifier : Modifier = Modifier

@@ -48,6 +48,9 @@ class ModelPreviewViewModel(
             is ModelPreviewAction.LoadForConfig ->
                 loadAdaptedModel(action.configId, action.taskId)
 
+            is ModelPreviewAction.LoadFromOrder ->
+                loadFromOrder(action.adaptedModelId)
+
             is ModelPreviewAction.Retry ->
                 retry(action.taskId)
 
@@ -162,6 +165,32 @@ class ModelPreviewViewModel(
         }
     }
 
+    // ── Path 3: from Order history — load by adaptedModelId directly ─────────
+
+    private fun loadFromOrder(adaptedModelId: String) {
+        viewModelScope.launch {
+            setState { copy(isLoadingLocal = true, error = null) }
+            model3DRepo.getAdaptedModelById(adaptedModelId)
+                .onSuccess { adapted ->
+                    if (adapted != null) {
+                        setState {
+                            copy(
+                                adaptedModel = adapted,
+                                modelUrl = adapted.modelUrl,
+                                modelStatus = adapted.status,
+                                isLoadingLocal = false
+                            )
+                        }
+                    } else {
+                        setState { copy(isLoadingLocal = false, error = "3D model not found") }
+                    }
+                }
+                .onError { message, _ ->
+                    setState { copy(isLoadingLocal = false, error = message) }
+                }
+        }
+    }
+
     private fun retry(taskId: String) {
         pollingJob?.cancel()
         setState { copy(error = null, modelStatus = ModelStatus.PENDING, modelUrl = null) }
@@ -203,6 +232,7 @@ sealed class ModelPreviewUiEvent : UiEvent {
 sealed class ModelPreviewAction {
     data class LoadForProduct(val productId: String) : ModelPreviewAction()
     data class LoadForConfig(val configId: String, val taskId: String?) : ModelPreviewAction()
+    data class LoadFromOrder(val adaptedModelId: String) : ModelPreviewAction()
     data class Retry(val taskId: String) : ModelPreviewAction()
     data class ProceedToAr(val configId: String) : ModelPreviewAction()
     data class ProceedToOrder(val configId: String) : ModelPreviewAction()

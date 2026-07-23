@@ -32,14 +32,14 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
 //     ── Logging (debug only) ────────────────────────────────────────────────
     install(Logging) {
         level = LogLevel.ALL
-       // level  = LogLevel.BODY        // switch to NONE for release builds
+        // level  = LogLevel.BODY        // switch to NONE for release builds
     }
 
     // ── Timeouts ────────────────────────────────────────────────────────────
     install(HttpTimeout) {
-        requestTimeoutMillis  = 30_000
-        connectTimeoutMillis  = 15_000
-        socketTimeoutMillis   = 30_000
+        requestTimeoutMillis = 30_000
+        connectTimeoutMillis = 15_000
+        socketTimeoutMillis = 30_000
     }
 
     // ── Auth: bearer token + silent refresh ─────────────────────────────────
@@ -48,7 +48,7 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
             loadTokens {
                 val token = tokenStorage.getToken() ?: return@loadTokens null
                 BearerTokens(
-                    accessToken  = token.accessToken,
+                    accessToken = token.accessToken,
                     refreshToken = token.refreshToken
                 )
             }
@@ -57,19 +57,6 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
                 val user = Firebase.auth.currentUser
                     ?: run { tokenStorage.clearToken(); return@refreshTokens null }
 
-               // val mUser: FirebaseUser = FirebaseAuth.getInstance().getCurrentUser()
-//                user.getIdToken(true)
-//                    .addOnCompleteListener(object : OnCompleteListener<GetTokenResult?>() {
-//                        fun onComplete(@NonNull task: Task<GetTokenResult?>) {
-//                            if (task.isSuccessful()) {
-//                                val idToken: String? = task.getResult().getToken()
-//                                // Send token to your backend via HTTPS
-//                                // ...
-//                            } else {
-//                                // Handle error -> task.getException();
-//                            }
-//                        }
-//                    })
                 val freshToken = user.getIdToken(forceRefresh = false) //was true
                     ?: run { tokenStorage.clearToken(); return@refreshTokens null }
 
@@ -77,38 +64,18 @@ fun createHttpClient(tokenStorage: TokenStorage): HttpClient = HttpClient {
                 tokenStorage.saveToken(newToken)
 
                 BearerTokens(
-                    accessToken  = freshToken,
+                    accessToken = freshToken,
                     refreshToken = ""   // Firebase doesn't use refresh tokens directly
                 )
             }
-//            refreshTokens {
-//                // called automatically by Ktor on 401
-//                val current = tokenStorage.getToken()
-//                    ?: return@refreshTokens null
-//
-//                val response = client.post(ApiConstants.Endpoints.REFRESH) {
-//                    setBody(RefreshRequestDto(current.refreshToken))
-//                    markAsRefreshTokenRequest()     // prevents infinite loop
-//                }
-//
-//                if (response.status.value == 200) {
-//                    val newTokenDto = response.body<TokenDto>()
-//                    val newToken = newTokenDto.toDomain()
-//                    tokenStorage.saveToken(newToken)
-//                    BearerTokens(newToken.accessToken, newToken.refreshToken)
-//                } else {
-//                    tokenStorage.clearToken()       // force re-login
-//                    null
-//                }
-//            }
         }
     }
 
     // ── Default request config ───────────────────────────────────────────────
     defaultRequest {
         url(ApiConstants.BASE_URL)
-        headers.append("Accept",       "application/json")
+        headers.append("Accept", "application/json")
         headers.append("Content-Type", "application/json")
-        headers.append("X-Platform",   getPlatformName())   // expect/actual below
+        headers.append("X-Platform", getPlatformName())   // expect/actual below
     }
 }

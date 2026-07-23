@@ -22,8 +22,6 @@ data class ProductConfigDto(
     @SerialName("textureName") val textureName: String,
     @SerialName("texture_description") val textureDescription: String?,
     @SerialName("texture_preview_url") val texturePreviewUrl: String?,
-
-    //@SerialName("custom_texture_description") val customTextureDescription: String = "None",
     @SerialName("inscription") val inscription: String,
 
     @SerialName("color_name") val colorName: String,

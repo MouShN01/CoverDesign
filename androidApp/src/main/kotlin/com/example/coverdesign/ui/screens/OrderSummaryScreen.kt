@@ -17,15 +17,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,9 +62,14 @@ fun OrderSummaryScreen(
     configId         : String,
     viewModel        : OrderSummaryViewModel = koinViewModel(),
     onOrderSubmitted : () -> Unit,
+    onView3DModel    : ((configId: String, adaptedModelId: String?) -> Unit)? = null,
     onBack           : () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(configId) {
+        viewModel.onAction(OrderSummaryAction.LoadOrder(configId))
+    }
 
     EventHandler(viewModel.events) { event ->
         when (event) {
@@ -71,32 +79,50 @@ fun OrderSummaryScreen(
     }
 
     OrderSummaryScreenContent(
-        uiState  = state,
-        onBack   = onBack,
-        onSubmit = { viewModel.onAction(OrderSummaryAction.SubmitOrder(it)) }
+        uiState       = state,
+        onBack        = onBack,
+        onSubmit      = { viewModel.onAction(OrderSummaryAction.SubmitOrder(it)) },
+        onView3DModel = onView3DModel
     )
 }
 
 @Composable
-private fun OrderSummaryScreenContent(
-    uiState  : OrderSummaryUiState,
-    onBack   : () -> Unit,
-    onSubmit : (Order) -> Unit
+internal fun OrderSummaryScreenContent(
+    uiState       : OrderSummaryUiState,
+    onBack        : () -> Unit,
+    onSubmit      : (Order) -> Unit,
+    onView3DModel : ((configId: String, adaptedModelId: String?) -> Unit)? = null
 ) {
     Scaffold(
         topBar = { AppTopBar(title = "Order Summary", onBack = onBack) },
         bottomBar = {
-            SubmitOrderBar(
-                isSubmitting = uiState.isSubmitting,
-                enabled      = uiState.order != null && uiState.submittedOrderId == null,
-                onSubmit     = {
-                    uiState.order?.let { onSubmit(it) }
+            Column {
+                uiState.order?.adaptedModelId?.let { adaptedModelId ->
+                    if (onView3DModel != null) {
+                        OutlinedButton(
+                            onClick  = { onView3DModel(uiState.order!!.config.id, adaptedModelId) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 4.dp)
+                                .height(52.dp),
+                            shape    = RoundedCornerShape(14.dp)
+                        ) {
+                            Icon(Icons.Default.ViewInAr, null, Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("View 3D Model", style = MaterialTheme.typography.titleSmall)
+                        }
+                    }
                 }
-            )
+                SubmitOrderBar(
+                    isSubmitting = uiState.isSubmitting,
+                    enabled      = uiState.order != null && uiState.submittedOrderId == null,
+                    onSubmit     = { uiState.order?.let { onSubmit(it) } }
+                )
+            }
         }
     ) { padding ->
         when {
-            uiState.isLoading  -> LoadingScreen()
+            uiState.isLoading     -> LoadingScreen()
             uiState.error != null -> ErrorScreen(uiState.error!!)
             uiState.order != null -> OrderSummaryContent(
                 order    = uiState.order!!,

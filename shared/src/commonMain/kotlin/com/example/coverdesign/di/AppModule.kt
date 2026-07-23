@@ -58,7 +58,7 @@ val databaseModule = module {
     single { get<AppDatabase>().orderQueries }
     single { get<AppDatabase>().catalogQueries }
     single { get<AppDatabase>().model3DQueries }
-    single { DatabaseSeeder(db = get()) }  
+    single { DatabaseSeeder(db = get()) }
 }
 
 val networkModule = module {
@@ -98,10 +98,9 @@ val useCaseModule = module {
     factory { ConfigureProductUseCase(repo = get(), validator = get()) }
 
     // FR4
-    factory { GenerateModelUseCase(get ()) }
-    factory { PollModelStatusUseCase(get ()) }
+    factory { GenerateModelUseCase(get()) }
+    factory { PollModelStatusUseCase(get()) }
     factory { SaveOrderLocallyUseCase(get()) }
-
 
     // FR5
     //factoryOf(::GenerateModelUseCase)
@@ -145,9 +144,7 @@ val viewModelModule = module {
 
     viewModel {
         ModelPreviewViewModel(
-            pollModelStatus = get(),
-            model3DRepo     = get(),
-            linkOrderToAdaptedModel = get()
+            pollModelStatus = get(), model3DRepo = get(), linkOrderToAdaptedModel = get()
         )
     }
     viewModel {
@@ -159,19 +156,14 @@ val viewModelModule = module {
     }
     viewModel {
         OrderSummaryViewModel(
-            submitOrderUseCase = get(),
-            getOrderSummary = get()
+            submitOrderUseCase = get(), getOrderSummary = get()
         )
     }
     viewModel { HomeViewModel(getOrderSummary = get(), authRepo = get()) }
-    viewModel { AuthViewModel(get(), get ()) }
+    viewModel { AuthViewModel(get(), get()) }
 
 }
 
 val appModules = listOf(
-    databaseModule,
-    networkModule,
-    repositoryModule,
-    useCaseModule,
-    viewModelModule
+    databaseModule, networkModule, repositoryModule, useCaseModule, viewModelModule
 )

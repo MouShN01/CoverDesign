@@ -28,6 +28,10 @@ sealed class Screen(val route: String) {
             "preview/$taskId/$configId"
     }
 
+    object ModelPreviewFromOrder : Screen("model3d/order/{adaptedModelId}") {
+        fun createRoute(adaptedModelId: String) = "model3d/order/$adaptedModelId"
+    }
+
     object ProductConfigFromCatalog : Screen("config/product/{productId}") {
         fun createRoute(productId: String) = "config/product/$productId"
     }

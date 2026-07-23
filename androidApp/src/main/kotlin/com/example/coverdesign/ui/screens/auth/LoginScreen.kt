@@ -90,7 +90,7 @@ fun LoginScreen(
     }
 }
 @Composable
-private fun LoginContent(
+internal fun LoginContent(
     state: AuthUiState,
     onAction: (AuthAction) -> Unit,
     onNavigateToRegister: () -> Unit,

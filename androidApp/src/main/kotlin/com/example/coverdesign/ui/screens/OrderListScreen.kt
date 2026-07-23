@@ -22,11 +22,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.domain.model.Material
+import com.example.coverdesign.domain.model.Measurement
+import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.ProductColor
+import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.Texture
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.screens.home.formatDate
+import com.example.coverdesign.ui.theme.AppTheme
+import com.example.coverdesign.ui.viewmodel.OrderSummaryUiState
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import java.util.Locale
@@ -38,7 +50,14 @@ fun OrdersListScreen(
     onOrderClick : (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    OrdersListContent(state = state, onOrderClick = onOrderClick)
+}
 
+@Composable
+internal fun OrdersListContent(
+    state        : OrderSummaryUiState,
+    onOrderClick : (String) -> Unit
+) {
     Scaffold(
         topBar = { AppTopBar(title = "My Orders") }
     ) { padding ->
@@ -93,3 +112,58 @@ fun OrdersListScreen(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun OrdersListScreenPreview() {
+    AppTheme {
+        OrdersListContent(
+            state = OrderSummaryUiState(
+                orderHistory = listOf(
+                    sampleOrder.copy(id = "1", status = OrderStatus.DRAFT),
+                    sampleOrder.copy(id = "2", status = OrderStatus.IN_PRODUCTION, createdAt = System.currentTimeMillis() - 86400000, config = sampleOrder.config.copy(productCategory = ProductCategory.CLOTHING)),
+                    sampleOrder.copy(id = "3", status = OrderStatus.SHIPPED, createdAt = System.currentTimeMillis() - 172800000, config = sampleOrder.config.copy(productCategory = ProductCategory.INTERIOR_DECOR)) ,
+                    sampleOrder.copy(id = "4", status = OrderStatus.CANCELLED, createdAt = System.currentTimeMillis() - 172800000, config = sampleOrder.config.copy(productCategory = ProductCategory.FOOTWEAR)),
+                    sampleOrder.copy(id = "5", status = OrderStatus.CONFIRMED, createdAt = System.currentTimeMillis() - 172800000),
+                    sampleOrder.copy(id = "6", status = OrderStatus.SUBMITTED, createdAt = System.currentTimeMillis() - 172800000),
+
+                )
+            ),
+            onOrderClick = {}
+        )
+    }
+}
+
+private val sampleOrder = Order(
+    id = "ord_1",
+    adaptedModelId = "mod_1",
+    config = ProductConfig(
+        id = "conf_1",
+        productId = "prod_1",
+        productCategory = ProductCategory.ACCESSORY,
+        measurement = Measurement(100.0, 50.0, 10.0),
+        sizeLabel = null,
+        color = ProductColor("Black", "#000000"),
+        material = Material.METAL,
+        texture = Texture(
+            id = "TODO()",
+            name = "TODO()",
+            previewUrl = "TODO()",
+            description = "TODO()"
+        ),
+        inscription = "",
+        userPhotoUri = null,
+        additionalElements = emptyList(),
+        quantity = 1,
+        createdAt = System.currentTimeMillis()
+    ),
+    priceEstimate = PriceEstimate(
+        configId = "conf_1",
+        basePrice = 100.0,
+        subtotal = 110.0,
+        total = 110.0,
+        quantity = 1
+    ),
+    status = OrderStatus.DRAFT,
+    createdAt = System.currentTimeMillis()
+)

@@ -45,14 +45,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.R
+import com.example.coverdesign.domain.model.Material
+import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.ProductColor
+import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.SizeLabel
+import com.example.coverdesign.domain.model.Texture
+import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.components.OrderStatusChip
+import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiEvent
+import com.example.coverdesign.ui.viewmodel.HomeUiState
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.SimpleDateFormat
@@ -82,6 +94,17 @@ fun HomeScreen(
         }
     }
 
+    HomeContent(
+        state    = state,
+        onAction = viewModel::onAction
+    )
+}
+
+@Composable
+internal fun HomeContent(
+    state    : HomeUiState,
+    onAction : (HomeAction) -> Unit
+) {
     Scaffold(
         topBar = {
             HomeTopBar(onInfoClick = { /* show app info */ })
@@ -95,7 +118,7 @@ fun HomeScreen(
         ) {
             // ── New order CTA ─────────────────────────────────────────────
             NewOrderBanner(
-                onClick  = { viewModel.onAction(HomeAction.NewOrder) },
+                onClick  = { onAction(HomeAction.NewOrder) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
@@ -112,14 +135,14 @@ fun HomeScreen(
                     label    = "3D Visualisation",
                     tint     = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
-                    onClick  = { viewModel.onAction(HomeAction.Open3D) }
+                    onClick  = { onAction(HomeAction.Open3D) }
                 )
                 ToolCard(
                     icon     = Icons.Outlined.FaceRetouchingNatural,
                     label    = "Virtual Try-On",
                     tint     = Color(0xFF9C27B0),
                     modifier = Modifier.weight(1f),
-                    onClick  = { viewModel.onAction(HomeAction.OpenTryOn) }
+                    onClick  = { onAction(HomeAction.OpenTryOn) }
                 )
             }
 
@@ -129,7 +152,7 @@ fun HomeScreen(
             HomeSectionHeader(
                 title    = "Recent Orders",
                 action   = "See all",
-                onAction = { viewModel.onAction(HomeAction.SeeAllOrders) }
+                onAction = { onAction(HomeAction.SeeAllOrders) }
             )
 
             if (state.recentOrders.isEmpty()) {
@@ -140,7 +163,7 @@ fun HomeScreen(
                 state.recentOrders.forEach { order ->
                     RecentOrderCard(
                         order    = order,
-                        onClick  = { viewModel.onAction(HomeAction.OpenOrder(order.id)) },
+                        onClick  = { onAction(HomeAction.OpenOrder(order.id)) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
@@ -513,4 +536,72 @@ private fun ContactRow(
 fun formatDate(epochMillis: Long): String {
     val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     return sdf.format(Date(epochMillis))
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenPreview() {
+    AppTheme {
+        HomeContent(
+            state = HomeUiState(
+                recentOrders = listOf(
+                    Order(
+                        id = "1",
+                        adaptedModelId = null,
+                        config = ProductConfig(
+                            id = "c1",
+                            productId = "p1",
+                            productCategory = ProductCategory.THREE_D_PRINT,
+                            measurement = Measurement(100.0, 50.0, 30.0),
+                            sizeLabel = SizeLabel.M,
+                            color = ProductColor("Cyan", "#00FFFF"),
+                            material = Material.PLA,
+                            texture = Texture("t1", "Smooth", null, null),
+                            inscription = "Sample",
+                            userPhotoUri = null,
+                            additionalElements = emptyList(),
+                            quantity = 1,
+                            createdAt = System.currentTimeMillis()
+                        ),
+                        priceEstimate = PriceEstimate(
+                            configId = "c1",
+                            basePrice = 50.0,
+                            subtotal = 55.0,
+                            total = 55.0
+                        ),
+                        status = OrderStatus.SUBMITTED,
+                        createdAt = System.currentTimeMillis()
+                    ),
+                    Order(
+                        id = "2",
+                        adaptedModelId = null,
+                        config = ProductConfig(
+                            id = "c2",
+                            productId = "p2",
+                            productCategory = ProductCategory.ACCESSORY,
+                            measurement = Measurement(20.0, 20.0, 10.0),
+                            sizeLabel = SizeLabel.S,
+                            color = ProductColor("Black", "#000000"),
+                            material = Material.CARBON_FIBER,
+                            texture = Texture("t2", "Carbon", null, null),
+                            inscription = "",
+                            userPhotoUri = null,
+                            additionalElements = emptyList(),
+                            quantity = 1,
+                            createdAt = System.currentTimeMillis()
+                        ),
+                        priceEstimate = PriceEstimate(
+                            configId = "c2",
+                            basePrice = 30.0,
+                            subtotal = 40.0,
+                            total = 40.0
+                        ),
+                        status = OrderStatus.IN_PRODUCTION,
+                        createdAt = System.currentTimeMillis() - 86400000
+                    )
+                )
+            ),
+            onAction = {}
+        )
+    }
 }

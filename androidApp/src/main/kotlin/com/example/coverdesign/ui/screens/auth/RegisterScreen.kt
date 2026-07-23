@@ -93,7 +93,7 @@ fun RegisterScreen(
 
 
 @Composable
-private fun RegisterContent(
+internal fun RegisterContent(
     state: AuthUiState,
     onAction: (AuthAction) -> Unit,
     onNavigateBack: () -> Unit,
@@ -108,6 +108,7 @@ private fun RegisterContent(
 
     // local validation — passwords match
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
+    val phnneMismatch = phone.isNotEmpty() && phone.length == 13
     val context = LocalContext.current
 
     Column(
@@ -153,7 +154,9 @@ private fun RegisterContent(
                     onValueChange = { phone = it },
                     label = "Phone number *",
                     keyboardType = KeyboardType.Phone,
-                    placeholder = "+380 XX XXX XX XX"
+                    placeholder = "+380 XX XXX XX XX",
+                    isError = passwordMismatch,
+                    supportingText = if (passwordMismatch) "The phone number invalid" else null
                 )
             }
         }
@@ -177,7 +180,9 @@ private fun RegisterContent(
                     onValueChange = { email = it },
                     label = "Email *",
                     leadingIcon = { Icon(Icons.Default.Email, null) },
-                    keyboardType = KeyboardType.Email
+                    keyboardType = KeyboardType.Email,
+                    supportingText = if (passwordMismatch) "Email is invalid" else null, //TODO
+                    isError = passwordMismatch,
                 )
                 AuthTextField(
                     value = password,

@@ -46,7 +46,7 @@ fun ClothingSizeSection(
         SizeLabelSelector(selected = sizeLabel, onChanged = onSize)
 
         Text(
-            "Or enter your measurements for a more accurate fit:",
+            "And enter your measurements for a more accurate fit:",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

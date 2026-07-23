@@ -84,7 +84,7 @@ class DatabaseSeeder(private val db: AppDatabase) {
                 Texture("tex-004", "Carbon weave", null, "Exposed carbon fiber weave"),
                 Texture("tex-005", "Voronoi",      null, "Lattice cutout pattern")
             ),
-            imageUrl = "https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/images/109/310/0c95a1dc-dba2-4cdc-8cfa-c010d5bfba5f/640/0c95a1dc-dba2-4cdc-8cfa-c010d5bfba5f.jpg"
+            imageUrl = "https://m.media-amazon.com/images/I/81XIlcPEYIL._US512_.jpg"
         ) to Model3D(
             configId        = "",
             productId = "prod-006",

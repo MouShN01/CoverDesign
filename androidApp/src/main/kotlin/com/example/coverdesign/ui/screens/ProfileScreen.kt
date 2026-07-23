@@ -43,6 +43,11 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProfileScreen(
     viewModel : AuthViewModel = koinViewModel()
 ) {
+    ProfileContent(onSignOut = { viewModel.onAction(AuthAction.SignOut) })
+}
+
+@Composable
+internal fun ProfileContent(onSignOut: () -> Unit) {
     Scaffold(
         topBar = { AppTopBar(title = "Profile") }
     ) { padding ->
@@ -113,7 +118,7 @@ fun ProfileScreen(
 
             // logout
             OutlinedButton(
-                onClick  = { viewModel.onAction(AuthAction.SignOut) },
+                onClick  = onSignOut,
                 modifier = Modifier.fillMaxWidth(),
                 shape    = RoundedCornerShape(12.dp),
                 colors   = ButtonDefaults.outlinedButtonColors(

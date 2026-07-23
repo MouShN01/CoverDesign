@@ -26,6 +26,7 @@ fun AppScaffold() {
     val hideBottomBar = currentRoute in listOf(
         //Screen.ProductConfig.route,
         Screen.ModelPreview.route,
+        Screen.ModelPreviewFromOrder.route,
         Screen.ArTryOn.route,
         Screen.OrderSummary.route,
         Screen.Login.route,

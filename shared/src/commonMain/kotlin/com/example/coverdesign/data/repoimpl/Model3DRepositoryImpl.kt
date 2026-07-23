@@ -80,6 +80,15 @@ class Model3DRepositoryImpl(
         Resource.Error("Failed to load cached model: ${e.message}", e)
     }
 
+    override suspend fun getAdaptedModelById(id: String): Resource<AdaptedModel3D?> = try {
+        val entity = db.adaptedModel3DQueries
+            .selectAdaptedById(id)
+            .executeAsOneOrNull()
+        Resource.Success(entity?.toDomain())
+    } catch (e: Exception) {
+        Resource.Error("Failed to load cached model by id: ${e.message}", e)
+    }
+
 //    override suspend fun getModel(taskId: String): Resource<Model3D?> = try {
 //        val entity = db.model3DQueries
 //            .selectByTaskId(taskId)

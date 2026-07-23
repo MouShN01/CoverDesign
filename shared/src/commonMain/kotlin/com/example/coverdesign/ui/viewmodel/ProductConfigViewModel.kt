@@ -6,6 +6,7 @@ import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Product
+import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
@@ -49,7 +50,10 @@ class ProductConfigViewModel(
             is ProductConfigAction.Enter -> onEnter(action.mode)
             is ProductConfigAction.ResumePreviousConfig -> resumeConfig(action.config)
             is ProductConfigAction.StartFreshConfig -> startFresh(action.product)
-            is ProductConfigAction.UpdateMeasurement -> onMeasurementUpdated(action.measurement)
+            is ProductConfigAction.UpdateMeasurement -> onMeasurementUpdated(
+                action.measurement, action.category
+            )
+
             is ProductConfigAction.UpdateMaterial -> onFieldUpdated { copy(material = action.material) }
             is ProductConfigAction.UpdateColor -> onFieldUpdated { copy(color = action.color) }
             is ProductConfigAction.UpdateTexture -> onFieldUpdated { copy(texture = action.texture) }
@@ -140,16 +144,10 @@ class ProductConfigViewModel(
         setState { copy(currentConfig = draft, pendingResumePrompt = null) }
     }
 
-    private fun onMeasurementUpdated(measurement: Measurement) {
+    private fun onMeasurementUpdated(measurement: Measurement, category: ProductCategory) {
         onFieldUpdated { copy(measurement = measurement) }
-
-        // validate for DISPLAY purposes only — doesn't gate the update
-        val error = validator.validate(measurement)
+        val error = validator.validate(m = measurement, category = category)
         setState { copy(measurementError = error) }
-//
-//        val error = validator.validate(measurement)
-//        setState { copy(measurementError = error) }
-//        if (error == null) onFieldUpdated { copy(measurement = measurement) }
     }
 
     private fun onInscriptionUpdated(text: String) {
@@ -250,7 +248,9 @@ class ProductConfigViewModel(
 //                .onError { msg, _ -> println("Firestore saveConfig failed: $msg") }
 
             productRepo.saveConfig(updatedConfig)
-            saveOrderLocally(updatedConfig, uiState.value.priceEstimate!!).onError { string, throwable ->
+            saveOrderLocally(
+                updatedConfig, uiState.value.priceEstimate!!
+            ).onError { string, throwable ->
                 println("loadAdaptedModel Error $string")
                 uiState.value.error.let {
                     setState { copy(isSaving = false, error = string) }
@@ -299,7 +299,9 @@ sealed class ProductConfigUiEvent : UiEvent {
 sealed class ProductConfigAction {
     data class Init(val productId: String) : ProductConfigAction()
     data class SetProduct(val product: Product) : ProductConfigAction()
-    data class UpdateMeasurement(val measurement: Measurement) : ProductConfigAction()
+    data class UpdateMeasurement(val measurement: Measurement, val category: ProductCategory) :
+        ProductConfigAction()
+
     data class UpdateMaterial(val material: Material) : ProductConfigAction()
     data class UpdateColor(val color: ProductColor) : ProductConfigAction()
     data class UpdateTexture(val texture: Texture) : ProductConfigAction()

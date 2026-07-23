@@ -23,6 +23,9 @@ interface Model3DRepository {
     /** Lookup by configId — used when re-opening from history */
     suspend fun getAdaptedModel(configId: String): Resource<AdaptedModel3D?>
 
+    /** Lookup by adaptedModelId — used when viewing 3D model from an existing order */
+    suspend fun getAdaptedModelById(id: String): Resource<AdaptedModel3D?>
+
     /** Lookup by taskId — used when resuming mid-generation */
     //suspend fun getModel(taskId: String): Resource<Model3D?>
 

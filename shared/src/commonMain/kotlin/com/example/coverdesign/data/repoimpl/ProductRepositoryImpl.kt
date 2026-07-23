@@ -56,15 +56,21 @@ class ProductRepositoryImpl(
                 else Resource.Error("Failed to load catalog: ${e.message}", e)
             }
         }
+
     private fun backgroundRefreshCatalog() {
         CoroutineScope(Dispatchers.Default).launch {
             fetchCatalogFromNetwork()
         }
     }
 
-    private suspend fun fetchCatalogFromNetwork(): Resource<List<Product>> =
-        try {
+    private suspend fun fetchCatalogFromNetwork(): Resource<List<Product>> {
+        println("fetchCatalogFromNetwork ENTERED")
+        return try {
             val products = api.getCatalog().map { it.toDomain() }
+
+            println("fetchCatalogFromNetwork products ${products.size}")
+            println("fetchCatalogFromNetwork products by name ${products.forEach { it.name }}")
+
             db.transaction {
                 db.catalogQueries.clearCatalog()
                 products.forEach {
@@ -75,8 +81,10 @@ class ProductRepositoryImpl(
             }
             Resource.Success(products)
         } catch (e: Exception) {
+            println("fetchCatalogFromNetwork erorr ${e.message} \n\r ${e.cause}")
             Resource.Error("Network unavailable: ${e.message}", e)
         }
+    }
 
     /* OLD*/
     override suspend fun getProduct(id: String): Resource<Product> =
@@ -112,6 +120,7 @@ class ProductRepositoryImpl(
                 Resource.Error("Price calculation failed: ${e.message}", e)
             }
         }
+
     // ProductRepositoryImpl.kt
     override suspend fun getConfigsForProduct(productId: String): List<ProductConfig> =
         withContext(Dispatchers.Default) {

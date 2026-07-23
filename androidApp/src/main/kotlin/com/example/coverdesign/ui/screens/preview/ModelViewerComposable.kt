@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.sceneview.SceneView
 import io.github.sceneview.createEnvironment
 import io.github.sceneview.math.Position
+import io.github.sceneview.math.Scale
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberCameraManipulator
@@ -35,6 +37,9 @@ import io.github.sceneview.rememberModelLoader
 @Composable
 fun ModelViewerComposable(
     modelUrl : String,
+    scaleX   : Float = 1.0f,
+    scaleY   : Float = 1.0f,
+    scaleZ   : Float = 1.0f,
     modifier : Modifier = Modifier
 ) {
     val engine              = rememberEngine()
@@ -47,6 +52,16 @@ fun ModelViewerComposable(
         fileLocation = modelUrl
     )
 
+    // Two-phase scale strategy:
+    // Phase 1 – scaleToUnits=1.0f lets ModelNode auto-fit the model; the apply{} lambda
+    //   captures the resulting node.scale into justCaptured (a plain local var, written
+    //   inside remember{} which is fine — no MutableState is touched during composition).
+    //   A SideEffect after composition commits it to baseScale, triggering one recompose.
+    // Phase 2 – baseScale known: scaleToUnits=null + scale=base*user are passed instead;
+    //   ModelNode's own internal SideEffect then applies scale reactively on every recompose.
+    var baseScale by remember { mutableStateOf<Scale?>(null) }
+    LaunchedEffect(modelUrl) { baseScale = null }
+
     Box(modifier = modifier) {
         SceneView(
             modifier            = Modifier.fillMaxSize(),
@@ -58,12 +73,25 @@ fun ModelViewerComposable(
                     ?: createEnvironment(environmentLoader)
             }
         ) {
-            modelInstance?.let {
+            modelInstance?.let { instance ->
+                val bs = baseScale
+                var justCaptured: Scale? = null   // lives only for this recompose cycle
+
                 ModelNode(
-                    modelInstance = it,
-                    scaleToUnits  = 1.0f,
-                    autoAnimate   = true
+                    modelInstance = instance,
+                    scaleToUnits  = if (bs == null) 1.0f else null,
+                    scale         = if (bs != null)
+                        Scale(bs.x * scaleX, bs.y * scaleY, bs.z * scaleZ)
+                    else Scale(1f),
+                    autoAnimate   = true,
+                    apply         = {
+                        // Runs once inside remember{} at node creation.
+                        // this.scale already holds the value written by scaleToUnits.
+                        if (bs == null) justCaptured = Scale(scale.x, scale.y, scale.z)
+                    }
                 )
+                // Commit captured base scale after composition — safe place to set state.
+                SideEffect { justCaptured?.let { baseScale = it } }
             }
         }
 

@@ -163,7 +163,7 @@ class AuthViewModel(
                 setState { copy(error = "Email cannot be empty") }; false
             }
 
-            !email.contains('@') -> {
+            !EMAIL_REGEX.matches(email) -> {
                 setState { copy(error = "Enter a valid email address") }; false
             }
 
@@ -173,6 +173,11 @@ class AuthViewModel(
 
             else -> true
         }
+    }
+
+    companion object {
+        private val EMAIL_REGEX =
+            Regex("^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$")
     }
 
 

@@ -8,11 +8,12 @@ import com.example.coverdesign.ui.screens.CatalogScreen
 import com.example.coverdesign.ui.screens.OrderSummaryScreen
 import com.example.coverdesign.ui.screens.OrdersListScreen
 import com.example.coverdesign.ui.screens.ProfileScreen
-import com.example.coverdesign.ui.screens.ar.ARScreen
+import com.example.coverdesign.ui.screens.ar.VirtualTryOnPlaceholderScreen
 import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
-import com.example.coverdesign.ui.screens.preview.ModelPreviewScreen
+import com.example.coverdesign.ui.screens.preview.ModifiableModelPreviewScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
+import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
 
 fun NavGraphBuilder.mainGraph(
     navController: NavHostController
@@ -54,11 +55,11 @@ fun NavGraphBuilder.mainGraph(
             // figure out if this is a productId (from 3D tab) or configId (from config flow)
             // convention: productIds start with "prod-", configIds are UUIDs
 //            val isProductId = id.startsWith("prod-")
-            println("loadAdaptedModel before ModelPreviewScreen: $configId")
-            ModelPreviewScreen(
+            println("loadAdaptedModel before ModifiableModelPreviewScreen: $configId")
+            ModifiableModelPreviewScreen(
                 configId = configId,
                 taskId = taskId,
-                onTryOn = { navController.navigate(Screen.ArTryOn.route) },
+                onTryOn = { navController.navigate(Screen.ArTryOn.createRoute(configId)) },
                 onOrder = {
                     navController.navigate(
                         Screen.OrderSummary
@@ -102,15 +103,16 @@ fun NavGraphBuilder.mainGraph(
                 onBack = { navController.popBackStack() }
             )
         }
-//        composable(Screen.ProductConfigFromOrder.route) { entry ->
-//            val configId = entry.arguments?.getString("configId") ?: return@composable
-//            ProductConfigScreen(
-//                entryMode = ConfigEntryMode.FromExistingConfig(configId),
-//                onProceed = { id -> navController
-//                    .navigate(Screen.ModelPreview.createRoute(id)) },
-//                onBack = { navController.popBackStack() }
-//            )
-//        }
+        composable(Screen.ProductConfigFromOrder.route) { entry ->
+            val configId = entry.arguments?.getString("configId") ?: return@composable
+            ProductConfigScreen(
+                entryMode = ConfigEntryMode.FromExistingConfig(configId),
+                onProceed = { taskId, newConfigId ->
+                    navController.navigate(Screen.ModelPreview.createRoute(taskId, newConfigId))
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
 //        composable(Screen.ProductConfig.route) { entry ->
 //            val productId = entry.arguments?.getString("productId") ?: return@composable
 //            ProductConfigScreen(
@@ -122,19 +124,67 @@ fun NavGraphBuilder.mainGraph(
 //            )
 //        }
         composable(Screen.ArTryOn.route) { entry ->
-            val configId = entry.arguments?.getString("configId") ?: return@composable
-            //shared-assets/models/Astronaut.glb
-            val modelUrl =
-                "https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb"
-            val helmet = "test_models/damaged_helmet.glb"
-            ARScreen(modelUrl = helmet)
-//            ArTryOnScreen(
-//                configId           = configId,
-//                onProceedToOrder   = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
-//                onUpdateParameters = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
-//                onBack             = { navController.popBackStack() }
+            val configId = entry.arguments?.getString("configId").orEmpty()
+//            ArSceneViewComposable(
+//                configId     = configId,
+//                onOrder      = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+//                onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+//                onBack       = { navController.popBackStack() }
 //            )
+            VirtualTryOnPlaceholderScreen(
+                configId = configId,
+                onOrder = {  navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+                onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+                onBack = { navController.popBackStack() },
+            )
+
         }
+//        composable(Screen.ArTryOn.route) { entry ->
+//            val configId = entry.arguments?.getString("configId").orEmpty()
+//
+//            // ArMode is resolved from the ProductConfig stored locally.
+//            // We read it here so navigation can decide which composable to show.
+//            val config by productRepo
+//                .getConfigById(configId)
+//                .collectAsStateWithLifecycle(initialValue = null)
+//
+//            config?.let { cfg ->
+//                val arMode = cfg.productCategory.resolveArMode(
+//                    photoUri     = cfg.userPhotoUri,
+//                    measurements = cfg.measurement
+//                )
+//
+//                when (arMode) {
+//                    // ── JEWELRY / ACCESSORY — overlay on user photo ───────────────
+//                    is ArMode.OnUserPhoto -> ArSceneViewComposable(
+//                        configId     = configId,
+//                        photoUri     = arMode.photoUri,
+//                        onOrder      = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+//                        onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+//                        onBack       = { navController.popBackStack() }
+//                    )
+//
+//                    // ── CLOTHING / FOOTWEAR / THREE_D_PRINT — body silhouette ─────
+//                    is ArMode.OnBodySilhouette -> VirtualTryOnPlaceholderScreen(
+//                        configId     = configId,
+//                        measurements = arMode.measurements,
+//                        category     = cfg.productCategory,
+//                        onOrder      = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+//                        onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+//                        onBack       = { navController.popBackStack() }
+//                    )
+//
+//                    // ── INTERIOR_DECOR / OTHER — room space ───────────────────────
+//                    is ArMode.InRoomSpace -> ArSceneViewComposable(
+//                        configId     = configId,
+//                        photoUri     = null,   // no reference photo — ARCore uses live camera
+//                        onOrder      = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
+//                        onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
+//                        onBack       = { navController.popBackStack() }
+//                    )
+//                }
+//            } ?: LoadingScreen()   // brief moment while config loads from local DB
+//        }
         composable(Screen.OrderSummary.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             OrderSummaryScreen(
@@ -144,6 +194,10 @@ fun NavGraphBuilder.mainGraph(
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
+                onView3DModel = { _, adaptedModelId ->
+                    if (adaptedModelId != null)
+                        navController.navigate(Screen.ModelPreviewFromOrder.createRoute(adaptedModelId))
+                },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -152,7 +206,22 @@ fun NavGraphBuilder.mainGraph(
             OrderSummaryScreen(
                 configId = orderId,
                 onOrderSubmitted = { navController.popBackStack() },
+                onView3DModel = { _, adaptedModelId ->
+                    if (adaptedModelId != null)
+                        navController.navigate(Screen.ModelPreviewFromOrder.createRoute(adaptedModelId))
+                },
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.ModelPreviewFromOrder.route) { entry ->
+            val adaptedModelId = entry.arguments?.getString("adaptedModelId") ?: return@composable
+            ModifiableModelPreviewScreen(
+                configId = adaptedModelId,
+                taskId   = null,
+                onTryOn  = { navController.navigate(Screen.ArTryOn.createRoute(adaptedModelId)) },
+                onOrder  = { navController.popBackStack() },
+                onBack   = { navController.popBackStack() },
+                loadAction = ModelPreviewAction.LoadFromOrder(adaptedModelId)
             )
         }
     }
