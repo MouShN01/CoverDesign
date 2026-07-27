@@ -49,18 +49,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.domain.model.UserRole
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.viewmodel.AuthAction
 import com.example.coverdesign.ui.viewmodel.AuthUiEvent
 import com.example.coverdesign.ui.viewmodel.AuthUiState
 import com.example.coverdesign.ui.viewmodel.AuthViewModel
-import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun RegisterScreen(
-    viewModel: AuthViewModel = koinViewModel(),
+    viewModel: AuthViewModel, // = koinViewModel(),
     onRegisterSuccess: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -108,7 +108,7 @@ internal fun RegisterContent(
 
     // local validation — passwords match
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
-    val phnneMismatch = phone.isNotEmpty() && phone.length == 13
+    val phoneMismatch = phone.isNotEmpty() && phone.length == 13
     val context = LocalContext.current
 
     Column(
@@ -128,6 +128,7 @@ internal fun RegisterContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        state.role?.let { RoleTag(it) }
 
         Spacer(Modifier.height(4.dp))
 
@@ -221,7 +222,7 @@ internal fun RegisterContent(
 
         GoogleSignInButton(
             isLoading = state.isLoading,
-            onClick = { onAction(AuthAction.SignInWithGoogle(context)) }
+            onClick = { onAction(AuthAction.SignInWithGoogle(context, state.role)) }
         )
 
         Text(
@@ -247,7 +248,8 @@ internal fun RegisterContent(
                         email = email,
                         password = password,
                         fullName = fullName,
-                        phone = phone
+                        phone = phone,
+                        role = state.role
                     )
                 )
             }
@@ -273,6 +275,21 @@ internal fun RegisterContent(
 // ═══════════════════════════════════════════════════════════════════
 // Shared small composables — match the app's existing field style
 // ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun RoleTag(role: UserRole) {
+    Surface(
+        shape = RoundedCornerShape(50.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Text(
+            role.name.lowercase().replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+        )
+    }
+}
 
 @Composable
 private fun AuthTextField(

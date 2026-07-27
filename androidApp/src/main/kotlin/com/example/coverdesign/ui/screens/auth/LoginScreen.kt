@@ -48,18 +48,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.domain.model.UserRole
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.viewmodel.AuthAction
 import com.example.coverdesign.ui.viewmodel.AuthUiEvent
 import com.example.coverdesign.ui.viewmodel.AuthUiState
 import com.example.coverdesign.ui.viewmodel.AuthViewModel
-import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun LoginScreen(
-    viewModel: AuthViewModel = koinViewModel(),
+    viewModel: AuthViewModel, //= koinViewModel(),
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
@@ -119,6 +119,7 @@ internal fun LoginContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        state.role?.let { RoleTag(it) }
 
         Spacer(Modifier.height(8.dp))
 
@@ -173,14 +174,14 @@ internal fun LoginContent(
         AuthPrimaryButton(
             text = "Sign In",
             isLoading = state.isLoading,
-            onClick = { onAction(AuthAction.SignInWithEmail(email, password)) })
+            onClick = { onAction(AuthAction.SignInWithEmail(email, password, state.role)) })
 
         // ── divider ───────────────────────────────────────────────────────────
         OrDivider()
 
         // ── Google ────────────────────────────────────────────────────────────
         GoogleSignInButton(
-            isLoading = state.isLoading, onClick = { onAction(AuthAction.SignInWithGoogle(context)) })
+            isLoading = state.isLoading, onClick = { onAction(AuthAction.SignInWithGoogle(context, state.role)) })
 
         // ── navigate to register ──────────────────────────────────────────────
         Row(
@@ -280,6 +281,21 @@ private fun OrDivider() {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         HorizontalDivider(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun RoleTag(role: UserRole) {
+    Surface(
+        shape = RoundedCornerShape(50.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Text(
+            role.name.lowercase().replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+        )
     }
 }
 

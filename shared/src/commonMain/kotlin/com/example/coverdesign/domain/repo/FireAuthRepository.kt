@@ -2,6 +2,7 @@ package com.example.coverdesign.domain.repo
 
 
 import com.example.coverdesign.domain.model.AppUser
+import com.example.coverdesign.domain.model.UserRole
 import com.example.coverdesign.domain.util.Resource
 import dev.gitlive.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
@@ -28,19 +29,21 @@ interface FireAuthRepository {
 
     suspend fun signInWithEmail(
         email    : String,
-        password : String
+        password : String,
+        role     : UserRole?
     ): Resource<FirebaseUser>
 
     suspend fun registerWithEmail(
         email    : String,
-        password : String
+        password : String,
+        role: UserRole?
     ): Resource<FirebaseUser>
 
     // ── Google Sign-In ────────────────────────────────────────────────────────
     // idToken is acquired platform-side (Credential Manager on Android,
     // Google SDK on iOS) then passed here for Firebase authentication.
 
-    suspend fun signInWithGoogle(idToken: String): Resource<FirebaseUser>
+    suspend fun signInWithGoogle(idToken: String, role: UserRole?): Resource<FirebaseUser>
 
     // ── Session ───────────────────────────────────────────────────────────────
 

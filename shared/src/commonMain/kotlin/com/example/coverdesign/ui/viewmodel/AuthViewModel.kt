@@ -22,58 +22,75 @@ class AuthViewModel(
     override fun initialState() = AuthUiState()
 
     init {
-        // observe Firebase auth state — keeps currentUser in sync
+        // Sync Firebase auth state into UI state only — navigation is driven explicitly
+        // by each sign-in/register handler so we never navigate on transient auth changes
+        // (e.g. the brief Firebase sign-in that precedes a role-mismatch sign-out).
         viewModelScope.launch {
             authRepo.currentUser.collect { user ->
                 setState { copy(currentUser = user) }
-                if (user != null) sendEvent(AuthUiEvent.NavigateToHome)
+                if (user != null) {
+                    when (val result = authRepo.getUserProfile(user.uid)) {
+                        is Resource.Success -> setState { copy(appUser = result.data) }
+                        else -> {}
+                    }
+                } else {
+                    setState { copy(appUser = null) }
+                }
             }
         }
     }
 
     fun onAction(action: AuthAction) {
         when (action) {
-            is AuthAction.SignInWithEmail -> signInWithEmail(action.email, action.password)
-            is AuthAction.RegisterWithEmail -> registerWithEmail(
-                action.email, action.password, action.fullName, action.phone
+            is AuthAction.SignInWithEmail -> signInWithEmail(
+                action.email,
+                action.password,
+                action.role
             )
 
-            is AuthAction.SignInWithGoogle -> signInWithGoogle(action.context)
+            is AuthAction.RegisterWithEmail -> {
+                val role = action.role
+                if (role == null) {
+                    setState { copy(error = "Please select a role before registering.") }
+                } else {
+                    registerWithEmail(action.email, action.password, action.fullName, action.phone, role)
+                }
+            }
+
+            is AuthAction.SignInWithGoogle -> signInWithGoogle(action.context, action.role)
             is AuthAction.SignOut -> signOut()
             is AuthAction.ResetPassword -> resetPassword(action.email)
             is AuthAction.ClearError -> setState { copy(error = null) }
             is AuthAction.ToggleMode -> setState { copy(isRegisterMode = !isRegisterMode) }
+            is AuthAction.PickRole -> setState { copy(role = action.role) }
         }
     }
 
     // ── Email / password ──────────────────────────────────────────────────────
 
-    private fun signInWithEmail(email: String, password: String) {
+    private fun signInWithEmail(email: String, password: String, role: UserRole?) {
         if (!validateEmailPassword(email, password)) return
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
-            when (val result = authRepo.signInWithEmail(email, password)) {
-                is Resource.Success -> setState { copy(isLoading = false) }
-                is Resource.Error -> setState {
-                    copy(
-                        isLoading = false, error = result.message
-                    )
+            when (val result = authRepo.signInWithEmail(email, password, role)) {
+                is Resource.Success -> {
+                    setState { copy(isLoading = false) }
+                    sendEvent(AuthUiEvent.NavigateToHome)
                 }
-
+                is Resource.Error -> setState { copy(isLoading = false, error = result.message) }
                 else -> {}
             }
         }
     }
 
     private fun registerWithEmail(
-        email: String, password: String, fullName: String, phone: String
+        email: String, password: String, fullName: String, phone: String, role: UserRole
     ) {
         if (!validateEmailPassword(email, password)) return
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
-            when (val result = authRepo.registerWithEmail(email, password)) {
+            when (val result = authRepo.registerWithEmail(email, password, role)) {
                 is Resource.Success -> {
-                    // create Firestore user profile with name + phone + default CUSTOMER role
                     val user = result.data
                     authRepo.createUserProfile(
                         AppUser(
@@ -81,11 +98,12 @@ class AuthViewModel(
                             email = email,
                             displayName = fullName,
                             phone = phone,
-                            role = UserRole.CUSTOMER,
+                            role = role,
                             createdAt = currentEpochMillis()
                         )
                     )
                     setState { copy(isLoading = false) }
+                    sendEvent(AuthUiEvent.NavigateToHome)
                 }
 
                 is Resource.Error -> setState {
@@ -103,27 +121,25 @@ class AuthViewModel(
     // Step 1: GoogleAuthenticator.getIdToken() — platform-side (Credential Manager)
     // Step 2: authRepo.signInWithGoogle(idToken) — Firebase via GitLive
 
-    private fun signInWithGoogle(context: Any) {
+    private fun signInWithGoogle(context: Any, role: UserRole?) {
+        if (role == null) {
+            setState { copy(error = "Please select a role before continuing with Google.") }
+            return
+        }
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
             try {
                 val idToken = googleAuthenticator.getIdToken(context)
-                when (val result = authRepo.signInWithGoogle(idToken)) {
-                    is Resource.Success -> setState { copy(isLoading = false) }
-                    is Resource.Error -> setState {
-                        copy(
-                            isLoading = false, error = result.message
-                        )
+                when (val result = authRepo.signInWithGoogle(idToken, role)) {
+                    is Resource.Success -> {
+                        setState { copy(isLoading = false) }
+                        sendEvent(AuthUiEvent.NavigateToHome)
                     }
-
+                    is Resource.Error -> setState { copy(isLoading = false, error = result.message) }
                     else -> {}
                 }
             } catch (e: Exception) {
-                setState {
-                    copy(
-                        isLoading = false, error = e.message ?: "Google sign-in failed"
-                    )
-                }
+                setState { copy(isLoading = false, error = e.message ?: "Google sign-in failed") }
             }
         }
     }
@@ -188,10 +204,12 @@ class AuthViewModel(
 
 data class AuthUiState(
     val currentUser: FirebaseUser? = null,
+    val appUser: AppUser? = null,
     val isLoading: Boolean = false,
     val isRegisterMode: Boolean = false,
     val error: String? = null,
-    val resetEmailSent: Boolean = false
+    val resetEmailSent: Boolean = false,
+    val role: UserRole? = null,
 ) : UiState
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -202,12 +220,19 @@ sealed class AuthUiEvent : UiEvent {
 }
 
 sealed class AuthAction {
-    data class SignInWithEmail(val email: String, val password: String) : AuthAction()
+    data class SignInWithEmail(val email: String, val password: String, val role: UserRole?) :
+        AuthAction()
+
+    data class PickRole(val role: UserRole) : AuthAction()
     data class RegisterWithEmail(
-        val email: String, val password: String, val fullName: String, val phone: String
+        val email: String,
+        val password: String,
+        val fullName: String,
+        val phone: String,
+        val role: UserRole?
     ) : AuthAction()
 
-    data class  SignInWithGoogle(val context: Any) : AuthAction()
+    data class SignInWithGoogle(val context: Any, val role: UserRole?) : AuthAction()
     object SignOut : AuthAction()
     data class ResetPassword(val email: String) : AuthAction()
     object ClearError : AuthAction()

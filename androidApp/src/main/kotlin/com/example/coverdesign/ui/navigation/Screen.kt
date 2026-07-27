@@ -3,6 +3,7 @@ package com.example.coverdesign.ui.navigation
 sealed class Screen(val route: String) {
     // auth
     object Auth : Screen("auth")
+    object SelectRole : Screen("select_role")
     object Login : Screen("login")
     object Register : Screen("register")
     object Main : Screen("main")
