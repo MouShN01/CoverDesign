@@ -53,4 +53,5 @@ sealed class Screen(val route: String) {
         fun createRoute(orderId: String) = "order/detail/$orderId"
     }
 
+    object RehabHistory : Screen("rehab_history")
 }

@@ -12,6 +12,7 @@ import com.example.coverdesign.ui.screens.ar.VirtualTryOnPlaceholderScreen
 import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.preview.ModifiableModelPreviewScreen
+import com.example.coverdesign.ui.screens.rehab.RehabHistoryScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
 
@@ -33,8 +34,12 @@ fun NavGraphBuilder.mainGraph(
                 onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderDetail.createRoute(orderId))
                 },
-                onSeeAllOrders = { navController.navigate(Screen.Orders.route) }
+                onSeeAllOrders = { navController.navigate(Screen.Orders.route) },
+                onOpenRehabHistory = { navController.navigate(Screen.RehabHistory.route) }
             )
+        }
+        composable(Screen.RehabHistory.route) {
+            RehabHistoryScreen(onBack = { navController.popBackStack() })
         }
         // in MainScaffold NavHost
 //        composable(Screen.Model3D.route) {

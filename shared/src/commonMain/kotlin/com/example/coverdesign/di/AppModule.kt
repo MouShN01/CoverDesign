@@ -42,6 +42,7 @@ import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import com.example.coverdesign.ui.viewmodel.ProductConfigViewModel
+import com.example.coverdesign.ui.viewmodel.RehabViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -161,6 +162,7 @@ val viewModelModule = module {
     }
     viewModel { HomeViewModel(getOrderSummary = get(), authRepo = get()) }
     viewModel { AuthViewModel(get(), get()) }
+    viewModel { RehabViewModel(authRepo = get()) }
 
 }
 

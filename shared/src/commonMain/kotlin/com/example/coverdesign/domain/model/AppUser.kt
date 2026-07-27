@@ -6,5 +6,6 @@ data class AppUser(
     val displayName : String    = "",
     val phone       : String    = "",
     val role        : UserRole  = UserRole.PATIENT,
-    val createdAt   : Long      = 0L
+    val createdAt   : Long      = 0L,
+    val hasInsoles  : Boolean   = false
 )

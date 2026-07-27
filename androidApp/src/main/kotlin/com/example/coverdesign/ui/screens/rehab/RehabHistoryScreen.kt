@@ -1,0 +1,587 @@
+package com.example.coverdesign.ui.screens.rehab
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.coverdesign.domain.model.BodyPosition
+import com.example.coverdesign.domain.model.CopPoint
+import com.example.coverdesign.domain.model.GaitSession
+import com.example.coverdesign.ui.components.EventHandler
+import com.example.coverdesign.ui.theme.AppTheme
+import com.example.coverdesign.ui.viewmodel.RehabAction
+import com.example.coverdesign.ui.viewmodel.RehabMockData
+import com.example.coverdesign.ui.viewmodel.RehabUiEvent
+import com.example.coverdesign.ui.viewmodel.RehabUiState
+import com.example.coverdesign.ui.viewmodel.RehabViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+
+@Composable
+fun RehabHistoryScreen(
+    viewModel: RehabViewModel = koinViewModel(),
+    onBack: () -> Unit
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    EventHandler(viewModel.events) { event ->
+        when (event) {
+            is RehabUiEvent.NavigateBack -> onBack()
+        }
+    }
+
+    RehabHistoryContent(
+        state = state,
+        onAction = viewModel::onAction,
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun RehabHistoryContent(
+    state: RehabUiState,
+    onAction: (RehabAction) -> Unit,
+    onBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Rehabilitation History") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                horizontal = 16.dp, vertical = 12.dp
+            )
+        ) {
+            // ── Score trend chart ─────────────────────────────────────────
+            item {
+                ScoreTrendCard(sessions = state.sessions)
+            }
+
+            // ── Sessions list ─────────────────────────────────────────────
+            item {
+                Text(
+                    "Sessions",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+
+            if (state.sessions.isEmpty()) {
+                item {
+                    Text(
+                        "No sessions recorded yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                items(state.sessions) { session ->
+                    SessionCard(
+                        session = session,
+                        hasInsoles = state.hasInsoles,
+                        expanded = state.expandedSessionId == session.id,
+                        onToggle = { onAction(RehabAction.ToggleSession(session.id)) }
+                    )
+                }
+            }
+
+            item { Spacer(Modifier.height(16.dp)) }
+        }
+    }
+}
+
+// ── Score trend card ──────────────────────────────────────────────────────────
+@Composable
+private fun ScoreTrendCard(sessions: List<GaitSession>, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Score Trend", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+
+            // Legend
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                LegendDot(Color(0xFF1565C0), "Posture")
+                LegendDot(Color(0xFF2E7D32), "Balance")
+                LegendDot(Color(0xFF6A1B9A), "Symmetry")
+            }
+
+            ScoreTrendChart(
+                sessions = sessions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendDot(color: Color, label: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Surface(shape = RoundedCornerShape(50), color = color, modifier = Modifier.size(8.dp)) {}
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun ScoreTrendChart(sessions: List<GaitSession>, modifier: Modifier = Modifier) {
+    val postureColor = Color(0xFF1565C0)
+    val balanceColor = Color(0xFF2E7D32)
+    val symmetryColor = Color(0xFF6A1B9A)
+    val gridColor = Color.Gray.copy(alpha = 0.2f)
+    val axisColor = Color.Gray.copy(alpha = 0.5f)
+    Color.Gray.copy(alpha = 0.7f)
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val padLeft = 32.dp.toPx()
+        val padBottom = 28.dp.toPx()
+        val padTop = 8.dp.toPx()
+        val chartW = w - padLeft
+        val chartH = h - padBottom - padTop
+
+        // Reversed: oldest session on left, most recent on right
+        val orderedSessions = sessions.reversed()
+        val n = orderedSessions.size.coerceAtLeast(1)
+
+        // Grid lines at 25, 50, 75, 100
+        listOf(25f, 50f, 75f, 100f).forEach { score ->
+            val y = padTop + chartH * (1f - score / 100f)
+            drawLine(gridColor, Offset(padLeft, y), Offset(w, y), strokeWidth = 1.dp.toPx())
+        }
+
+        // X axis
+        drawLine(
+            axisColor,
+            Offset(padLeft, padTop + chartH),
+            Offset(w, padTop + chartH),
+            strokeWidth = 1.dp.toPx()
+        )
+
+        if (orderedSessions.isEmpty()) return@Canvas
+
+        fun xPos(i: Int) =
+            padLeft + if (n == 1) chartW / 2f else i.toFloat() / (n - 1).toFloat() * chartW
+
+        fun yPos(score: Float) = padTop + chartH * (1f - score / 100f)
+
+        // Draw the three score lines
+        data class Metric(val color: Color, val scores: List<Float>)
+
+        val metrics = listOf(
+            Metric(postureColor, orderedSessions.map { it.gaitAnalysis.postureScore }),
+            Metric(balanceColor, orderedSessions.map { it.gaitAnalysis.balanceScore }),
+            Metric(symmetryColor, orderedSessions.map { it.gaitAnalysis.symmetryScore })
+        )
+
+        metrics.forEach { metric ->
+            val path = Path()
+            metric.scores.forEachIndexed { i, score ->
+                val x = xPos(i)
+                val y = yPos(score)
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(
+                path,
+                metric.color,
+                style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+
+            // Dots
+            metric.scores.forEachIndexed { i, score ->
+                drawCircle(
+                    metric.color,
+                    radius = 4.dp.toPx(),
+                    center = Offset(xPos(i), yPos(score))
+                )
+                drawCircle(Color.White, radius = 2.dp.toPx(), center = Offset(xPos(i), yPos(score)))
+            }
+        }
+    }
+}
+
+// ── Session card ──────────────────────────────────────────────────────────────
+@Composable
+private fun SessionCard(
+    session: GaitSession,
+    hasInsoles: Boolean,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dateStr = SimpleDateFormat(
+        "MMM d, yyyy",
+        LocalLocale.current.platformLocale
+    ).format(Date(session.timestamp))
+
+    Card(
+        onClick = onToggle,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(dateStr, style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "${session.durationSeconds / 60} min session · ${session.pressureData?.stepCount ?: 0} steps",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Score row
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MiniScoreBadge("Posture", session.gaitAnalysis.postureScore, Color(0xFF1565C0))
+                MiniScoreBadge("Balance", session.gaitAnalysis.balanceScore, Color(0xFF2E7D32))
+                MiniScoreBadge("Symmetry", session.gaitAnalysis.symmetryScore, Color(0xFF6A1B9A))
+            }
+
+            // Expanded detail
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // COP stabilogram
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "COP Trajectory",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            if (hasInsoles && session.pressureData != null) {
+                                StabilogramChart(
+                                    copPoints = session.pressureData!!.copTrajectory,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                )
+                            } else {
+                                NoInsolesPlaceholder(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                )
+                            }
+                        }
+
+                        // Body deviation
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Body Deviation",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            DeviationChart(
+                                series = session.gaitAnalysis.positionSeries,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                            )
+                        }
+                    }
+
+                    // Abnormalities
+                    if (session.gaitAnalysis.abnormalities.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        Text("Notes", style = MaterialTheme.typography.labelMedium)
+                        session.gaitAnalysis.abnormalities.forEach { note ->
+                            Text(
+                                "· $note",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniScoreBadge(label: String, score: Float, color: Color) {
+    Surface(shape = RoundedCornerShape(6.dp), color = color.copy(alpha = 0.12f)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                "${score.toInt()}%",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = color
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+// ── Full chart composables ────────────────────────────────────────────────────
+
+@Composable
+private fun StabilogramChart(copPoints: List<CopPoint>, modifier: Modifier = Modifier) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val axisColor = Color.Gray.copy(alpha = 0.35f)
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cx = w / 2f
+        val cy = h / 2f
+
+        drawRect(color = surfaceVariant, size = size)
+
+        val axisStroke = 1.dp.toPx()
+        drawLine(axisColor, Offset(0f, cy), Offset(w, cy), strokeWidth = axisStroke)
+        drawLine(axisColor, Offset(cx, 0f), Offset(cx, h), strokeWidth = axisStroke)
+
+        if (copPoints.size < 2) return@Canvas
+
+        val scaleX = (w * 0.85f) / 70f
+        val scaleY = (h * 0.85f) / 50f
+
+        val path = Path()
+        copPoints.forEachIndexed { index, pt ->
+            val px = cx + pt.x * scaleX
+            val py = cy - pt.y * scaleY
+            if (index == 0) path.moveTo(px, py) else path.lineTo(px, py)
+        }
+        drawPath(
+            path = path,
+            color = primaryColor.copy(alpha = 0.85f),
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+
+        val first = copPoints.first()
+        val last = copPoints.last()
+        drawCircle(
+            Color(0xFF4CAF50),
+            radius = 4.dp.toPx(),
+            center = Offset(cx + first.x * scaleX, cy - first.y * scaleY)
+        )
+        drawCircle(
+            Color(0xFFF44336),
+            radius = 4.dp.toPx(),
+            center = Offset(cx + last.x * scaleX, cy - last.y * scaleY)
+        )
+    }
+}
+
+@Composable
+private fun DeviationChart(series: List<BodyPosition>, modifier: Modifier = Modifier) {
+    val primary = MaterialTheme.colorScheme.primary
+    val errorColor = MaterialTheme.colorScheme.error
+    val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
+    val gridColor = Color.Gray.copy(alpha = 0.2f)
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val midY = h / 2f
+
+        drawRect(color = surfaceColor, size = size)
+
+        // Grid at ±5 and ±10 cm
+        val maxDev = 12f
+        listOf(-10f, -5f, 5f, 10f).forEach { level ->
+            val y = midY - level / maxDev * midY
+            drawLine(gridColor, Offset(0f, y), Offset(w, y), strokeWidth = 1.dp.toPx())
+        }
+
+        // Zero line
+        drawLine(
+            color = Color(0xFF4CAF50),
+            start = Offset(0f, midY),
+            end = Offset(w, midY),
+            strokeWidth = 1.5.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 4f))
+        )
+
+        if (series.size < 2) return@Canvas
+
+        val scaleY = midY / maxDev
+        val scaleX = w / (series.size - 1).toFloat().coerceAtLeast(1f)
+
+        val pathX = Path()
+        series.forEachIndexed { i, pt ->
+            val px = i * scaleX
+            val py = midY - pt.deviationX * scaleY
+            if (i == 0) pathX.moveTo(px, py) else pathX.lineTo(px, py)
+        }
+        drawPath(
+            pathX,
+            errorColor.copy(alpha = 0.85f),
+            style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+
+        val pathY = Path()
+        series.forEachIndexed { i, pt ->
+            val px = i * scaleX
+            val py = midY - pt.deviationY * scaleY
+            if (i == 0) pathY.moveTo(px, py) else pathY.lineTo(px, py)
+        }
+        drawPath(
+            pathY,
+            primary.copy(alpha = 0.85f),
+            style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+@Composable
+private fun NoInsolesPlaceholder(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "No smart insoles connected",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+        }
+    }
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+@Preview(showBackground = true)
+@Composable
+private fun RehabHistoryPreview() {
+    AppTheme {
+        RehabHistoryContent(
+            state = RehabUiState(
+                sessions = RehabMockData.generateSessions(),
+                hasInsoles = true
+            ),
+            onAction = {},
+            onBack = {}
+        )
+    }
+}
