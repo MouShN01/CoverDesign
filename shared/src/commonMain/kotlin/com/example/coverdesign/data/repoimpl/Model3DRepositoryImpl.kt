@@ -80,6 +80,15 @@ class Model3DRepositoryImpl(
         Resource.Error("Failed to load cached model: ${e.message}", e)
     }
 
+    override suspend fun getAllAdaptedModelsByConfigId(configId: String): Resource<List<AdaptedModel3D>> = try {
+        val entities = db.adaptedModel3DQueries
+            .selectAllByConfigId(configId)
+            .executeAsList()
+        Resource.Success(entities.map { it.toDomain() })
+    } catch (e: Exception) {
+        Resource.Error("Failed to load adapted models for config $configId: ${e.message}", e)
+    }
+
     override suspend fun getAdaptedModelById(id: String): Resource<AdaptedModel3D?> = try {
         val entity = db.adaptedModel3DQueries
             .selectAdaptedById(id)

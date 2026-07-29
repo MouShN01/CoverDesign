@@ -1,7 +1,10 @@
+-- configId references ProstheticCoverOrderConfigEntity so multiple model iterations
+-- (colour variants, revisions, bilateral cases) can be linked to one cover config.
+-- Catalog-flow adapted models are linked via OrderEntity.adaptedModelId instead.
 CREATE TABLE AdaptedModel3DEntity (
     id                   TEXT    NOT NULL PRIMARY KEY,
-    configId             TEXT    NOT NULL UNIQUE,
-    baseModelId          TEXT    NOT NULL,   -- which base model this was adapted from
+    configId             TEXT    NOT NULL,
+    baseModelId          TEXT    NOT NULL,
     modelUrl             TEXT,
     previewImageUrl      TEXT,
     status               TEXT    NOT NULL DEFAULT 'PENDING',
@@ -9,8 +12,7 @@ CREATE TABLE AdaptedModel3DEntity (
     error                TEXT,
     progress             INTEGER NOT NULL DEFAULT 0,
     estimatedWaitSeconds INTEGER,
-    FOREIGN KEY (configId) REFERENCES ProductConfigEntity(id) ON DELETE CASCADE,
-    FOREIGN KEY (baseModelId) REFERENCES ProductEntity(id) ON DELETE CASCADE
+    FOREIGN KEY (configId) REFERENCES ProstheticCoverOrderConfigEntity(orderId) ON DELETE CASCADE
 );
 
 insertOrReplaceAdaptedModel:
@@ -20,6 +22,11 @@ selectByConfigId:
 SELECT * FROM AdaptedModel3DEntity
 WHERE configId = :configId
 LIMIT 1;
+
+selectAllByConfigId:
+SELECT * FROM AdaptedModel3DEntity
+WHERE configId = :configId
+ORDER BY generatedAt DESC;
 
 selectAdaptedById:
 SELECT * FROM AdaptedModel3DEntity

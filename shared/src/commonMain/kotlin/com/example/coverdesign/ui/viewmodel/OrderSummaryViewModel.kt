@@ -2,7 +2,8 @@ package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.Order
-import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
+import com.example.coverdesign.domain.model.OrderDetail
+import com.example.coverdesign.domain.usecase.GetOrderDetailUseCase
 import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.util.onError
 import com.example.coverdesign.domain.util.onSuccess
@@ -12,32 +13,25 @@ import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
 class OrderSummaryViewModel(
-    private val submitOrderUseCase     : SubmitOrderUseCase,
-    private val getOrderSummary : GetOrderSummaryUseCase
+    private val submitOrderUseCase : SubmitOrderUseCase,
+    private val getOrderDetail     : GetOrderDetailUseCase,
 ) : BaseViewModel<OrderSummaryUiState, OrderSummaryUiEvent>() {
 
     override fun initialState() = OrderSummaryUiState()
-
-    init {
-        observeOrderHistory()
-    }
 
     fun onAction(action: OrderSummaryAction) {
         when (action) {
             is OrderSummaryAction.LoadOrder   -> loadOrder(action.orderId)
             is OrderSummaryAction.SubmitOrder -> submitOrder(action.order)
-            is OrderSummaryAction.ViewHistory -> sendEvent(
-                OrderSummaryUiEvent.NavigateToHistory
-            )
         }
     }
 
     private fun loadOrder(orderId: String) {
         viewModelScope.launch {
-            setState { copy(isLoading = true) }
-            getOrderSummary(orderId)
-                .onSuccess { order ->
-                    setState { copy(order = order, isLoading = false) }
+            setState { copy(isLoading = true, error = null) }
+            getOrderDetail(orderId)
+                .onSuccess { detail ->
+                    setState { copy(orderDetail = detail, isLoading = false) }
                 }
                 .onError { message, _ ->
                     setState { copy(error = message, isLoading = false) }
@@ -58,35 +52,26 @@ class OrderSummaryViewModel(
                 }
         }
     }
-
-    private fun observeOrderHistory() {
-        viewModelScope.launch {
-            getOrderSummary.observeHistory().collect { orders ->
-                setState { copy(orderHistory = orders) }
-            }
-        }
-    }
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────────────────────
 data class OrderSummaryUiState(
-    val order            : Order?       = null,
-    val orderHistory     : List<Order>  = emptyList(),
+    val orderDetail      : OrderDetail? = null,
     val submittedOrderId : String?      = null,
     val isLoading        : Boolean      = false,
     val isSubmitting     : Boolean      = false,
-    val error            : String?      = null
-) : UiState
-
-// ── Events ────────────────────────────────────────────────────────────────────
-sealed class OrderSummaryUiEvent : UiEvent {
-    data class OrderSubmitted(val orderId: String) : OrderSummaryUiEvent()
-    object NavigateToHistory                       : OrderSummaryUiEvent()
+    val error            : String?      = null,
+) : UiState {
+    val order: Order? get() = (orderDetail as? OrderDetail.CatalogOrder)?.order
 }
 
-// ── Actions ───────────────────────────────────────────────────────────────────
+// ── Events ─────────────────────────────────────────────────────────────────────
+sealed class OrderSummaryUiEvent : UiEvent {
+    data class OrderSubmitted(val orderId: String) : OrderSummaryUiEvent()
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────────
 sealed class OrderSummaryAction {
     data class LoadOrder(val orderId: String)  : OrderSummaryAction()
     data class SubmitOrder(val order: Order)   : OrderSummaryAction()
-    object ViewHistory                         : OrderSummaryAction()
 }

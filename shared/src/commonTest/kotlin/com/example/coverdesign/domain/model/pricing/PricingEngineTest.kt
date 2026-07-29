@@ -3,7 +3,7 @@ package com.example.coverdesign.domain.model.pricing
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
@@ -21,11 +21,11 @@ class PricingEngineTest {
         sizeLabel: SizeLabel? = SizeLabel.M,
         measurement: Measurement = Measurement(0.0, 0.0, 0.0),
         quantity: Int = 1,
-        category: ProductCategory = ProductCategory.ACCESSORY
+        category: OrderCategory = OrderCategory.ACCESSORY
     ) = ProductConfig(
         id = "cfg",
         productId = "prod",
-        productCategory = category,
+        orderCategory = category,
         measurement = measurement,
         sizeLabel = sizeLabel,
         color = ProductColor("White", "#FFFFFF"),
@@ -183,7 +183,7 @@ class PricingEngineTest {
             makeConfig(
                 sizeLabel = null,
                 measurement = Measurement(40.0, 20.0, 20.0),
-                category = ProductCategory.ACCESSORY
+                category = OrderCategory.ACCESSORY
             ),
             basePrice = 100.0
         )
@@ -198,7 +198,7 @@ class PricingEngineTest {
             makeConfig(
                 sizeLabel = null,
                 measurement = Measurement(1.0, 1.0, 1.0),
-                category = ProductCategory.ACCESSORY
+                category = OrderCategory.ACCESSORY
             ),
             basePrice = 100.0
         )
@@ -212,7 +212,7 @@ class PricingEngineTest {
             makeConfig(
                 sizeLabel = null,
                 measurement = Measurement(100.0, 100.0, 100.0),
-                category = ProductCategory.ACCESSORY
+                category = OrderCategory.ACCESSORY
             ),
             basePrice = 100.0
         )

@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,87 +27,63 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.coverdesign.domain.model.Material
-import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderCategory
+import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.domain.model.OrderStatus
-import com.example.coverdesign.domain.model.ProductCategory
-import com.example.coverdesign.domain.model.ProductColor
-import com.example.coverdesign.domain.model.ProductConfig
-import com.example.coverdesign.domain.model.Texture
-import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.screens.home.formatDate
 import com.example.coverdesign.ui.theme.AppTheme
-import com.example.coverdesign.ui.viewmodel.OrderSummaryUiState
-import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
+import com.example.coverdesign.ui.viewmodel.OrderListFilter
+import com.example.coverdesign.ui.viewmodel.OrderListUiState
+import com.example.coverdesign.ui.viewmodel.OrderListViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import java.util.Locale
 
-// androidApp/ui/screens/orders/OrdersListScreen.kt
 @Composable
 fun OrdersListScreen(
-    viewModel    : OrderSummaryViewModel = koinViewModel(),
+    viewModel    : OrderListViewModel = koinViewModel(),
     onOrderClick : (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    OrdersListContent(state = state, onOrderClick = onOrderClick)
+    OrdersListContent(
+        state        = state,
+        onOrderClick = onOrderClick,
+        onFilterSelect = viewModel::setFilter
+    )
 }
 
 @Composable
 internal fun OrdersListContent(
-    state        : OrderSummaryUiState,
-    onOrderClick : (String) -> Unit
+    state          : OrderListUiState,
+    onOrderClick   : (String) -> Unit,
+    onFilterSelect : (OrderListFilter) -> Unit
 ) {
     Scaffold(
         topBar = { AppTopBar(title = "My Orders") }
     ) { padding ->
-        if (state.orderHistory.isEmpty()) {
-            Box(
-                Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No orders yet",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            LazyColumn(
-                modifier       = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(state.orderHistory, key = { it.id }) { order ->
-                    Card(
-                        onClick  = { onOrderClick(order.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape    = RoundedCornerShape(12.dp),
-                        border   = BorderStroke(
-                            1.dp, MaterialTheme.colorScheme.outlineVariant
-                        )
-                    ) {
-                        Row(modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(order.config.productCategory.name,
-                                    style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    formatDate(order.createdAt),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    "$${String.format(Locale.US,"%.2f", order.priceEstimate.total)}", //TODO chanhe locale based on selected lang
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(Modifier.height(2.dp))
-                                OrderStatusChip(status = order.status)
-                            }
-                        }
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            FilterRow(selected = state.filter, onSelect = onFilterSelect)
+
+            if (state.visibleItems.isEmpty()) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No orders yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier            = Modifier.fillMaxSize(),
+                    contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.visibleItems, key = { it.orderId }) { item ->
+                        OrderListCard(item = item, onClick = { onOrderClick(item.orderId) })
                     }
                 }
             }
@@ -113,57 +91,87 @@ internal fun OrdersListContent(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun OrdersListScreenPreview() {
-    AppTheme {
-        OrdersListContent(
-            state = OrderSummaryUiState(
-                orderHistory = listOf(
-                    sampleOrder.copy(id = "1", status = OrderStatus.DRAFT),
-                    sampleOrder.copy(id = "2", status = OrderStatus.IN_PRODUCTION, createdAt = System.currentTimeMillis() - 86400000, config = sampleOrder.config.copy(productCategory = ProductCategory.CLOTHING)),
-                    sampleOrder.copy(id = "3", status = OrderStatus.SHIPPED, createdAt = System.currentTimeMillis() - 172800000, config = sampleOrder.config.copy(productCategory = ProductCategory.INTERIOR_DECOR)) ,
-                    sampleOrder.copy(id = "4", status = OrderStatus.CANCELLED, createdAt = System.currentTimeMillis() - 172800000, config = sampleOrder.config.copy(productCategory = ProductCategory.FOOTWEAR)),
-                    sampleOrder.copy(id = "5", status = OrderStatus.CONFIRMED, createdAt = System.currentTimeMillis() - 172800000),
-                    sampleOrder.copy(id = "6", status = OrderStatus.SUBMITTED, createdAt = System.currentTimeMillis() - 172800000),
-
-                )
-            ),
-            onOrderClick = {}
-        )
+private fun FilterRow(
+    selected : OrderListFilter,
+    onSelect : (OrderListFilter) -> Unit
+) {
+    LazyRow(
+        contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(OrderListFilter.entries) { filter ->
+            FilterChip(
+                selected = filter == selected,
+                onClick  = { onSelect(filter) },
+                label    = { Text(filter.label) }
+            )
+        }
     }
 }
 
-private val sampleOrder = Order(
-    id = "ord_1",
-    adaptedModelId = "mod_1",
-    config = ProductConfig(
-        id = "conf_1",
-        productId = "prod_1",
-        productCategory = ProductCategory.ACCESSORY,
-        measurement = Measurement(100.0, 50.0, 10.0),
-        sizeLabel = null,
-        color = ProductColor("Black", "#000000"),
-        material = Material.METAL,
-        texture = Texture(
-            id = "TODO()",
-            name = "TODO()",
-            previewUrl = "TODO()",
-            description = "TODO()"
-        ),
-        inscription = "",
-        userPhotoUri = null,
-        additionalElements = emptyList(),
-        quantity = 1,
-        createdAt = System.currentTimeMillis()
-    ),
-    priceEstimate = PriceEstimate(
-        configId = "conf_1",
-        basePrice = 100.0,
-        subtotal = 110.0,
-        total = 110.0,
-        quantity = 1
-    ),
-    status = OrderStatus.DRAFT,
-    createdAt = System.currentTimeMillis()
-)
+private val OrderListFilter.label: String get() = when (this) {
+    OrderListFilter.ALL            -> "All"
+    OrderListFilter.COSMETIC_COVER -> "Prosthetic Cover"
+    OrderListFilter.INSOLE         -> "Insole"
+}
+
+@Composable
+private fun OrderListCard(item: OrderListItem, onClick: () -> Unit) {
+    Card(
+        onClick  = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape    = RoundedCornerShape(12.dp),
+        border   = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            modifier          = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.category.label, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    formatDate(item.createdAt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "$${String.format(Locale.US, "%.2f", item.totalPrice)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(2.dp))
+                OrderStatusChip(status = item.status)
+            }
+        }
+    }
+}
+
+private val OrderCategory.label: String get() = when (this) {
+    OrderCategory.COSMETIC_COVER -> "Prosthetic Cover"
+    OrderCategory.INSOLE         -> "Insole"
+    else                         -> name
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun OrdersListScreenPreview() {
+    val now = System.currentTimeMillis()
+    AppTheme {
+        OrdersListContent(
+            state = OrderListUiState(
+                allItems = listOf(
+                    OrderListItem("1", OrderCategory.COSMETIC_COVER, now,               320.0, OrderStatus.DRAFT),
+                    OrderListItem("2", OrderCategory.INSOLE,         now - 86_400_000,  95.0,  OrderStatus.IN_PRODUCTION),
+                    OrderListItem("3", OrderCategory.COSMETIC_COVER, now - 172_800_000, 415.0, OrderStatus.SHIPPED),
+                    OrderListItem("4", OrderCategory.INSOLE,         now - 259_200_000, 80.0,  OrderStatus.CANCELLED),
+                    OrderListItem("5", OrderCategory.COSMETIC_COVER, now - 345_600_000, 310.0, OrderStatus.CONFIRMED),
+                )
+            ),
+            onOrderClick   = {},
+            onFilterSelect = {}
+        )
+    }
+}

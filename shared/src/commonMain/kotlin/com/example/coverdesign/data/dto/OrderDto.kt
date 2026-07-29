@@ -24,3 +24,15 @@ data class SubmitOrderRequestDto(
     @SerialName("config_id") val configId: String,
     @SerialName("notes") val notes: String
 )
+
+@Serializable
+data class SubmitInsoleOrderRequestDto(
+    @SerialName("config") val config: InsoleOrderConfigDto,
+    @SerialName("notes") val notes: String = ""
+)
+
+@Serializable
+data class SubmitProstheticCoverOrderRequestDto(
+    @SerialName("config") val config: ProstheticCoverOrderConfigDto,
+    @SerialName("notes") val notes: String = ""
+)

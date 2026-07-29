@@ -1,7 +1,7 @@
 package com.example.coverdesign.domain.validator
 
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MeasurementValidator
@@ -24,15 +24,17 @@ class MeasurementValidator {
 
     // ── public entry point ────────────────────────────────────────────────────
 
-    fun validate(category: ProductCategory, m: Measurement): String? =
+    fun validate(category: OrderCategory, m: Measurement): String? =
         when (category) {
-            ProductCategory.JEWELRY        -> validateJewelry(m)
-            ProductCategory.ACCESSORY      -> validateAccessory(m)
-            ProductCategory.CLOTHING       -> validateClothingBody(m)
-            ProductCategory.FOOTWEAR       -> validateFootwear(m)
-            ProductCategory.THREE_D_PRINT  -> validateThreeDPrint(m)
-            ProductCategory.INTERIOR_DECOR -> validateInteriorDecor(m)
-            ProductCategory.OTHER          -> validateGeneric(m)
+            OrderCategory.JEWELRY        -> validateJewelry(m)
+            OrderCategory.ACCESSORY      -> validateAccessory(m)
+            OrderCategory.CLOTHING       -> validateClothingBody(m)
+            OrderCategory.FOOTWEAR       -> validateFootwear(m)
+            OrderCategory.THREE_D_PRINT  -> validateThreeDPrint(m)
+            OrderCategory.INTERIOR_DECOR -> validateInteriorDecor(m)
+            OrderCategory.OTHER          -> validateGeneric(m)
+            OrderCategory.COSMETIC_COVER -> validateProsthesisCover(m)
+            OrderCategory.INSOLE         -> validateFootwear(m)
         }
 
     // ── JEWELRY ───────────────────────────────────────────────────────────────
@@ -189,6 +191,13 @@ class MeasurementValidator {
     // ── OTHER — permissive generic bounds ─────────────────────────────────────
 
     private fun validateGeneric(m: Measurement): String? {
+        if (m.height < 0.0 || m.width < 0.0 || m.depth < 0.0)
+            return "Dimensions cannot be negative"
+        if (m.height > 10_000.0 || m.width > 10_000.0 || m.depth > 10_000.0)
+            return "Dimension exceeds 10 000 mm — please check your input"
+        return null
+    }
+    private fun validateProsthesisCover(m: Measurement): String? { ///TODO add validation for prosthesis cover
         if (m.height < 0.0 || m.width < 0.0 || m.depth < 0.0)
             return "Dimensions cannot be negative"
         if (m.height > 10_000.0 || m.width > 10_000.0 || m.depth > 10_000.0)

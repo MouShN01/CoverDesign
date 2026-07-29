@@ -6,5 +6,5 @@ import com.example.coverdesign.db.AppDatabase
 
 actual class DatabaseDriverFactory {
     actual fun createDriver(): SqlDriver =
-        NativeSqliteDriver(AppDatabase.Schema, "app.db")
+        NativeSqliteDriver(AppDatabase.Schema, "app_v2.db")
 }

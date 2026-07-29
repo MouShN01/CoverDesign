@@ -12,7 +12,7 @@ actual class DatabaseDriverFactory(private val context: Context) {
         AndroidSqliteDriver(
             schema = AppDatabase.Schema,
             context = context,
-            name = "app.db",
+            name = "app_v3.db",
             callback = object : AndroidSqliteDriver.Callback(AppDatabase.Schema) {
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     super.onOpen(db)

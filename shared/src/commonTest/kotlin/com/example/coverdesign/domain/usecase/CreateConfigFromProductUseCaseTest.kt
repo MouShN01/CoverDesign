@@ -1,9 +1,8 @@
 package com.example.coverdesign.domain.usecase
 
 import com.example.coverdesign.domain.model.Material
-import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Product
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
@@ -25,7 +24,7 @@ class CreateConfigFromProductUseCaseTest {
         name = "Test Cover",
         description = "A test product",
         basePrice = 50.0,
-        category = ProductCategory.ACCESSORY,
+        category = OrderCategory.ACCESSORY,
         availableMaterials = listOf(Material.PLA, Material.ABS),
         availableTextures = listOf(Texture("t1", "Matte", null, null)),
         imageUrl = ""
@@ -49,7 +48,7 @@ class CreateConfigFromProductUseCaseTest {
     fun invoke_configHasCorrectCategory() = runTest {
         val useCase = CreateConfigFromProductUseCase(FakeProductRepository())
         val result = assertIs<Resource.Success<ProductConfig>>(useCase(testProduct))
-        assertEquals(ProductCategory.ACCESSORY, result.data.productCategory)
+        assertEquals(OrderCategory.ACCESSORY, result.data.orderCategory)
     }
 
     @Test

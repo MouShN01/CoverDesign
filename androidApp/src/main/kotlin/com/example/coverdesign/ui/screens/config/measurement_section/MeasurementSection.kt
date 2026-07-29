@@ -17,12 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.SizeLabel
 
 @Composable
 fun MeasurementSection(
-    category: ProductCategory,
+    category: OrderCategory,
     measurement: Measurement,
     sizeLabel: SizeLabel?,
     measError: String?,
@@ -33,7 +33,7 @@ fun MeasurementSection(
 
         // ── FOOTWEAR ──────────────────────────────────────────────────────
         // EU shoe size grid + foot-length input with measuring guide
-        ProductCategory.FOOTWEAR -> {
+        OrderCategory.FOOTWEAR -> {
             FootwearSizeSection(
                 measurement = measurement,
                 sizeLabel = sizeLabel,
@@ -45,7 +45,7 @@ fun MeasurementSection(
 
         // ── ACCESSORY ─────────────────────────────────────────────────────
         // Subgroup selector (Ring / Earring / Bracelet) then size inputs
-        ProductCategory.ACCESSORY -> {
+        OrderCategory.ACCESSORY -> {
             AccessorySizeSection(
                 measurement = measurement,
                 sizeLabel = sizeLabel,
@@ -57,7 +57,7 @@ fun MeasurementSection(
 
         // ── THREE_D_PRINT ─────────────────────────────────────────────────
         // Only raw mm measurements; no size grid
-        ProductCategory.THREE_D_PRINT -> {
+        OrderCategory.THREE_D_PRINT -> {
             MeasurementInputs(
                 measurement = measurement,
                 labels = listOf("Height", "Width", "Depth"),
@@ -69,7 +69,7 @@ fun MeasurementSection(
 
         // ── INTERIOR_DECOR ────────────────────────────────────────────────
         // Only mm measurements; no size grid
-        ProductCategory.INTERIOR_DECOR -> {
+        OrderCategory.INTERIOR_DECOR -> {
             MeasurementInputs(
                 measurement = measurement,
                 labels = listOf("Height", "Width", "Depth"),
@@ -81,7 +81,7 @@ fun MeasurementSection(
 
         // ── CLOTHING ─────────────────────────────────────────────────────
         // Height (cm) required; Weight (kg) + Waist (cm) optional but helpful
-        ProductCategory.CLOTHING -> {
+        OrderCategory.CLOTHING -> {
             ClothingSizeSection(
                 measurement = measurement,
                 sizeLabel = sizeLabel,
@@ -91,7 +91,7 @@ fun MeasurementSection(
             )
         }
 
-        ProductCategory.JEWELRY -> {
+        OrderCategory.JEWELRY -> {
             AccessorySizeSection(
                 measurement = measurement,
                 sizeLabel = sizeLabel,

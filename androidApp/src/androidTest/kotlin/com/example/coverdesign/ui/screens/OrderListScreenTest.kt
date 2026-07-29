@@ -9,7 +9,7 @@ import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
@@ -33,7 +33,7 @@ class OrderListScreenTest {
         config = ProductConfig(
             id = "config_1",
             productId = "prod_1",
-            productCategory = ProductCategory.THREE_D_PRINT,
+            orderCategory = OrderCategory.THREE_D_PRINT,
             measurement = Measurement(10.0, 10.0, 10.0),
             sizeLabel = SizeLabel.M,
             color = ProductColor("Red", "#FF0000"),

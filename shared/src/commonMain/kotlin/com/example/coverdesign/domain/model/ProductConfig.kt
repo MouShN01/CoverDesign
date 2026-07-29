@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class ProductConfig(
     val id: String,
     val productId: String,
-    val productCategory: ProductCategory,        // Тип товару
+    val orderCategory: OrderCategory,        // Тип товару
     val measurement: Measurement,        // Розмір (numeric)
     val sizeLabel: SizeLabel?,           // Розмір (enum S/M/L)
     val color: ProductColor,             // Колір

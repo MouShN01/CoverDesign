@@ -12,7 +12,7 @@ class UpdateConfigUseCase(
     private val validator: MeasurementValidator
 ) {
     suspend operator fun invoke(updated: ProductConfig): Resource<ProductConfig> {
-        val error = validator.validate(updated.productCategory, updated.measurement)
+        val error = validator.validate(updated.orderCategory, updated.measurement)
         if (error != null) return Resource.Error(error)
 
         repo.saveConfig(updated)

@@ -2,15 +2,24 @@ package com.example.coverdesign.data.dto
 
 import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.AdditionalElement
+import com.example.coverdesign.domain.model.ButtonPlacement
+import com.example.coverdesign.domain.model.FasteningType
+import com.example.coverdesign.domain.model.InsoleFootConfig
+import com.example.coverdesign.domain.model.InsoleOrderConfig
+import com.example.coverdesign.domain.model.LegSide
+import com.example.coverdesign.domain.model.LimbLevel
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.domain.model.Product
-import com.example.coverdesign.domain.model.ProductCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.ProstheticCommonMeasurements
+import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
+import com.example.coverdesign.domain.model.ProstheticTypeEnum
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.Token
@@ -20,12 +29,12 @@ import com.example.coverdesign.domain.model.pricing.PriceEstimate
 // DTO → Domain  (incoming from backend)
 // ═══════════════════════════════════════════════════════════════════
 
-fun ProductDto.toDomain() = Product(
+fun ProductDto.toDomain() = Product.Generic(
     id = id,
     name = name,
     description = description,
     basePrice = basePrice,
-    category = ProductCategory.valueOf(category.uppercase()),
+    category = OrderCategory.valueOf(category.uppercase()),
     availableMaterials = materials.map { Material.valueOf(it.uppercase()) },
     availableTextures = textures.map { it.toDomain() },
     imageUrl = imageUrl
@@ -41,7 +50,7 @@ fun TextureDto.toDomain() = Texture(
 fun ProductConfigDto.toDomain() = ProductConfig(
     id = id,
     productId = productId,
-    productCategory = ProductCategory.valueOf(productCategory.uppercase()),
+    orderCategory = OrderCategory.valueOf(productCategory.uppercase()),
     measurement = Measurement(
         height = heightMm,
         width = widthMm,
@@ -92,11 +101,11 @@ fun PriceEstimate.toDto() = PriceEstimateDto(
     currency = currency,
     basePrice = basePrice,
     materialSurcharges = materialSurcharges,
-    textureSurcharge = textureSurcharge,
-    inscriptionSurcharge = inscriptionSurcharge,
-    elementSurcharges = elementSurcharges,
+    textureSurcharge = textureSurcharge!!,
+    inscriptionSurcharge = inscriptionSurcharge!!,
+    elementSurcharges = elementSurcharges!!,
     sizeMultiplier = sizeMultiplier,
-    sizeMultiplierLabel = sizeMultiplierLabel,
+    sizeMultiplierLabel = sizeMultiplierLabel!!,
     quantity = quantity,
     subtotal = subtotal,
     total = total
@@ -133,7 +142,7 @@ fun Order.toDto() = Order(
 fun ProductConfig.toDto() = ProductConfigDto(
     id = id,
     productId = productId,
-    productCategory = productCategory.name.lowercase(),
+    productCategory = orderCategory.name.lowercase(),
     heightMm = measurement.height,
     widthMm = measurement.width,
     depthMm = measurement.depth,
@@ -165,4 +174,106 @@ fun AdaptedModel3DDto.toDomain() = AdaptedModel3D(
     estimatedWaitSeconds = estimatedWaitSeconds,
     progress = progress.toLong(),
     error = error
+)
+
+// ═══════════════════════════════════════════════════════════════════
+// InsoleOrderConfig  ↔  InsoleOrderConfigDto
+// ═══════════════════════════════════════════════════════════════════
+
+fun InsoleFootConfigDto.toDomain() = InsoleFootConfig(
+    euSize = euSize,
+    lengthMm = lengthMm,
+    widthMm = widthMm,
+    side = LegSide.valueOf(side.uppercase())
+)
+
+fun InsoleFootConfig.toDto() = InsoleFootConfigDto(
+    euSize = euSize,
+    lengthMm = lengthMm,
+    widthMm = widthMm,
+    side = side.name.lowercase()
+)
+
+fun InsoleOrderConfigDto.toDomain() = InsoleOrderConfig(
+    orderId = orderId,
+    category = OrderCategory.valueOf(category.uppercase()),
+    quantity = quantity,
+    priceEstimate = priceEstimate.toDomain(),
+    rightFoot = rightFoot.toDomain(),
+    leftFoot = leftFoot?.toDomain(),
+    material = Material.valueOf(material.uppercase()),
+    color = ProductColor(name = colorName, hex = colorHex)
+)
+
+fun InsoleOrderConfig.toDto() = InsoleOrderConfigDto(
+    orderId = orderId,
+    category = category.name.lowercase(),
+    quantity = quantity,
+    priceEstimate = priceEstimate.toDto(),
+    rightFoot = rightFoot.toDto(),
+    leftFoot = leftFoot?.toDto(),
+    material = material.name.lowercase(),
+    colorName = color.name,
+    colorHex = color.hex
+)
+
+// ═══════════════════════════════════════════════════════════════════
+// ProstheticCoverOrderConfig  ↔  ProstheticCoverOrderConfigDto
+// ═══════════════════════════════════════════════════════════════════
+
+fun ProstheticCoverOrderConfigDto.toDomain() = ProstheticCoverOrderConfig(
+    orderId = orderId,
+    category = OrderCategory.valueOf(category.uppercase()),
+    quantity = quantity,
+    priceEstimate = priceEstimate.toDomain(),
+    limbSide = LegSide.valueOf(limbSide.uppercase()),
+    limbLevel = LimbLevel.valueOf(limbLevel.uppercase()),
+    prostheticType = prostheticType?.let { runCatching { ProstheticTypeEnum.valueOf(it) }.getOrNull() },
+    commonMeasurements = ProstheticCommonMeasurements(
+        circumferenceMm = circumferenceMm,
+        kneeApexToFootshellTopMm = kneeApexToFootshellTopMm
+    ),
+    typeSpecificMeasurementMm = typeSpecificMeasurementMm,
+    secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
+    buttonPlacement = buttonPlacement?.let { runCatching { ButtonPlacement.valueOf(it.uppercase()) }.getOrNull() },
+    fasteningType = runCatching { FasteningType.valueOf(fasteningType.uppercase()) }.getOrDefault(FasteningType.STRAP),
+    color = ProductColor(name = colorName, hex = colorHex),
+    material = Material.valueOf(material.uppercase()),
+    texture = Texture(
+        id = textureId,
+        name = textureName,
+        previewUrl = texturePreviewUrl,
+        description = textureDescription
+    ),
+    inscription = inscription,
+    additionalElements = additionalElements.map { AdditionalElement.valueOf(it.uppercase()) },
+    additionalNotes = additionalNotes,
+    createdAt = createdAt
+)
+
+fun ProstheticCoverOrderConfig.toDto() = ProstheticCoverOrderConfigDto(
+    orderId = orderId,
+    category = category.name.lowercase(),
+    quantity = quantity,
+    priceEstimate = priceEstimate.toDto(),
+    limbSide = limbSide.name.lowercase(),
+    limbLevel = limbLevel.name.lowercase(),
+    prostheticType = prostheticType?.name,
+    circumferenceMm = commonMeasurements.circumferenceMm,
+    kneeApexToFootshellTopMm = commonMeasurements.kneeApexToFootshellTopMm,
+    typeSpecificMeasurementMm = typeSpecificMeasurementMm,
+    secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
+    buttonPlacement = buttonPlacement?.name?.lowercase(),
+    fasteningType = fasteningType.name.lowercase(),
+    colorName = color.name,
+    colorHex = color.hex,
+    material = material.name.lowercase(),
+    textureId = texture.id,
+    textureName = texture.name,
+    texturePreviewUrl = texture.previewUrl,
+    textureDescription = texture.description,
+    inscription = inscription,
+    additionalElements = additionalElements.map { it.name.lowercase() },
+    additionalNotes = additionalNotes,
+    createdAt = createdAt
 )

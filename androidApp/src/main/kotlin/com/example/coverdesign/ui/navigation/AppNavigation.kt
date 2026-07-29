@@ -30,6 +30,8 @@ fun AppScaffold() {
         Screen.Register.route,
         Screen.ProductConfigFromCatalog.route,
         Screen.ProductConfigFromOrder.route,
+        Screen.NewOrder.route,
+        Screen.NewInsoleOrder.route,
         Screen.SelectRole.route,
         Screen.RehabHistory.route
     )

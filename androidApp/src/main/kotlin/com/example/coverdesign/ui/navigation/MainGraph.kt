@@ -15,6 +15,7 @@ import com.example.coverdesign.ui.screens.preview.ModifiableModelPreviewScreen
 import com.example.coverdesign.ui.screens.rehab.RehabHistoryScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
+import com.example.coverdesign.ui.viewmodel.OrderType
 
 fun NavGraphBuilder.mainGraph(
     navController: NavHostController
@@ -28,14 +29,15 @@ fun NavGraphBuilder.mainGraph(
         // ── bottom nav roots ──────────────────────────────────────────
         composable(Screen.Home.route) {
             HomeScreen(
-                onNewOrder = { navController.navigate(Screen.Catalog.route) },
+                onNewOrder = { navController.navigate(Screen.NewOrder.route) },
                 on3DVisualize = { navController.navigate(Screen.Model3D.route) },
                 onVirtualTryOn = { navController.navigate(Screen.ArTryOn.createRoute("")) },
                 onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderDetail.createRoute(orderId))
                 },
                 onSeeAllOrders = { navController.navigate(Screen.Orders.route) },
-                onOpenRehabHistory = { navController.navigate(Screen.RehabHistory.route) }
+                onOpenRehabHistory = { navController.navigate(Screen.RehabHistory.route) },
+                onOrderInsoles = { navController.navigate(Screen.NewInsoleOrder.route) }
             )
         }
         composable(Screen.RehabHistory.route) {
@@ -94,16 +96,41 @@ fun NavGraphBuilder.mainGraph(
                 }
             )
         }
+        composable(Screen.NewOrder.route) {
+            ProductConfigScreen(
+                entryMode = ConfigEntryMode.DirectNew(),
+                onProceed = { taskId, configId ->
+                    navController.navigate(Screen.ModelPreview.createRoute(taskId, configId))
+                },
+                onOrderSummary = { configId ->
+                    navController.navigate(Screen.OrderSummary.createRoute(configId))
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.NewInsoleOrder.route) {
+            ProductConfigScreen(
+                entryMode = ConfigEntryMode.DirectNew(OrderType.INSOLE),
+                onProceed = { taskId, configId ->
+                    navController.navigate(Screen.ModelPreview.createRoute(taskId, configId))
+                },
+                onOrderSummary = { configId ->
+                    navController.navigate(Screen.OrderSummary.createRoute(configId))
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
         composable(Screen.ProductConfigFromCatalog.route) { entry ->
             val productId = entry.arguments?.getString("productId") ?: return@composable
             ProductConfigScreen(
                 entryMode = ConfigEntryMode.FromProduct(productId),
                 onProceed = { taskId, configId ->
                     navController.navigate(
-                        Screen.ModelPreview.createRoute(
-                            taskId, configId
-                        )
+                        Screen.ModelPreview.createRoute(taskId, configId)
                     )
+                },
+                onOrderSummary = { configId ->
+                    navController.navigate(Screen.OrderSummary.createRoute(configId))
                 },
                 onBack = { navController.popBackStack() }
             )
@@ -114,6 +141,9 @@ fun NavGraphBuilder.mainGraph(
                 entryMode = ConfigEntryMode.FromExistingConfig(configId),
                 onProceed = { taskId, newConfigId ->
                     navController.navigate(Screen.ModelPreview.createRoute(taskId, newConfigId))
+                },
+                onOrderSummary = { configId ->
+                    navController.navigate(Screen.OrderSummary.createRoute(configId))
                 },
                 onBack = { navController.popBackStack() }
             )

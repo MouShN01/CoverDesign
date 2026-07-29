@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.runtime.Composable
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.ui.screens.ArMode
 
 
@@ -12,15 +12,15 @@ import com.example.coverdesign.ui.screens.ArMode
 fun PhotoUploadSection(
     currentUri      : String?,
     arMode          : ArMode,
-    productCategory : ProductCategory,
+    orderCategory : OrderCategory,
     onChanged       : (String?) -> Unit
 ) {
     when (arMode) {
         is ArMode.OnUserPhoto -> {
-            val hint = when (productCategory) {
-                ProductCategory.JEWELRY   ->
+            val hint = when (orderCategory) {
+                OrderCategory.JEWELRY   ->
                     "Upload a photo of yourself wearing similar jewellery — helps position the 3D model accurately."
-                ProductCategory.ACCESSORY ->
+                OrderCategory.ACCESSORY ->
                     "Upload a photo showing where you will wear this accessory — used for visual fitting reference."
                 else -> "Upload a reference photo for fitting."
             }
@@ -31,12 +31,12 @@ fun PhotoUploadSection(
             )
         }
         is ArMode.OnBodySilhouette -> {
-            val message = when (productCategory) {
-                ProductCategory.CLOTHING ->
+            val message = when (orderCategory) {
+                OrderCategory.CLOTHING ->
                     "Your clothing item will be previewed on a body silhouette based on the measurements you entered above."
-                ProductCategory.FOOTWEAR ->
+                OrderCategory.FOOTWEAR ->
                     "Your footwear will be shown on a body silhouette — enter foot measurements above for best fit."
-                ProductCategory.THREE_D_PRINT ->
+                OrderCategory.THREE_D_PRINT ->
                     "Your custom 3D-printed item will be previewed on a body silhouette. Adjust measurements above as needed."
                 else ->
                     "This item will be previewed on a body silhouette based on the measurements entered above."
@@ -48,8 +48,8 @@ fun PhotoUploadSection(
             )
         }
         is ArMode.InRoomSpace -> {
-            val message = when (productCategory) {
-                ProductCategory.INTERIOR_DECOR ->
+            val message = when (orderCategory) {
+                OrderCategory.INTERIOR_DECOR ->
                     "This décor item will be placed in your real environment using the phone camera and ARCore plane detection."
                 else ->
                     "This item will be placed in your real environment using the phone camera and ARCore plane detection."

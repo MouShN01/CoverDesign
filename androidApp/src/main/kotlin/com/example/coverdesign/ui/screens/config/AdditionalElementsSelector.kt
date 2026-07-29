@@ -15,92 +15,93 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.AdditionalElement
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 
 
 @Composable
 // Which AdditionalElements make sense for each ProductCategory.
 // Uses only the elements that already exist in the enum — no new ones added.
-private fun availableElements(category: ProductCategory): List<AdditionalElement> = when (category) {
+private fun availableElements(category: OrderCategory): List<AdditionalElement>? =
+    when (category) {
 
-    // Clothing / Footwear — branding, decorative patches, attachment hardware
-    ProductCategory.CLOTHING  -> listOf(
-        AdditionalElement.LOGO,
-        AdditionalElement.DECOR,
-        AdditionalElement.STRAP // лямка
-    )
-    ProductCategory.FOOTWEAR  -> listOf(
-        AdditionalElement.LOGO,
-        AdditionalElement.DECOR,
-        AdditionalElement.STRAP,
-        //AdditionalElement.PADDING,
-        AdditionalElement.FASTENER
-    )
+        OrderCategory.COSMETIC_COVER -> null
+        OrderCategory.INSOLE -> null
+        OrderCategory.CLOTHING -> listOf(
+            AdditionalElement.LOGO,
+            AdditionalElement.DECOR,
+            AdditionalElement.STRAP // лямка
+        )
 
-    // Jewellery / Accessories — engraving and decorative finish are relevant;
-    // mounting hardware for clasps / clips
-    ProductCategory.JEWELRY   -> listOf(
-        AdditionalElement.ENGRAVING,
-        AdditionalElement.DECOR,
-        AdditionalElement.LOGO,
-        AdditionalElement.FASTENER
-    )
-    ProductCategory.ACCESSORY -> listOf(
-        AdditionalElement.LOGO,
-        AdditionalElement.ENGRAVING,
-        AdditionalElement.DECOR,
-        AdditionalElement.MOUNTING,
-        AdditionalElement.STRAP
-    )
+        OrderCategory.FOOTWEAR -> listOf(
+            AdditionalElement.LOGO,
+            AdditionalElement.DECOR,
+            AdditionalElement.STRAP,
+            //AdditionalElement.PADDING,
+            AdditionalElement.FASTENER
+        )
 
-    // 3D Print — all structural and finish options are relevant
-    ProductCategory.THREE_D_PRINT -> listOf(
-        AdditionalElement.LOGO,
-        AdditionalElement.ENGRAVING,
-        AdditionalElement.DECOR,
-        AdditionalElement.MOUNTING,
-        AdditionalElement.PADDING
-    )
+        // Jewellery / Accessories — engraving and decorative finish are relevant;
+        // mounting hardware for clasps / clips
+        OrderCategory.JEWELRY -> listOf(
+            AdditionalElement.ENGRAVING,
+            AdditionalElement.DECOR,
+            AdditionalElement.LOGO,
+            AdditionalElement.FASTENER
+        )
 
-    // Interior décor — mounting (wall / shelf) + decorative + logo (brand pieces)
-    ProductCategory.INTERIOR_DECOR -> listOf(
-        AdditionalElement.LOGO,
-        AdditionalElement.DECOR,
-        AdditionalElement.MOUNTING,
-        AdditionalElement.ENGRAVING
-    )
+        OrderCategory.ACCESSORY -> listOf(
+            AdditionalElement.LOGO,
+            AdditionalElement.ENGRAVING,
+            AdditionalElement.DECOR,
+            AdditionalElement.MOUNTING,
+            AdditionalElement.STRAP
+        )
 
-    // Other — show everything
-    ProductCategory.OTHER -> AdditionalElement.values().toList()
-}
+        // 3D Print — all structural and finish options are relevant
+        OrderCategory.THREE_D_PRINT -> listOf(
+            AdditionalElement.LOGO,
+            AdditionalElement.ENGRAVING,
+            AdditionalElement.DECOR,
+            AdditionalElement.MOUNTING,
+            AdditionalElement.PADDING
+        )
+
+        // Interior décor — mounting (wall / shelf) + decorative + logo (brand pieces)
+        OrderCategory.INTERIOR_DECOR -> listOf(
+            AdditionalElement.LOGO,
+            AdditionalElement.DECOR,
+            AdditionalElement.MOUNTING,
+            AdditionalElement.ENGRAVING
+        )
+
+        // Other — show everything
+        OrderCategory.OTHER -> AdditionalElement.values().toList()
+    }
 
 
 @Composable
 fun AdditionalElementsSelector(
-    category : ProductCategory,
-    selected : List<AdditionalElement>,
-    onAdd    : (AdditionalElement) -> Unit,
-    onRemove : (AdditionalElement) -> Unit
+    category: OrderCategory,
+    selected: List<AdditionalElement>,
+    onAdd: (AdditionalElement) -> Unit,
+    onRemove: (AdditionalElement) -> Unit
 ) {
     val available = availableElements(category)
 
-    // If category changed and some previously selected elements are no longer
-    // available, silently remove them so the config stays consistent.
+    if (available.isNullOrEmpty()) return
+
     LaunchedEffect(category) {
         selected.filter { it !in available }.forEach { onRemove(it) }
     }
-
-    if (available.isEmpty()) return
-
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Additional elements", style = MaterialTheme.typography.bodyMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             available.forEach { element ->
                 val isSelected = element in selected
                 FilterChip(
-                    selected    = isSelected,
-                    onClick     = { if (isSelected) onRemove(element) else onAdd(element) },
-                    label       = { Text(element.displayName) },
+                    selected = isSelected,
+                    onClick = { if (isSelected) onRemove(element) else onAdd(element) },
+                    label = { Text(element.displayName) },
                     leadingIcon = if (isSelected) ({
                         Icon(Icons.Default.Check, null, Modifier.size(16.dp))
                     }) else null

@@ -2,9 +2,9 @@ package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.domain.model.GaitSession
-import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.domain.repo.FireAuthRepository
-import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
+import com.example.coverdesign.domain.usecase.GetOrderListUseCase
 import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
 import com.example.coverdesign.ui.viewmodel.base.UiEvent
@@ -12,8 +12,8 @@ import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val getOrderSummary : GetOrderSummaryUseCase,
-    private val authRepo        : FireAuthRepository
+    private val getOrderList : GetOrderListUseCase,
+    private val authRepo     : FireAuthRepository
 ) : BaseViewModel<HomeUiState, HomeUiEvent>() {
 
     override fun initialState() = HomeUiState()
@@ -32,14 +32,15 @@ class HomeViewModel(
             is HomeAction.OpenOrder         -> sendEvent(HomeUiEvent.NavigateToOrder(action.orderId))
             is HomeAction.SeeAllOrders      -> sendEvent(HomeUiEvent.NavigateToAllOrders)
             is HomeAction.OpenRehabHistory  -> sendEvent(HomeUiEvent.NavigateToRehabHistory)
+            is HomeAction.OrderInsoles      -> sendEvent(HomeUiEvent.NavigateToInsoleOrder)
             is HomeAction.Logout            -> logout()
         }
     }
 
     private fun loadRecentOrders() {
         viewModelScope.launch {
-            getOrderSummary.observeHistory().collect { orders ->
-                setState { copy(recentOrders = orders.take(3)) }
+            getOrderList().collect { items ->
+                setState { copy(recentOrders = items.take(3)) }
             }
         }
     }
@@ -61,7 +62,7 @@ class HomeViewModel(
 
 // ── State ─────────────────────────────────────────────────────────────────────
 data class HomeUiState(
-    val recentOrders  : List<Order>       = emptyList(),
+    val recentOrders  : List<OrderListItem> = emptyList(),
     val rehabSessions : List<GaitSession> = emptyList(),
     val hasInsoles    : Boolean           = false,
     val isLoading     : Boolean           = false
@@ -74,6 +75,7 @@ sealed class HomeUiEvent : UiEvent {
     object NavigateToTryOn         : HomeUiEvent()
     object NavigateToAllOrders     : HomeUiEvent()
     object NavigateToRehabHistory  : HomeUiEvent()
+    object NavigateToInsoleOrder   : HomeUiEvent()
     data class NavigateToOrder(val orderId: String) : HomeUiEvent()
 }
 
@@ -84,6 +86,7 @@ sealed class HomeAction {
     object OpenTryOn         : HomeAction()
     object SeeAllOrders      : HomeAction()
     object OpenRehabHistory  : HomeAction()
+    object OrderInsoles      : HomeAction()
     object Logout            : HomeAction()
     data class OpenOrder(val orderId: String) : HomeAction()
 }

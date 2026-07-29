@@ -3,7 +3,6 @@ package com.example.coverdesign.di
 // shared/commonMain/di/AppModule.kt
 
 import com.example.coverdesign.data.local.DatabaseDriverFactory
-import com.example.coverdesign.data.local.DatabaseSeeder
 import com.example.coverdesign.data.remote.client.createHttpClient
 import com.example.coverdesign.data.remote.interceptor.InMemoryTokenStorage
 import com.example.coverdesign.data.remote.interceptor.TokenStorage
@@ -25,7 +24,8 @@ import com.example.coverdesign.domain.usecase.ConfigureProductUseCase
 import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
-import com.example.coverdesign.domain.usecase.GetOrderSummaryUseCase
+import com.example.coverdesign.domain.usecase.GetOrderDetailUseCase
+import com.example.coverdesign.domain.usecase.GetOrderListUseCase
 import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
 import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
 import com.example.coverdesign.domain.usecase.SaveOrderLocallyUseCase
@@ -40,6 +40,7 @@ import com.example.coverdesign.ui.viewmodel.AuthViewModel
 import com.example.coverdesign.ui.viewmodel.CatalogViewModel
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
+import com.example.coverdesign.ui.viewmodel.OrderListViewModel
 import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import com.example.coverdesign.ui.viewmodel.ProductConfigViewModel
 import com.example.coverdesign.ui.viewmodel.RehabViewModel
@@ -59,7 +60,9 @@ val databaseModule = module {
     single { get<AppDatabase>().orderQueries }
     single { get<AppDatabase>().catalogQueries }
     single { get<AppDatabase>().model3DQueries }
-    single { DatabaseSeeder(db = get()) }
+    single { get<AppDatabase>().insoleOrderConfigQueries }
+    single { get<AppDatabase>().prostheticCoverOrderConfigQueries }
+    //single { DatabaseSeeder(db = get()) }
 }
 
 val networkModule = module {
@@ -124,7 +127,8 @@ val useCaseModule = module {
     factoryOf(::SubmitOrderUseCase)
 
     // FR10
-    factoryOf(::GetOrderSummaryUseCase)
+    factoryOf(::GetOrderListUseCase)
+    factory { GetOrderDetailUseCase(orderRepo = get(), model3DRepo = get()) }
 
     // shared validator
     singleOf(::MeasurementValidator)
@@ -139,6 +143,7 @@ val viewModelModule = module {
             uploadTextureImage = get(),
             uploadUserImage = get(),
             saveOrderLocally = get(),
+            orderRepo = get()
         )
     }
     viewModel { CatalogViewModel(getCatalog = get()) }
@@ -157,10 +162,11 @@ val viewModelModule = module {
     }
     viewModel {
         OrderSummaryViewModel(
-            submitOrderUseCase = get(), getOrderSummary = get()
+            submitOrderUseCase = get(), getOrderDetail = get()
         )
     }
-    viewModel { HomeViewModel(getOrderSummary = get(), authRepo = get()) }
+    viewModel { OrderListViewModel(getOrderList = get()) }
+    viewModel { HomeViewModel(getOrderList = get(), authRepo = get()) }
     viewModel { AuthViewModel(get(), get()) }
     viewModel { RehabViewModel(authRepo = get()) }
 

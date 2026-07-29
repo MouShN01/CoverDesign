@@ -1,0 +1,69 @@
+CREATE TABLE ProstheticCoverOrderConfigEntity (
+    orderId                         TEXT    NOT NULL PRIMARY KEY,
+    category                        TEXT    NOT NULL DEFAULT 'COSMETIC_COVER',
+    status                          TEXT    NOT NULL DEFAULT 'DRAFT',
+    quantity                        INTEGER NOT NULL DEFAULT 1,
+
+    -- Limb & prosthetic type
+    limbSide                        TEXT    NOT NULL,
+    limbLevel                       TEXT    NOT NULL,
+    prostheticType                  TEXT,               -- ProstheticTypeEnum name, nullable
+
+    -- Common measurements
+    circumferenceMm                 REAL    NOT NULL DEFAULT 0.0,
+    kneeApexToFootshellTopMm        REAL    NOT NULL DEFAULT 0.0,
+
+    -- Type-specific measurements
+    typeSpecificMeasurementMm       REAL    NOT NULL DEFAULT 0.0,
+    secondTypeSpecificMeasurementMm REAL    NOT NULL DEFAULT 0.0,
+    buttonPlacement                 TEXT,               -- ButtonPlacement name, nullable
+
+    fasteningType                   TEXT    NOT NULL DEFAULT 'STRAP',
+
+    -- Appearance
+    colorName                       TEXT    NOT NULL,
+    colorHex                        TEXT    NOT NULL,
+    material                        TEXT    NOT NULL,
+    textureId                       TEXT    NOT NULL DEFAULT '',
+    textureName                     TEXT    NOT NULL DEFAULT '',
+    texturePreviewUrl               TEXT,
+    textureDescription              TEXT,
+    inscription                     TEXT    NOT NULL DEFAULT '',
+    additionalElementsJson          TEXT    NOT NULL DEFAULT '[]',
+    additionalNotes                 TEXT    NOT NULL DEFAULT '',
+
+    -- PriceEstimate (flattened — same layout as OrderEntity)
+    currency                        TEXT    NOT NULL DEFAULT 'USD',
+    basePrice                       REAL    NOT NULL DEFAULT 0.0,
+    materialSurchargesJson          TEXT    NOT NULL DEFAULT '{}',
+    textureSurcharge                REAL    NOT NULL DEFAULT 0.0,
+    inscriptionSurcharge            REAL    NOT NULL DEFAULT 0.0,
+    elementSurchargesJson           TEXT    NOT NULL DEFAULT '{}',
+    sizeMultiplier                  REAL    NOT NULL DEFAULT 1.0,
+    sizeMultiplierLabel             TEXT    NOT NULL DEFAULT '',
+    subtotal                        REAL    NOT NULL DEFAULT 0.0,
+    totalPrice                      REAL    NOT NULL DEFAULT 0.0,
+
+    createdAt                       INTEGER NOT NULL
+);
+
+insertProstheticCoverOrder:
+INSERT OR REPLACE INTO ProstheticCoverOrderConfigEntity
+VALUES ?;
+
+selectAllProstheticCoverOrders:
+SELECT * FROM ProstheticCoverOrderConfigEntity
+ORDER BY createdAt DESC;
+
+selectProstheticCoverOrderById:
+SELECT * FROM ProstheticCoverOrderConfigEntity
+WHERE orderId = :orderId;
+
+updateProstheticCoverOrderStatus:
+UPDATE ProstheticCoverOrderConfigEntity
+SET status = :status
+WHERE orderId = :orderId;
+
+deleteProstheticCoverOrder:
+DELETE FROM ProstheticCoverOrderConfigEntity
+WHERE orderId = :orderId;

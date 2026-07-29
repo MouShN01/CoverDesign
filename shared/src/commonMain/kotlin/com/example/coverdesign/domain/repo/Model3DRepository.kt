@@ -23,6 +23,9 @@ interface Model3DRepository {
     /** Lookup by configId — used when re-opening from history */
     suspend fun getAdaptedModel(configId: String): Resource<AdaptedModel3D?>
 
+    /** All adapted models for a config — prosthetic cover can have multiple iterations */
+    suspend fun getAllAdaptedModelsByConfigId(configId: String): Resource<List<AdaptedModel3D>>
+
     /** Lookup by adaptedModelId — used when viewing 3D model from an existing order */
     suspend fun getAdaptedModelById(id: String): Resource<AdaptedModel3D?>
 

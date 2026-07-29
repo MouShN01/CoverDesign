@@ -1,0 +1,49 @@
+CREATE TABLE InsoleOrderConfigEntity (
+    orderId                TEXT    NOT NULL PRIMARY KEY,
+    category               TEXT    NOT NULL DEFAULT 'INSOLE',
+    status                 TEXT    NOT NULL DEFAULT 'DRAFT',
+    quantity               INTEGER NOT NULL DEFAULT 1,
+
+    -- InsoleFootConfig stored as JSON (euSize, lengthMm, widthMm, side)
+    rightFootJson          TEXT    NOT NULL,
+    leftFootJson           TEXT,               -- nullable: second foot
+
+    material               TEXT    NOT NULL,
+    colorName              TEXT    NOT NULL,
+    colorHex               TEXT    NOT NULL,
+
+    -- PriceEstimate (flattened — same layout as OrderEntity)
+    currency               TEXT    NOT NULL DEFAULT 'USD',
+    basePrice              REAL    NOT NULL DEFAULT 0.0,
+    materialSurchargesJson TEXT    NOT NULL DEFAULT '{}',
+    textureSurcharge       REAL    NOT NULL DEFAULT 0.0,
+    inscriptionSurcharge   REAL    NOT NULL DEFAULT 0.0,
+    elementSurchargesJson  TEXT    NOT NULL DEFAULT '{}',
+    sizeMultiplier         REAL    NOT NULL DEFAULT 1.0,
+    sizeMultiplierLabel    TEXT    NOT NULL DEFAULT '',
+    subtotal               REAL    NOT NULL DEFAULT 0.0,
+    totalPrice             REAL    NOT NULL DEFAULT 0.0,
+
+    createdAt              INTEGER NOT NULL
+);
+
+insertInsoleOrder:
+INSERT OR REPLACE INTO InsoleOrderConfigEntity
+VALUES ?;
+
+selectAllInsoleOrders:
+SELECT * FROM InsoleOrderConfigEntity
+ORDER BY createdAt DESC;
+
+selectInsoleOrderById:
+SELECT * FROM InsoleOrderConfigEntity
+WHERE orderId = :orderId;
+
+updateInsoleOrderStatus:
+UPDATE InsoleOrderConfigEntity
+SET status = :status
+WHERE orderId = :orderId;
+
+deleteInsoleOrder:
+DELETE FROM InsoleOrderConfigEntity
+WHERE orderId = :orderId;

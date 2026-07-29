@@ -26,7 +26,6 @@ import androidx.compose.material.icons.outlined.FaceRetouchingNatural
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.ShoppingBag
-import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +59,8 @@ import com.example.coverdesign.R
 import com.example.coverdesign.domain.model.BodyPosition
 import com.example.coverdesign.domain.model.CopPoint
 import com.example.coverdesign.domain.model.GaitSession
-import com.example.coverdesign.domain.model.Order
+import com.example.coverdesign.domain.model.OrderCategory
+import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.viewmodel.HomeAction
@@ -81,18 +81,20 @@ fun HomeScreen(
     onVirtualTryOn: () -> Unit,
     onOrderClick: (String) -> Unit,
     onSeeAllOrders: () -> Unit,
-    onOpenRehabHistory: () -> Unit
+    onOpenRehabHistory: () -> Unit,
+    onOrderInsoles: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     EventHandler(viewModel.events) { event ->
         when (event) {
-            is HomeUiEvent.NavigateToNewOrder -> onNewOrder()
-            is HomeUiEvent.NavigateTo3D -> on3DVisualize()
-            is HomeUiEvent.NavigateToTryOn -> onVirtualTryOn()
-            is HomeUiEvent.NavigateToAllOrders -> onSeeAllOrders()
-            is HomeUiEvent.NavigateToOrder -> onOrderClick(event.orderId)
+            is HomeUiEvent.NavigateToNewOrder    -> onNewOrder()
+            is HomeUiEvent.NavigateTo3D          -> on3DVisualize()
+            is HomeUiEvent.NavigateToTryOn       -> onVirtualTryOn()
+            is HomeUiEvent.NavigateToAllOrders   -> onSeeAllOrders()
+            is HomeUiEvent.NavigateToOrder       -> onOrderClick(event.orderId)
             is HomeUiEvent.NavigateToRehabHistory -> onOpenRehabHistory()
+            is HomeUiEvent.NavigateToInsoleOrder -> onOrderInsoles()
         }
     }
 
@@ -139,7 +141,7 @@ internal fun HomeContent(
             RehabSummaryCard(
                 latestSession = state.rehabSessions.firstOrNull(),
                 hasInsoles = state.hasInsoles,
-                onOrderInsoles = { onAction(HomeAction.NewOrder) },
+                onOrderInsoles = { onAction(HomeAction.OrderInsoles) },
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -156,10 +158,10 @@ internal fun HomeContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             } else {
-                state.recentOrders.forEach { order ->
+                state.recentOrders.forEach { item ->
                     RecentOrderCard(
-                        order = order,
-                        onClick = { onAction(HomeAction.OpenOrder(order.id)) },
+                        item    = item,
+                        onClick = { onAction(HomeAction.OpenOrder(item.orderId)) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
@@ -619,64 +621,37 @@ private fun ToolCard(
 // ── Recent order card ─────────────────────────────────────────────────────────
 @Composable
 private fun RecentOrderCard(
-    order: Order, onClick: () -> Unit, modifier: Modifier = Modifier
+    item: OrderListItem, onClick: () -> Unit, modifier: Modifier = Modifier
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-                .fillMaxWidth(),
+            modifier          = Modifier.padding(horizontal = 16.dp, vertical = 14.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = order.config.productCategory.name,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(item.category.label, style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = formatDate(order.createdAt),
+                    formatDate(item.createdAt),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Outlined.ViewInAr,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.width(3.dp))
-                        Text(
-                            "3D",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                OrderStatusChip(status = order.status)
-            }
+            OrderStatusChip(status = item.status)
         }
     }
+}
+
+private val OrderCategory.label: String get() = when (this) {
+    OrderCategory.COSMETIC_COVER -> "Prosthetic Cover"
+    OrderCategory.INSOLE         -> "Insole"
+    else                         -> name
 }
 
 // ── Empty orders ──────────────────────────────────────────────────────────────

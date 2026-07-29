@@ -11,7 +11,7 @@ import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderStatus
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
@@ -35,7 +35,7 @@ class OrderSummaryScreenTest {
         config = ProductConfig(
             id = "conf_1",
             productId = "prod_1",
-            productCategory = ProductCategory.ACCESSORY,
+            orderCategory = OrderCategory.ACCESSORY,
             measurement = Measurement(100.0, 50.0, 10.0),
             sizeLabel = SizeLabel.M,
             color = ProductColor("Black", "#000000"),

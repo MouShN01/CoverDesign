@@ -18,7 +18,7 @@ class CreateConfigFromProductUseCase(
         val config = ProductConfig(
             id = generateUuid(),
             productId = product.id,
-            productCategory = product.category,
+            orderCategory = product.category,
             measurement = Measurement(0.0, 0.0, 0.0),
             sizeLabel = null,
             color = ProductColor("", "#000000"),

@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 
 sealed class ArMode {
     /** Prosthetic covers — overlay model on user's reference photo */
@@ -18,39 +18,43 @@ sealed class ArMode {
     /** Accessory / room object — place in real environment via ARCore */
     object InRoomSpace : ArMode()
 
-    val label: String get() = when (this) {
-        is OnUserPhoto      -> "Try on Photo"
-        is OnBodySilhouette -> "Body Fitting"
-        is InRoomSpace      -> "Place in Room"
-    }
+    val label: String
+        get() = when (this) {
+            is OnUserPhoto -> "Try on Photo"
+            is OnBodySilhouette -> "Body Fitting"
+            is InRoomSpace -> "Place in Room"
+        }
 
-    val icon: ImageVector get() = when (this) {
-        is OnUserPhoto      -> Icons.Default.Face
-        is OnBodySilhouette -> Icons.Default.Person
-        is InRoomSpace      -> Icons.Default.Home
-    }
+    val icon: ImageVector
+        get() = when (this) {
+            is OnUserPhoto -> Icons.Default.Face
+            is OnBodySilhouette -> Icons.Default.Person
+            is InRoomSpace -> Icons.Default.Home
+        }
 }
 
 /** Maps each ProductCategory to the correct AR mode */
-fun ProductCategory.resolveArMode(photoUri: String?, measurements: Measurement): ArMode =
+fun OrderCategory.resolveArMode(photoUri: String?, measurements: Measurement): ArMode =
     when (this) {
         // Jewellery / accessories worn on the body — overlay on user photo
-        ProductCategory.JEWELRY,
-        ProductCategory.ACCESSORY      -> ArMode.OnUserPhoto(photoUri)
+        OrderCategory.JEWELRY,
+        OrderCategory.ACCESSORY -> ArMode.OnUserPhoto(photoUri)
 
         // Clothing / footwear — fit on body silhouette with measurements
 //        ProductCategory.CLOTHING,
 //        ProductCategory.FOOTWEAR       -> ArMode.OnBodySilhouette(measurements)
 //
-        ProductCategory.CLOTHING,
-        ProductCategory.FOOTWEAR       -> ArMode.OnUserPhoto(photoUri)
+        OrderCategory.CLOTHING,
+        OrderCategory.FOOTWEAR,
+        OrderCategory.INSOLE -> ArMode.OnUserPhoto(photoUri)
 
         // 3D-print custom items — body silhouette by default
-        ProductCategory.THREE_D_PRINT  -> ArMode.InRoomSpace  // was OnBodySilhouette(measurements)
+        OrderCategory.THREE_D_PRINT,
+        OrderCategory.COSMETIC_COVER -> ArMode.InRoomSpace  // was OnBodySilhouette(measurements)
 
         // Interior decor — place in real room space
-        ProductCategory.INTERIOR_DECOR -> ArMode.InRoomSpace
+        OrderCategory.INTERIOR_DECOR -> ArMode.InRoomSpace
 
         // Fallback
-        ProductCategory.OTHER          -> ArMode.InRoomSpace
+        OrderCategory.OTHER -> ArMode.InRoomSpace
     }

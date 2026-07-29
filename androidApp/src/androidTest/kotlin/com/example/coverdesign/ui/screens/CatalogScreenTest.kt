@@ -7,7 +7,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.coverdesign.domain.model.Product
-import com.example.coverdesign.domain.model.ProductCategory
+import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.ui.viewmodel.CatalogAction
 import com.example.coverdesign.ui.viewmodel.CatalogUiState
 import org.junit.Assert.assertEquals
@@ -27,12 +27,12 @@ class CatalogScreenTest {
         name: String = "Prosthetic Cover A",
         description: String = "A high-quality cover",
         basePrice: Double = 150.0
-    ) = Product(
+    ) = Product.Generic(
         id = id,
         name = name,
         description = description,
         basePrice = basePrice,
-        category = ProductCategory.THREE_D_PRINT,
+        category = OrderCategory.THREE_D_PRINT,
         availableMaterials = emptyList(),
         availableTextures = emptyList(),
         imageUrl = ""

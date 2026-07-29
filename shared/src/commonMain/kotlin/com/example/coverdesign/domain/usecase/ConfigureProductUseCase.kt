@@ -11,7 +11,7 @@ class ConfigureProductUseCase(
     private val validator: MeasurementValidator
 ) {
     suspend operator fun invoke(config: ProductConfig): Resource<ProductConfig> {
-        val validationError = validator.validate(config.productCategory,config.measurement)
+        val validationError = validator.validate(config.orderCategory,config.measurement)
         if (validationError != null) return Resource.Error(validationError)
         repo.saveConfig(config)
         return Resource.Success(config)

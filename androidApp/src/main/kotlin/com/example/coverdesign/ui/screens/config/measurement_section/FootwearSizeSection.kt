@@ -35,11 +35,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.SizeLabel
+import kotlin.math.abs
 
 
 // ─────────────────────────────────────────────────────────────────────
 // FOOTWEAR section
 // ─────────────────────────────────────────────────────────────────────
+
+private fun nearestEuFor(lengthMm: Double): Int {
+    if (lengthMm <= 0) return 0
+    return EU_TO_MM.minByOrNull { (_, mm) -> abs(mm - lengthMm.toInt()) }?.key ?: 0
+}
 
 private val EU_SIZES = listOf(35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46)
 
@@ -91,9 +97,7 @@ fun FootwearSizeSection(
             EU_SIZES.forEach { eu ->
                 FilterChip(
                     selected = selectedEu == eu,
-                    onClick = {
-                        onMeasure(measurement.copy(depth = eu.toDouble()))
-                    },
+                    onClick = {},
                     label = { Text(eu.toString()) }
                 )
             }
@@ -132,8 +136,11 @@ fun FootwearSizeSection(
             }
         }
         OutlinedTextField(
-            value = if (measurement.height == 0.0) "" else measurement.height.toString(),
-            onValueChange = { onMeasure(measurement.copy(height = it.toDoubleOrNull() ?: 0.0)) },
+            value = if (measurement.height == 0.0) "" else measurement.height.toInt().toString(),
+            onValueChange = { raw ->
+                val len = raw.toDoubleOrNull() ?: 0.0
+                onMeasure(measurement.copy(height = len, depth = nearestEuFor(len).toDouble()))
+            },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Foot length") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -149,7 +156,7 @@ fun FootwearSizeSection(
         )
         // Foot width
         OutlinedTextField(
-            value = if (measurement.width == 0.0) "" else measurement.width.toString(),
+            value = if (measurement.width == 0.0) "" else measurement.width.toInt().toString(),
             onValueChange = { onMeasure(measurement.copy(width = it.toDoubleOrNull() ?: 0.0)) },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Foot width (widest point)") },
