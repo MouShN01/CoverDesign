@@ -66,21 +66,12 @@ class ModelPreviewViewModel(
             }
         }
     }
-
-    // ── Path 1: 3D tab — base model, no generation ───────────────────────────
-
-    private fun loadBaseModel(productId: String) {
+    private fun loadBaseModel(productId: String) { //Ideally not used in the app
         viewModelScope.launch {
             setState { copy(isLoadingLocal = true, error = null) }
             model3DRepo.getBaseModelForProduct(productId)
                 .onSuccess { model ->
-                    setState {
-                        copy(
-                            modelUrl = model.modelUrl,
-                            modelStatus = ModelStatus.READY,
-                            isLoadingLocal = false
-                        )
-                    }
+                    setState { copy(baseModelUrl = model.modelUrl, isLoadingLocal = false) }
                 }
                 .onError { message, _ ->
                     setState { copy(isLoadingLocal = false, error = message) }
@@ -102,14 +93,8 @@ class ModelPreviewViewModel(
                     setState { copy(adaptedModel = adapted, isLoadingLocal = false) }
 
                     when (adapted.status) {
-                        ModelStatus.READY -> setState {
-                            copy(modelUrl = adapted.modelUrl, modelStatus = ModelStatus.READY)
-                        }
-
-                        ModelStatus.FAILED -> setState {
-                            copy(modelStatus = ModelStatus.FAILED)
-                        }
-
+                        ModelStatus.READY  -> { /* modelUrl/modelStatus auto-derived */ }
+                        ModelStatus.FAILED -> { /* isFailed auto-derived */ }
                         ModelStatus.PENDING,
                         ModelStatus.GENERATING -> {
                             // resume polling — app may have been closed mid-generation
@@ -133,30 +118,18 @@ class ModelPreviewViewModel(
     private fun startPolling(taskId: String) {
         println("loadAdaptedModel - startPolling")
         if (pollingJob?.isActive == true) return
-        setState { copy(modelStatus = ModelStatus.PENDING) }
 
         pollingJob = viewModelScope.launch {
             pollModelStatus(taskId).collect { result ->
                 when (result) {
                     is Resource.Success -> {
                         val model = result.data
-                        setState {
-                            copy(
-                                modelStatus = model.status,
-                                estimatedWaitSeconds = model.estimatedWaitSeconds,
-                                error = null
-                            )
-                        }
                         println("loadAdaptedModel model - $model")
-
-                        if (model.status == ModelStatus.READY) {
-                            setState { copy(modelUrl = model.modelUrl) }
-                        }
+                        setState { copy(adaptedModel = model, error = null) }
                     }
 
                     is Resource.Error -> setState {
-                        //print("getGenerationStatus FROM INSIDE setState we got an error ${result.message}")
-                        copy(error = result.message, modelStatus = ModelStatus.FAILED)
+                        copy(error = result.message, adaptedModel = adaptedModel?.copy(status = ModelStatus.FAILED))
                     }
 
                     else -> {}
@@ -173,14 +146,7 @@ class ModelPreviewViewModel(
             model3DRepo.getAdaptedModelById(adaptedModelId)
                 .onSuccess { adapted ->
                     if (adapted != null) {
-                        setState {
-                            copy(
-                                adaptedModel = adapted,
-                                modelUrl = adapted.modelUrl,
-                                modelStatus = adapted.status,
-                                isLoadingLocal = false
-                            )
-                        }
+                        setState { copy(adaptedModel = adapted, isLoadingLocal = false) }
                     } else {
                         setState { copy(isLoadingLocal = false, error = "3D model not found") }
                     }
@@ -193,7 +159,7 @@ class ModelPreviewViewModel(
 
     private fun retry(taskId: String) {
         pollingJob?.cancel()
-        setState { copy(error = null, modelStatus = ModelStatus.PENDING, modelUrl = null) }
+        setState { copy(adaptedModel = null, error = null) }
         startPolling(taskId)
     }
 
@@ -207,17 +173,20 @@ class ModelPreviewViewModel(
 
 data class ModelPreviewUiState(
     val adaptedModel: AdaptedModel3D? = null,
-    val modelUrl: String? = null,
-    val modelStatus: ModelStatus = ModelStatus.PENDING,
+    val baseModelUrl: String? = null,
     val isLoadingLocal: Boolean = false,
-    val estimatedWaitSeconds: Int? = null,
-    val error: String? = null
+    val error: String? = null,
 ) : UiState {
-    val isGenerating: Boolean
-        get() =
-            modelStatus == ModelStatus.PENDING || modelStatus == ModelStatus.GENERATING
-    val isReady: Boolean get() = modelStatus == ModelStatus.READY
-    val isFailed: Boolean get() = modelStatus == ModelStatus.FAILED
+    val modelUrl: String?     get() = adaptedModel?.modelUrl ?: baseModelUrl
+    val modelStatus: ModelStatus
+        get() = adaptedModel?.status
+            ?: if (baseModelUrl != null) ModelStatus.READY else ModelStatus.PENDING
+    val estimatedWaitSeconds: Int? get() = adaptedModel?.estimatedWaitSeconds
+    val isGenerating: Boolean get() = modelStatus == ModelStatus.PENDING || modelStatus == ModelStatus.GENERATING
+    val isReady: Boolean      get() = modelStatus == ModelStatus.READY
+    // isFailed covers both: adaptedModel with FAILED status, and a polling error before any model arrived
+    val isFailed: Boolean     get() = modelStatus == ModelStatus.FAILED ||
+        (adaptedModel == null && baseModelUrl == null && !isLoadingLocal && error != null)
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────

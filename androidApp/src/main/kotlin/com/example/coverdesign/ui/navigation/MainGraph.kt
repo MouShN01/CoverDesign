@@ -223,7 +223,7 @@ fun NavGraphBuilder.mainGraph(
         composable(Screen.OrderSummary.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             OrderSummaryScreen(
-                configId = configId,
+                orderId = configId,
                 onOrderSubmitted = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
@@ -233,13 +233,16 @@ fun NavGraphBuilder.mainGraph(
                     if (adaptedModelId != null)
                         navController.navigate(Screen.ModelPreviewFromOrder.createRoute(adaptedModelId))
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateHome = {
+                    navController.navigate(Screen.Home.route)
+                }
             )
         }
         composable(Screen.OrderDetail.route) { entry ->
             val orderId = entry.arguments?.getString("orderId") ?: return@composable
             OrderSummaryScreen(
-                configId = orderId,
+                orderId = orderId,
                 onOrderSubmitted = { navController.popBackStack() },
                 onView3DModel = { _, adaptedModelId ->
                     if (adaptedModelId != null)

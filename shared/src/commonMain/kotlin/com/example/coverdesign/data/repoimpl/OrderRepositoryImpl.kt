@@ -2,9 +2,7 @@ package com.example.coverdesign.data.repoimpl
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.example.coverdesign.data.dto.SubmitInsoleOrderRequestDto
 import com.example.coverdesign.data.dto.SubmitOrderRequestDto
-import com.example.coverdesign.data.dto.SubmitProstheticCoverOrderRequestDto
 import com.example.coverdesign.data.dto.toDomain
 import com.example.coverdesign.data.dto.toDto
 import com.example.coverdesign.data.local.toDomain
@@ -108,11 +106,12 @@ class OrderRepositoryImpl(
     override suspend fun submitInsoleOrder(config: InsoleOrderConfig): Resource<OrderId> =
         withContext(Dispatchers.Default) {
             try {
-                val request = SubmitInsoleOrderRequestDto(config = config.toDto())
+//                val request = SubmitInsoleOrderRequestDto(config = config.toDto())
+                val request = config.toDto()
                 val response = api.submitInsoleOrder(request)
                 db.insoleOrderConfigQueries.updateInsoleOrderStatus(
-                    status = OrderStatus.SUBMITTED.name,
-                    orderId = config.orderId
+                    status = response.status.name,
+                    orderId = response.orderId
                 )
                 Resource.Success(OrderId(response.orderId))
             } catch (e: Exception) {
@@ -154,12 +153,15 @@ class OrderRepositoryImpl(
     ): Resource<OrderId> =
         withContext(Dispatchers.Default) {
             try {
-                val request = SubmitProstheticCoverOrderRequestDto(config = config.toDto())
+//                val request = SubmitProstheticCoverOrderRequestDto(config = config.toDto())
+                val request =  config.toDto()
+                println("Prosthetic cover order submission request is $request")
                 val response = api.submitProstheticCoverOrder(request)
-                db.prostheticCoverOrderConfigQueries.updateProstheticCoverOrderStatus(
-                    status = OrderStatus.SUBMITTED.name,
-                    orderId = config.orderId
+                val res = db.prostheticCoverOrderConfigQueries.updateProstheticCoverOrderStatus(
+                    status = response.status.name,
+                    orderId = response.orderId
                 )
+                println("Prosthetic cover order submission res for prostheticCoverOrderConfigQueries is $res")
                 Resource.Success(OrderId(response.orderId))
             } catch (e: Exception) {
                 Resource.Error("Prosthetic cover order submission failed: ${e.message}", e)

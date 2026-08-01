@@ -10,11 +10,11 @@ data class Order(
     val priceEstimate: PriceEstimate,
     val status: OrderStatus,
     val createdAt: Long,
-    )
+)
 
 enum class OrderStatus {
     DRAFT, SUBMITTED, CONFIRMED, IN_PRODUCTION, SHIPPED, DELIVERED, CANCELLED
 }
 
 @JvmInline
-value class OrderId(val value: String)
+value class OrderId(val orderId: String)

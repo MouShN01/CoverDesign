@@ -31,13 +31,28 @@ class SaveOrderLocallyUseCase(
 ) {
     suspend operator fun invoke(
         config: ProductConfig,
-        estimate: PriceEstimate,
+        estimate: PriceEstimate? = null,
     ): Resource<Order> {
+
+        val calcEstimate = estimate ?: PriceEstimate(
+            configId = config.id,
+            currency = "USD",
+            basePrice = 0.0,
+            materialSurcharges = emptyMap(),
+            textureSurcharge = 0.0,
+            inscriptionSurcharge = 0.0,
+            elementSurcharges = emptyMap(),
+            sizeMultiplier = 1.0,
+            sizeMultiplierLabel = "",
+            quantity = config.quantity,
+            subtotal = 0.0,
+            total = 0.0
+        )
         val order = Order(
             id = generateUuid(),
             adaptedModelId = null,          // set later in ModelPreviewViewModel
             config = config,
-            priceEstimate = estimate,
+            priceEstimate = calcEstimate,
             status = OrderStatus.DRAFT,
             createdAt = currentEpochMillis()
         )

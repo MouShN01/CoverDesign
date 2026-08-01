@@ -7,6 +7,7 @@ import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProductConfig
+import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import kotlin.math.roundToInt
@@ -67,6 +68,9 @@ private val REFERENCE_VOLUME_MM3: Map<OrderCategory, Double> = mapOf(
     OrderCategory.FOOTWEAR to 300_000.0,  // ~260×100×~11.5 mm
     OrderCategory.THREE_D_PRINT to 50_000.0,   // ~50×50×20 mm generic
     OrderCategory.INTERIOR_DECOR to 500_000.0,  // ~200×100×25 mm
+    // COSMETIC_COVER uses length×circumference as 2D area proxy (depth=1 in toProductConfig)
+    // Reference: average adult lower leg ~350mm long × 320mm circumference = 112,000 mm²
+    OrderCategory.COSMETIC_COVER to 100_000.0,
     OrderCategory.OTHER to 50_000.0
 )
 
@@ -268,4 +272,48 @@ object PricingEngine {
         if (texture.id.isNotBlank()) texture.id else texture.name.lowercase()
 
     private fun Double.roundTo2(): Double = (this * 100.0).roundToInt() / 100.0
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ProstheticCoverOrderConfig extension — mirrors calculateForInsole pattern
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Client-side price estimate for a prosthetic cover order.
+ *
+ * Size multiplier uses circumference × kneeApexLength as a 2D surface-area
+ * proxy against the COSMETIC_COVER reference (~100,000 mm²), clamped to
+ * [0.60 … 2.50]. No inscription or element surcharges — those are not
+ * applicable to the direct prosthetic ordering flow.
+ */
+fun ProstheticCoverOrderConfig.toPriceEstimate(basePrice: Double = 1.0): PriceEstimate {
+    val matSurcharge = MATERIAL_SURCHARGES[material] ?: 0.0
+    val texKey = if (texture.id.isNotBlank()) texture.id else texture.name.lowercase()
+    val texSurcharge = TEXTURE_SURCHARGES[texKey] ?: 0.0
+
+    val areaMm2 = (commonMeasurements.circumferenceMm * commonMeasurements.kneeApexToFootshellTopMm).toDouble()
+    val (multiplier, multiplierLabel) = if (areaMm2 > 0.0) {
+        val ref = REFERENCE_VOLUME_MM3[OrderCategory.COSMETIC_COVER]!!
+        val ratio = (areaMm2 / ref).coerceIn(0.60, 2.50)
+        val rounded = (ratio * 100).roundToInt() / 100.0
+        val pct = ((ratio - 1.0) * 100).roundToInt()
+        rounded to "Custom ${if (pct >= 0) "+$pct%" else "$pct%"}"
+    } else {
+        1.0 to ""
+    }
+
+    val subtotal = ((basePrice + matSurcharge + texSurcharge) * multiplier * 100.0).roundToInt() / 100.0
+    val total = (subtotal * quantity * 100.0).roundToInt() / 100.0
+
+    return PriceEstimate(
+        configId = orderId,
+        basePrice = basePrice,
+        materialSurcharges = mapOf(material.name to matSurcharge),
+        textureSurcharge = texSurcharge,
+        sizeMultiplier = multiplier,
+        sizeMultiplierLabel = multiplierLabel,
+        quantity = quantity,
+        subtotal = subtotal,
+        total = total
+    )
 }

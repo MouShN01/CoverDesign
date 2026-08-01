@@ -1,5 +1,6 @@
 package com.example.coverdesign.data.dto
 
+import com.example.coverdesign.domain.model.OrderStatus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,9 +15,10 @@ data class OrderDto(
     @SerialName("created_at") val createdAt: Long
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class OrderIdDto(
-    @SerialName("order_id") val orderId: String
+    @SerialName("order_id") val orderId: String,
+    @SerialName("status") val status: OrderStatus
 )
 
 @Serializable

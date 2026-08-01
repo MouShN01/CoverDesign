@@ -191,7 +191,7 @@ fun InsoleFootConfig.toDto() = InsoleFootConfigDto(
     euSize = euSize,
     lengthMm = lengthMm,
     widthMm = widthMm,
-    side = side.name.lowercase()
+    side = side.name
 )
 
 fun InsoleOrderConfigDto.toDomain() = InsoleOrderConfig(
@@ -250,6 +250,53 @@ fun ProstheticCoverOrderConfigDto.toDomain() = ProstheticCoverOrderConfig(
     additionalNotes = additionalNotes,
     createdAt = createdAt
 )
+
+fun ProstheticCoverOrderConfig.toGenerateModelRequest(): GenerateModelRequestDto {
+    val prompt = buildString {
+        append("Prosthetic cosmetic cover")
+        append(", ${limbSide.name.lowercase()} side")
+        append(", ${limbLevel.name.lowercase().replace('_', ' ')}")
+        prostheticType?.let { append(", ${it.name.lowercase().replace('_', ' ')}") }
+        append(". Material: ${material.name.lowercase()}")
+        append(", color: ${color.name} (${color.hex})")
+        if (texture.name.isNotBlank()) append(", texture: ${texture.name}")
+        append(". Circumference: ${commonMeasurements.circumferenceMm}mm")
+        append(", length: ${commonMeasurements.kneeApexToFootshellTopMm}mm")
+        if (typeSpecificMeasurementMm > 0f) append(", type measurement: ${typeSpecificMeasurementMm}mm")
+        if (secondTypeSpecificMeasurementMm > 0f) append(", secondary measurement: ${secondTypeSpecificMeasurementMm}mm")
+        append(". Fastening: ${fasteningType.name.lowercase()}")
+        if (additionalNotes.isNotBlank()) append(". $additionalNotes")
+    }
+
+    val params = ProstheticGenerationParameters(
+        limbSide = limbSide.name,
+        limbLevel = limbLevel.name,
+        prostheticType = prostheticType?.name,
+        circumferenceMm = commonMeasurements.circumferenceMm,
+        kneeApexToFootshellTopMm = commonMeasurements.kneeApexToFootshellTopMm,
+        typeSpecificMeasurementMm = typeSpecificMeasurementMm,
+        secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
+        buttonPlacement = buttonPlacement?.name,
+        fasteningType = fasteningType.name,
+        colorName = color.name,
+        colorHex = color.hex,
+        textureId = texture.id,
+        textureName = texture.name,
+        quantity = quantity,
+        additionalNotes = additionalNotes,
+    )
+
+    return GenerateModelRequestDto(
+        configId = orderId,
+        prompt = prompt,
+        textureUrl = texture.previewUrl,
+        material = material.name.lowercase(),
+        enablePbr = true,
+        category = category.name.lowercase(),
+        productId = null,
+        parameters = params
+    )
+}
 
 fun ProstheticCoverOrderConfig.toDto() = ProstheticCoverOrderConfigDto(
     orderId = orderId,

@@ -20,7 +20,7 @@ class Model3DApiService(private val client: HttpClient) {
     ).body()
 
     suspend fun submitGeneration(request: GenerateModelRequestDto): GenerateModelResponseDto =
-        client.post(ApiConstants.Endpoints.GENERATE_MODEL) {
+        client.post(ApiConstants.Endpoints.GENERATE_COVER_MODEL) {
             println("submitGeneration beginning of the post")
             setBody(request)
         }.body()

@@ -205,7 +205,7 @@ fun ProductConfigScreen(
         }
     }
 
-    if (showProceedDialog) {
+    if (showProceedDialog) { //TODO adapt for insoles and prosthetics
         state.currentConfig?.let { config ->
             ProceedConfirmationDialog(config = config, onConfirm = {
                 showProceedDialog = false

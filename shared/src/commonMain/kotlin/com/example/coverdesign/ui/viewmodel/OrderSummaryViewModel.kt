@@ -1,10 +1,12 @@
 package com.example.coverdesign.ui.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.example.coverdesign.domain.model.Order
 import com.example.coverdesign.domain.model.OrderDetail
+import com.example.coverdesign.domain.model.OrderId
+import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.domain.repo.OrderRepository
 import com.example.coverdesign.domain.usecase.GetOrderDetailUseCase
-import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
+import com.example.coverdesign.domain.util.Resource
 import com.example.coverdesign.domain.util.onError
 import com.example.coverdesign.domain.util.onSuccess
 import com.example.coverdesign.ui.viewmodel.base.BaseViewModel
@@ -13,16 +15,16 @@ import com.example.coverdesign.ui.viewmodel.base.UiState
 import kotlinx.coroutines.launch
 
 class OrderSummaryViewModel(
-    private val submitOrderUseCase : SubmitOrderUseCase,
-    private val getOrderDetail     : GetOrderDetailUseCase,
+    private val orderRepo    : OrderRepository,
+    private val getOrderDetail: GetOrderDetailUseCase,
 ) : BaseViewModel<OrderSummaryUiState, OrderSummaryUiEvent>() {
 
     override fun initialState() = OrderSummaryUiState()
 
     fun onAction(action: OrderSummaryAction) {
         when (action) {
-            is OrderSummaryAction.LoadOrder   -> loadOrder(action.orderId)
-            is OrderSummaryAction.SubmitOrder -> submitOrder(action.order)
+            is OrderSummaryAction.LoadOrder      -> loadOrder(action.orderId)
+            is OrderSummaryAction.SubmitCurrentOrder -> submitCurrentOrder()
         }
     }
 
@@ -39,16 +41,29 @@ class OrderSummaryViewModel(
         }
     }
 
-    private fun submitOrder(order: Order) {
+    private fun submitCurrentOrder() {
         viewModelScope.launch {
             setState { copy(isSubmitting = true, error = null) }
-            submitOrderUseCase(order)
+            val detail = uiState.value.orderDetail ?: return@launch
+
+            val result: Resource<OrderId> = when (detail) {
+                is OrderDetail.CatalogOrder         -> orderRepo.submitOrder(detail.order)
+                is OrderDetail.InsoleOrder          -> orderRepo.submitInsoleOrder(detail.config)
+                is OrderDetail.ProstheticCoverOrder -> orderRepo.submitProstheticCoverOrder(detail.config)
+            }
+
+            result
                 .onSuccess { orderId ->
-                    setState { copy(isSubmitting = false, submittedOrderId = orderId.value) }
-                    sendEvent(OrderSummaryUiEvent.OrderSubmitted(orderId.value))
+                    val submitted = when (detail) {
+                        is OrderDetail.CatalogOrder         -> detail.copy(order = detail.order.copy(status = OrderStatus.SUBMITTED))
+                        is OrderDetail.InsoleOrder          -> detail.copy(status = OrderStatus.SUBMITTED)
+                        is OrderDetail.ProstheticCoverOrder -> detail.copy(status = OrderStatus.SUBMITTED)
+                    }
+                    setState { copy(isSubmitting = false, submittedOrderId = orderId.orderId, orderDetail = submitted) }
+                    sendEvent(OrderSummaryUiEvent.OrderSubmitted(orderId.orderId))
                 }
-                .onError { message, _ ->
-                    setState { copy(isSubmitting = false, error = message) }
+                .onError { msg, _ ->
+                    setState { copy(isSubmitting = false, error = msg) }
                 }
         }
     }
@@ -61,9 +76,7 @@ data class OrderSummaryUiState(
     val isLoading        : Boolean      = false,
     val isSubmitting     : Boolean      = false,
     val error            : String?      = null,
-) : UiState {
-    val order: Order? get() = (orderDetail as? OrderDetail.CatalogOrder)?.order
-}
+) : UiState
 
 // ── Events ─────────────────────────────────────────────────────────────────────
 sealed class OrderSummaryUiEvent : UiEvent {
@@ -72,6 +85,6 @@ sealed class OrderSummaryUiEvent : UiEvent {
 
 // ── Actions ────────────────────────────────────────────────────────────────────
 sealed class OrderSummaryAction {
-    data class LoadOrder(val orderId: String)  : OrderSummaryAction()
-    data class SubmitOrder(val order: Order)   : OrderSummaryAction()
+    data class LoadOrder(val orderId: String) : OrderSummaryAction()
+    data object SubmitCurrentOrder            : OrderSummaryAction()
 }

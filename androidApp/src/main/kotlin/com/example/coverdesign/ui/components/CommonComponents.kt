@@ -36,9 +36,9 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun ErrorScreen(message: String, onRetry: (() -> Unit)? = null) {
+fun ErrorScreen(message: String, onRetry: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     Column(
-        modifier              = Modifier.fillMaxSize().padding(24.dp),
+        modifier              = modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment   = Alignment.CenterHorizontally,
         verticalArrangement   = Arrangement.Center
     ) {

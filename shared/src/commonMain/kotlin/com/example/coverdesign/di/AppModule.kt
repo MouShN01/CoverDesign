@@ -23,13 +23,15 @@ import com.example.coverdesign.domain.usecase.CalculatePriceUseCase
 import com.example.coverdesign.domain.usecase.ConfigureProductUseCase
 import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
 import com.example.coverdesign.domain.usecase.GenerateModelUseCase
+import com.example.coverdesign.domain.usecase.GenerateProstheticCoverModelUseCase
+import com.example.coverdesign.domain.usecase.SubmitProstheticOrderUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetOrderDetailUseCase
 import com.example.coverdesign.domain.usecase.GetOrderListUseCase
 import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
 import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
+import com.example.coverdesign.domain.usecase.SaveInsoleOrderLocallyUseCase
 import com.example.coverdesign.domain.usecase.SaveOrderLocallyUseCase
-import com.example.coverdesign.domain.usecase.SubmitOrderUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
 import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
@@ -103,8 +105,11 @@ val useCaseModule = module {
 
     // FR4
     factory { GenerateModelUseCase(get()) }
+    factoryOf(::GenerateProstheticCoverModelUseCase)
+    factory { SubmitProstheticOrderUseCase(orderRepo = get(), generateModel = get()) }
     factory { PollModelStatusUseCase(get()) }
     factory { SaveOrderLocallyUseCase(get()) }
+    factoryOf(::SaveInsoleOrderLocallyUseCase)
 
     // FR5
     //factoryOf(::GenerateModelUseCase)
@@ -123,9 +128,6 @@ val useCaseModule = module {
     // FR8
     factoryOf(::CalculatePriceUseCase)
 
-    // FR9
-    factoryOf(::SubmitOrderUseCase)
-
     // FR10
     factoryOf(::GetOrderListUseCase)
     factory { GetOrderDetailUseCase(orderRepo = get(), model3DRepo = get()) }
@@ -139,10 +141,12 @@ val viewModelModule = module {
         ProductConfigViewModel(
             productRepo = get(),
             generateModel = get(),
+            submitProstheticOrder = get(),
             validator = get(),
             uploadTextureImage = get(),
             uploadUserImage = get(),
             saveOrderLocally = get(),
+            saveInsoleOrderLocally = get(),
             orderRepo = get()
         )
     }
@@ -161,9 +165,7 @@ val viewModelModule = module {
         )
     }
     viewModel {
-        OrderSummaryViewModel(
-            submitOrderUseCase = get(), getOrderDetail = get()
-        )
+        OrderSummaryViewModel(orderRepo = get(), getOrderDetail = get())
     }
     viewModel { OrderListViewModel(getOrderList = get()) }
     viewModel { HomeViewModel(getOrderList = get(), authRepo = get()) }

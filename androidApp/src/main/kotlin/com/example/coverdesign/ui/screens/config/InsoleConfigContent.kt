@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -140,19 +139,14 @@ internal fun InsoleConfigContent(
             )
         }
 
-        state.priceEstimate?.let { PriceCard(price = it) }
-        OutlinedButton(
-            onClick = { onAction(ProductConfigAction.RequestPriceUpdate) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isPriceLoading
-        ) {
-            if (state.isPriceLoading) CircularProgressIndicator(Modifier.size(16.dp))
-            else Text("Calculate Price")
-        }
+        PriceEstimateSection(
+            state = state,
+            onAction = onAction
+        )
 
         Spacer(Modifier.height(80.dp))
 
-//        ConfigSection(title = "Order") { //TODO add price estimate base on PricingEngine.kt
+//        ConfigSection(title = "Order") {
 //            Text(
 //                text = "Quantity: ${ic.quantity}",
 //                style = MaterialTheme.typography.bodyMedium
@@ -169,6 +163,8 @@ internal fun InsoleConfigContent(
 //        Spacer(Modifier.height(80.dp))
     }
 }
+
+
 
 @Composable
 private fun LegSideSelector(

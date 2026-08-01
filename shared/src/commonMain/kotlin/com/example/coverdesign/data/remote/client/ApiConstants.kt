@@ -15,6 +15,7 @@ object ApiConstants {
 
         // 3D model
         const val GENERATE_MODEL = "/model/generate"
+        const val GENERATE_COVER_MODEL = "/model/cover_generate"
         const val MODEL_STATUS = "/model/{taskId}/status"
         const val MODEL_URL = "/model/{id}/url"
         const val TRY_ON = "/model/tryon"
@@ -22,6 +23,8 @@ object ApiConstants {
 
         // orders
         const val SUBMIT_ORDER = "/orders"
+        const val SUBMIT_INSOLE_ORDER = "/orders/insole"
+        const val SUBMIT_COVER_ORDER = "/orders/cover"
         const val ORDER_BY_ID = "/orders/{id}"
 
         // auth

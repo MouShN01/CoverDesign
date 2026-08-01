@@ -147,11 +147,29 @@ internal fun ProstheticCoverConfigContent(
                 onChanged = { onAction(ProductConfigAction.UpdateProstheticTexture(it)) }
             )
         }
+        ConfigSection(title = "Price Estimate") {
+            PriceEstimateSection(
+                state = state,
+                onAction = onAction
+            )
+        }
         ConfigSection(title = "Order") {
             QuantitySelector(
                 value = pc.quantity,
                 error = null,
                 onChanged = { onAction(ProductConfigAction.UpdateProstheticQuantity(it)) }
+            )
+        }
+        ConfigSection(title = "Additional Notes") {
+            OutlinedTextField(
+                value = pc.additionalNotes,
+                onValueChange = { onAction(ProductConfigAction.UpdateProstheticAdditionalNotes(it)) },
+                label = { Text("Notes (optional)") },
+                placeholder = { Text("Any specific requirements or details about your prosthetic cover…") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 6,
+                shape = RoundedCornerShape(10.dp)
             )
         }
         Spacer(Modifier.height(80.dp))

@@ -1,8 +1,9 @@
 package com.example.coverdesign.data.remote.service
 
+import com.example.coverdesign.data.dto.InsoleOrderConfigDto
 import com.example.coverdesign.data.dto.OrderDto
 import com.example.coverdesign.data.dto.OrderIdDto
-import com.example.coverdesign.data.dto.SubmitInsoleOrderRequestDto
+import com.example.coverdesign.data.dto.ProstheticCoverOrderConfigDto
 import com.example.coverdesign.data.dto.SubmitOrderRequestDto
 import com.example.coverdesign.data.dto.SubmitProstheticCoverOrderRequestDto
 import com.example.coverdesign.data.remote.client.ApiConstants
@@ -25,13 +26,15 @@ class OrderApiService(private val client: HttpClient) {
             ApiConstants.Endpoints.ORDER_BY_ID.replace("{id}", id)
         ).body()
 
-    suspend fun submitInsoleOrder(request: SubmitInsoleOrderRequestDto): OrderIdDto =
-        client.post(ApiConstants.Endpoints.SUBMIT_ORDER) {
+//    suspend fun submitInsoleOrder(request: SubmitInsoleOrderRequestDto): OrderIdDto =
+    suspend fun submitInsoleOrder(request: InsoleOrderConfigDto): OrderIdDto =
+        client.post(ApiConstants.Endpoints.SUBMIT_INSOLE_ORDER) {
             setBody(request)
         }.body()
 
-    suspend fun submitProstheticCoverOrder(request: SubmitProstheticCoverOrderRequestDto): OrderIdDto =
-        client.post(ApiConstants.Endpoints.SUBMIT_ORDER) {
+//    suspend fun submitProstheticCoverOrder(request: SubmitProstheticCoverOrderRequestDto): OrderIdDto =
+    suspend fun submitProstheticCoverOrder(request: ProstheticCoverOrderConfigDto): OrderIdDto =
+        client.post(ApiConstants.Endpoints.SUBMIT_COVER_ORDER) {
             setBody(request)
         }.body()
 }
