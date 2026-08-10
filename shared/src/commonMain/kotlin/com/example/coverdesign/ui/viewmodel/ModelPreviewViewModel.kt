@@ -2,7 +2,7 @@ package com.example.coverdesign.ui.viewmodel
 
 
 import androidx.lifecycle.viewModelScope
-import com.example.coverdesign.domain.model.AdaptedModel3D
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
@@ -172,7 +172,7 @@ class ModelPreviewViewModel(
 // ── State ─────────────────────────────────────────────────────────────────────
 
 data class ModelPreviewUiState(
-    val adaptedModel: AdaptedModel3D? = null,
+    val adaptedModel: GenerationTask? = null,
     val baseModelUrl: String? = null,
     val isLoadingLocal: Boolean = false,
     val error: String? = null,

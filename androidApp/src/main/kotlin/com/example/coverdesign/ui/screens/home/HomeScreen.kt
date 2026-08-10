@@ -649,7 +649,7 @@ private fun RecentOrderCard(
 }
 
 private val OrderCategory.label: String get() = when (this) {
-    OrderCategory.COSMETIC_COVER -> "Prosthetic Cover"
+    OrderCategory.PROSTHETIC_COVER -> "Prosthetic Cover"
     OrderCategory.INSOLE         -> "Insole"
     else                         -> name
 }

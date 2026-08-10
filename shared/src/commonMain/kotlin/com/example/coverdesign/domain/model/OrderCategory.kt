@@ -1,7 +1,7 @@
 package com.example.coverdesign.domain.model
 
 enum class OrderCategory {
-    COSMETIC_COVER,
+    PROSTHETIC_COVER,
     INSOLE,
   //[CLAUDE] leave the rest of the categories be
     ACCESSORY,

@@ -47,7 +47,7 @@ class GenerateModelUseCase(
 // Prompt builder — constructs a text prompt from the config for the 3D API
 // ─────────────────────────────────────────────────────────────────────────────
 
-private fun ProductConfigDto.toGenerationRequest(): GenerateModelRequestDto {
+private fun ProductConfigDto.toGenerationRequest(): GenerateModelRequestDto { //todo falls under "Product"
     val prompt = buildString {
         append("A personalised $productCategory item")
         append(" made of $material")
@@ -60,7 +60,6 @@ private fun ProductConfigDto.toGenerationRequest(): GenerateModelRequestDto {
 
     return GenerateModelRequestDto(
         configId = id,
-        prompt = prompt,
         textureUrl = texturePreviewUrl,   // Firebase Storage URL or null
         material = material,
         enablePbr = true,

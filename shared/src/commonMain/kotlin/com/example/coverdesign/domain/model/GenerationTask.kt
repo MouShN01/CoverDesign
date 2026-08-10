@@ -3,10 +3,10 @@ package com.example.coverdesign.domain.model
 /**
  * adapted model — result of GenAI pipeline for a specific configuration
   */
-data class AdaptedModel3D(
+data class GenerationTask(
     val id: String,
-    val configId: String,
-    val baseModelId: String,
+    val configId: String, //OrderId
+    val baseModelId: String, //excluding this for now
     val modelUrl: String?,
     val previewImageUrl: String?,
     val status: ModelStatus,

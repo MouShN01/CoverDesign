@@ -8,10 +8,10 @@ import com.example.coverdesign.db.OrderEntity
 import com.example.coverdesign.db.ProductConfigEntity
 import com.example.coverdesign.db.ProductEntity
 import com.example.coverdesign.db.ProstheticCoverOrderConfigEntity
-import com.example.coverdesign.domain.model.AdaptedModel3D
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.ButtonPlacement
-import com.example.coverdesign.domain.model.FasteningType
+import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.domain.model.InsoleFootConfig
 import com.example.coverdesign.domain.model.InsoleOrderConfig
 import com.example.coverdesign.domain.model.LegSide
@@ -28,7 +28,7 @@ import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.ProstheticCommonMeasurements
 import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
-import com.example.coverdesign.domain.model.ProstheticTypeEnum
+import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
@@ -186,7 +186,7 @@ fun Model3D.toEntity(productId: String) = Model3DEntity(
     generatedAt = generatedAt,
 )
 
-fun AdaptedModel3DEntity.toDomain() = AdaptedModel3D(
+fun AdaptedModel3DEntity.toDomain() = GenerationTask(
     id = id, configId = configId,
     baseModelId = baseModelId,
     modelUrl = modelUrl, previewImageUrl = previewImageUrl,
@@ -196,7 +196,7 @@ fun AdaptedModel3DEntity.toDomain() = AdaptedModel3D(
     progress = progress,
 )
 
-fun AdaptedModel3D.toEntity() = AdaptedModel3DEntity(
+fun GenerationTask.toEntity() = AdaptedModel3DEntity(
     id = id,
     configId = configId,
     baseModelId = baseModelId,
@@ -283,7 +283,7 @@ fun ProstheticCoverOrderConfigEntity.toDomain(): ProstheticCoverOrderConfig =
         limbSide = LegSide.valueOf(limbSide),
         limbLevel = LimbLevel.valueOf(limbLevel),
         prostheticType = prostheticType?.let {
-            runCatching { ProstheticTypeEnum.valueOf(it) }.getOrNull()
+            runCatching { ProstheticTypeEnumDto.valueOf(it) }.getOrNull()
         },
         commonMeasurements = ProstheticCommonMeasurements(
             circumferenceMm = circumferenceMm.toFloat(),
@@ -294,8 +294,8 @@ fun ProstheticCoverOrderConfigEntity.toDomain(): ProstheticCoverOrderConfig =
         buttonPlacement = buttonPlacement?.let {
             runCatching { ButtonPlacement.valueOf(it) }.getOrNull()
         },
-        fasteningType = runCatching { FasteningType.valueOf(fasteningType) }
-            .getOrDefault(FasteningType.STRAP),
+        suspensionType = runCatching { SuspensionType.valueOf(fasteningType) }
+            .getOrDefault(SuspensionType.STRAP),
         color = ProductColor(name = colorName, hex = colorHex),
         material = Material.valueOf(material),
         texture = Texture(
@@ -325,7 +325,7 @@ fun ProstheticCoverOrderConfig.toEntity(): ProstheticCoverOrderConfigEntity =
         typeSpecificMeasurementMm = typeSpecificMeasurementMm.toDouble(),
         secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm.toDouble(),
         buttonPlacement = buttonPlacement?.name,
-        fasteningType = fasteningType.name,
+        fasteningType = suspensionType.name,
         colorName = color.name,
         colorHex = color.hex,
         material = material.name,

@@ -6,7 +6,7 @@ import com.example.coverdesign.data.local.toDomain
 import com.example.coverdesign.data.local.toEntity
 import com.example.coverdesign.data.remote.service.Model3DApiService
 import com.example.coverdesign.db.AppDatabase
-import com.example.coverdesign.domain.model.AdaptedModel3D
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.model.Model3D
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.repo.Model3DRepository
@@ -52,7 +52,7 @@ class Model3DRepositoryImpl(
 
     // ── Step 2: poll status — called repeatedly by PollModelStatusUseCase ────
 
-    override suspend fun getGenerationStatus(taskId: String): Resource<AdaptedModel3D> = try {
+    override suspend fun getGenerationStatus(taskId: String): Resource<GenerationTask> = try {
         val dto = api.getGenerationStatus(taskId)
         val model = dto.toDomain()
 
@@ -71,7 +71,7 @@ class Model3DRepositoryImpl(
 
     // ── Local DB — adapted model (config pipeline) ────────────────────────────
 
-    override suspend fun getAdaptedModel(configId: String): Resource<AdaptedModel3D?> = try {
+    override suspend fun getAdaptedModel(configId: String): Resource<GenerationTask?> = try {
         val entity = db.adaptedModel3DQueries
             .selectByConfigId(configId)
             .executeAsOneOrNull()
@@ -80,7 +80,7 @@ class Model3DRepositoryImpl(
         Resource.Error("Failed to load cached model: ${e.message}", e)
     }
 
-    override suspend fun getAllAdaptedModelsByConfigId(configId: String): Resource<List<AdaptedModel3D>> = try {
+    override suspend fun getAllAdaptedModelsByConfigId(configId: String): Resource<List<GenerationTask>> = try {
         val entities = db.adaptedModel3DQueries
             .selectAllByConfigId(configId)
             .executeAsList()
@@ -89,7 +89,7 @@ class Model3DRepositoryImpl(
         Resource.Error("Failed to load adapted models for config $configId: ${e.message}", e)
     }
 
-    override suspend fun getAdaptedModelById(id: String): Resource<AdaptedModel3D?> = try {
+    override suspend fun getAdaptedModelById(id: String): Resource<GenerationTask?> = try {
         val entity = db.adaptedModel3DQueries
             .selectAdaptedById(id)
             .executeAsOneOrNull()
@@ -107,7 +107,7 @@ class Model3DRepositoryImpl(
 //        Resource.Error("Failed to load cached model: ${e.message}", e)
 //    }
 
-    override suspend fun saveModel(model: AdaptedModel3D): Resource<Unit> = try {
+    override suspend fun saveModel(model: GenerationTask): Resource<Unit> = try {
         db.adaptedModel3DQueries.insertOrReplaceAdaptedModel(
             model.toEntity()
         )

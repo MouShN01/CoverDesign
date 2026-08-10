@@ -150,7 +150,7 @@ private fun OrderListCard(item: OrderListItem, onClick: () -> Unit) {
 }
 
 private val OrderCategory.label: String get() = when (this) {
-    OrderCategory.COSMETIC_COVER -> "Prosthetic Cover"
+    OrderCategory.PROSTHETIC_COVER -> "Prosthetic Cover"
     OrderCategory.INSOLE         -> "Insole"
     else                         -> name
 }
@@ -163,11 +163,11 @@ private fun OrdersListScreenPreview() {
         OrdersListContent(
             state = OrderListUiState(
                 allItems = listOf(
-                    OrderListItem("1", OrderCategory.COSMETIC_COVER, now,               320.0, OrderStatus.DRAFT),
+                    OrderListItem("1", OrderCategory.PROSTHETIC_COVER, now,               320.0, OrderStatus.DRAFT),
                     OrderListItem("2", OrderCategory.INSOLE,         now - 86_400_000,  95.0,  OrderStatus.IN_PRODUCTION),
-                    OrderListItem("3", OrderCategory.COSMETIC_COVER, now - 172_800_000, 415.0, OrderStatus.SHIPPED),
+                    OrderListItem("3", OrderCategory.PROSTHETIC_COVER, now - 172_800_000, 415.0, OrderStatus.SHIPPED),
                     OrderListItem("4", OrderCategory.INSOLE,         now - 259_200_000, 80.0,  OrderStatus.CANCELLED),
-                    OrderListItem("5", OrderCategory.COSMETIC_COVER, now - 345_600_000, 310.0, OrderStatus.CONFIRMED),
+                    OrderListItem("5", OrderCategory.PROSTHETIC_COVER, now - 345_600_000, 310.0, OrderStatus.CONFIRMED),
                 )
             ),
             onOrderClick   = {},

@@ -1,7 +1,7 @@
 package com.example.coverdesign.data.remote.service
 
 // data/remote/service/Model3DApiService.kt
-import com.example.coverdesign.data.dto.AdaptedModel3DDto
+import com.example.coverdesign.data.dto.GenerationTaskDto
 import com.example.coverdesign.data.dto.GenerateModelRequestDto
 import com.example.coverdesign.data.dto.GenerateModelResponseDto
 import com.example.coverdesign.data.dto.Model3DDto
@@ -28,7 +28,7 @@ class Model3DApiService(private val client: HttpClient) {
     // ── Step 2: poll status by taskId ────────────────────────────────────────
     // Returns AdaptedModel3DDto with current status field
     // Call repeatedly until status == "ready" or "failed"
-    suspend fun getGenerationStatus(taskId: String): AdaptedModel3DDto = client.get(
+    suspend fun getGenerationStatus(taskId: String): GenerationTaskDto = client.get(
         ApiConstants.Endpoints.MODEL_STATUS.replace("{taskId}", taskId)
     ).body()
 

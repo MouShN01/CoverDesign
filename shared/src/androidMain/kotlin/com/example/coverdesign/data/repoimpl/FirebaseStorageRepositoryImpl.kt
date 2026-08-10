@@ -13,21 +13,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class FirebaseStorageRepositoryImpl(
+class FirebaseStorageRepositoryImpl( //TODO change pass for textures
     private val storage: FirebaseStorage
 ) : StorageRepository {
 
-    //    override suspend fun uploadTextureImage(
-//        localUri : String,
-//        configId : String,
-//        userId   : String,
-//        onProgress: ((Int) -> Unit)?
-//    ): Resource<String> = upload(
-//        uri        = Uri.parse(localUri),
-//        path       = "textures/$userId/$configId.jpg",
-//        onProgress = onProgress
-//    )
-    // androidMain/FirebaseStorageRepositoryImpl.kt
     override fun uploadTextureImage(
         localUri: String,
         configId: String,

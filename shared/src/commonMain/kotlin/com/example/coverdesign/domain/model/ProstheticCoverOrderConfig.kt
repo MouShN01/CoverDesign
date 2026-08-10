@@ -1,15 +1,16 @@
 package com.example.coverdesign.domain.model
 
+import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
 
 data class ProstheticCoverOrderConfig(
     override val orderId: String,
-    override val category: OrderCategory = OrderCategory.COSMETIC_COVER,
-    override val quantity: Int,
+    override val category: OrderCategory = OrderCategory.PROSTHETIC_COVER,
+    override val quantity: Int, //todo reconsider usefulness
     override val priceEstimate: PriceEstimate,
     val limbSide: LegSide,
     val limbLevel: LimbLevel,
-    val prostheticType: ProstheticTypeEnum?,
+    val prostheticType: ProstheticTypeEnumDto?,
     val commonMeasurements: ProstheticCommonMeasurements = ProstheticCommonMeasurements(),
     // Type-specific measurements — semantics depend on prostheticType:
     //   PolycentricKnee / TotalKnee           → kneeUnitMm
@@ -19,7 +20,7 @@ data class ProstheticCoverOrderConfig(
     val typeSpecificMeasurementMm: Float = 0f,
     val secondTypeSpecificMeasurementMm: Float = 0f,
     val buttonPlacement: ButtonPlacement? = null,
-    val fasteningType: FasteningType = FasteningType.STRAP,
+    val suspensionType: SuspensionType = SuspensionType.STRAP,
     val color: ProductColor,
     val material: Material,
     val texture: Texture,

@@ -1,7 +1,7 @@
 package com.example.coverdesign.domain.usecase
 
 import com.example.coverdesign.domain.ar.ArCapability
-import com.example.coverdesign.domain.model.AdaptedModel3D
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.util.Resource
 
@@ -11,7 +11,7 @@ import com.example.coverdesign.domain.util.Resource
 class VirtualTryOnUseCase(
     private val model3DRepo: Model3DRepository
 ) {
-    suspend fun loadModelForTryOn(configId: String): Resource<AdaptedModel3D?> =
+    suspend fun loadModelForTryOn(configId: String): Resource<GenerationTask?> =
         model3DRepo.getAdaptedModel(configId)
 
     fun isArSupported(): Boolean = ArCapability.isSupported()

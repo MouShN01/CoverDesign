@@ -1,14 +1,15 @@
-package com.example.coverdesign.domain.model
+package com.example.coverdesign.data.dto
 
+import com.example.coverdesign.domain.model.LimbLevel
 import kotlinx.serialization.Serializable
 
 /**
- * Serializable counterpart to [ProstheticType]. Replaces the sealed-class hierarchy in order
+ * Serializable counterpart to [com.example.coverdesign.domain.model.ProstheticType]. Replaces the sealed-class hierarchy in order
  * configs and DTOs. Type-specific measurement values are stored as flat fields on
- * [ProstheticCoverOrderConfig] rather than inside the type object.
+ * [com.example.coverdesign.domain.model.ProstheticCoverOrderConfig] rather than inside the type object.
  */
 @Serializable
-enum class ProstheticTypeEnum(val displayName: String) {
+enum class ProstheticTypeEnumDto(val displayName: String) {
     // ── Above Knee ────────────────────────────────────────────────────────────
     ABOVE_KNEE_POLYCENTRIC_KNEE("Polycentric Knee"),
     ABOVE_KNEE_TOTAL_KNEE("Total Knee"),

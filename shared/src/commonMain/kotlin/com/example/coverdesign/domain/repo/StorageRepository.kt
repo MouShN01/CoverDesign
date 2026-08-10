@@ -12,7 +12,7 @@ interface StorageRepository {
 
     /**
      * Upload a local image (content:// or file:// URI string) to Firebase Storage.
-     * Returns the permanent Firebase download URL (https://firebasestorage.googleapis.com/...).
+     * Returns the permanent Firebase download URL.
      * That URL is safe to store in Firestore and send to the 3D generation server.
      */
     fun uploadTextureImage(

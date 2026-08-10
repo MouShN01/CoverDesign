@@ -50,7 +50,7 @@ fun OrderCategory.resolveArMode(photoUri: String?, measurements: Measurement): A
 
         // 3D-print custom items — body silhouette by default
         OrderCategory.THREE_D_PRINT,
-        OrderCategory.COSMETIC_COVER -> ArMode.InRoomSpace  // was OnBodySilhouette(measurements)
+        OrderCategory.PROSTHETIC_COVER -> ArMode.InRoomSpace  // was OnBodySilhouette(measurements)
 
         // Interior decor — place in real room space
         OrderCategory.INTERIOR_DECOR -> ArMode.InRoomSpace

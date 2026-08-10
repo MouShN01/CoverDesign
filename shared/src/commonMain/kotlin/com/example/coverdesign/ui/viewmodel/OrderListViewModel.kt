@@ -17,7 +17,7 @@ data class OrderListUiState(
 ) : UiState {
     val visibleItems: List<OrderListItem> get() = when (filter) {
         OrderListFilter.ALL            -> allItems
-        OrderListFilter.COSMETIC_COVER -> allItems.filter { it.category == OrderCategory.COSMETIC_COVER }
+        OrderListFilter.COSMETIC_COVER -> allItems.filter { it.category == OrderCategory.PROSTHETIC_COVER }
         OrderListFilter.INSOLE         -> allItems.filter { it.category == OrderCategory.INSOLE }
     }
 }

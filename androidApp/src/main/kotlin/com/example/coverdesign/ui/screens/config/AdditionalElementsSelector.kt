@@ -24,7 +24,7 @@ import com.example.coverdesign.domain.model.OrderCategory
 private fun availableElements(category: OrderCategory): List<AdditionalElement>? =
     when (category) {
 
-        OrderCategory.COSMETIC_COVER -> null
+        OrderCategory.PROSTHETIC_COVER -> null
         OrderCategory.INSOLE -> null
         OrderCategory.CLOTHING -> listOf(
             AdditionalElement.LOGO,

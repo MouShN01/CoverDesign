@@ -33,7 +33,7 @@ class MeasurementValidator {
             OrderCategory.THREE_D_PRINT  -> validateThreeDPrint(m)
             OrderCategory.INTERIOR_DECOR -> validateInteriorDecor(m)
             OrderCategory.OTHER          -> validateGeneric(m)
-            OrderCategory.COSMETIC_COVER -> validateProsthesisCover(m)
+            OrderCategory.PROSTHETIC_COVER -> validateProsthesisCover(m)
             OrderCategory.INSOLE         -> validateFootwear(m)
         }
 

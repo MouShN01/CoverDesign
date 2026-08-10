@@ -261,7 +261,7 @@ class OrderRepositoryImpl(
                 list.map { e ->
                     OrderListItem(
                         orderId = e.orderId,
-                        category = OrderCategory.COSMETIC_COVER,
+                        category = OrderCategory.PROSTHETIC_COVER,
                         createdAt = e.createdAt,
                         totalPrice = e.totalPrice,
                         status = OrderStatus.valueOf(e.status)

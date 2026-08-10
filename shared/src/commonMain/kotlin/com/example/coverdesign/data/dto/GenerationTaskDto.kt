@@ -25,15 +25,16 @@ data class Model3DDto(
 )
 
 @Serializable
-data class AdaptedModel3DDto(
+data class GenerationTaskDto(
     @SerialName("task_id") val taskId: String,
-    @SerialName("config_id") val configId: String,
+    @SerialName("order_id") val orderId: String,
     @SerialName("base_model_id") val baseModelId: String, //productID
+    @SerialName("status") val status: String,
+    @SerialName("progress") val progress: Int,
+    @SerialName("current_step") val currentStep: String? = null,
     @SerialName("model_url") val modelUrl: String? = null,
     @SerialName("preview_image_url") val previewImageUrl: String? = null,
-    @SerialName("status") val status: String,
     @SerialName("generated_at") val generatedAt: Long,
     @SerialName("estimated_wait_seconds") val estimatedWaitSeconds: Int? = null,
-    @SerialName("progress") val progress: Int,
-    @SerialName("error") val error: String?
+    @SerialName("error") val error: String? = null
 )

@@ -70,7 +70,7 @@ private val REFERENCE_VOLUME_MM3: Map<OrderCategory, Double> = mapOf(
     OrderCategory.INTERIOR_DECOR to 500_000.0,  // ~200×100×25 mm
     // COSMETIC_COVER uses length×circumference as 2D area proxy (depth=1 in toProductConfig)
     // Reference: average adult lower leg ~350mm long × 320mm circumference = 112,000 mm²
-    OrderCategory.COSMETIC_COVER to 100_000.0,
+    OrderCategory.PROSTHETIC_COVER to 100_000.0,
     OrderCategory.OTHER to 50_000.0
 )
 
@@ -293,7 +293,7 @@ fun ProstheticCoverOrderConfig.toPriceEstimate(basePrice: Double = 1.0): PriceEs
 
     val areaMm2 = (commonMeasurements.circumferenceMm * commonMeasurements.kneeApexToFootshellTopMm).toDouble()
     val (multiplier, multiplierLabel) = if (areaMm2 > 0.0) {
-        val ref = REFERENCE_VOLUME_MM3[OrderCategory.COSMETIC_COVER]!!
+        val ref = REFERENCE_VOLUME_MM3[OrderCategory.PROSTHETIC_COVER]!!
         val ratio = (areaMm2 / ref).coerceIn(0.60, 2.50)
         val rounded = (ratio * 100).roundToInt() / 100.0
         val pct = ((ratio - 1.0) * 100).roundToInt()

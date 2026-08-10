@@ -39,7 +39,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.domain.model.AdditionalElement
-import com.example.coverdesign.domain.model.FasteningType
 import com.example.coverdesign.domain.model.InsoleFootConfig
 import com.example.coverdesign.domain.model.InsoleOrderConfig
 import com.example.coverdesign.domain.model.LegSide
@@ -53,8 +52,9 @@ import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
-import com.example.coverdesign.domain.model.ProstheticTypeEnum
+import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
 import com.example.coverdesign.domain.model.SizeLabel
+import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.ui.components.AppTopBar
@@ -216,9 +216,11 @@ internal fun OrderSummaryScreenContent(
         }) { padding ->
         when {
             uiState.isLoading -> LoadingScreen()
-            uiState.error != null -> ErrorScreen(
+            uiState.error != null -> ErrorScreen( // TODO if error disable the continue button change to retry
                 uiState.error!!,
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                modifier = Modifier
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
             )
 
             uiState.orderDetail != null -> OrderDetailContent(
@@ -337,7 +339,7 @@ private fun ProstheticCoverOrderContent(
             )
         }
         SummarySection(title = "Fastening") {
-            SummaryRow("Type", config.fasteningType.displayName)
+            SummaryRow("Type", config.suspensionType.displayName)
             config.buttonPlacement?.let { SummaryRow("Button placement", it.name) }
         }
         SummarySection(title = "Appearance") {
@@ -495,11 +497,11 @@ private fun ProstheticCoverOrderPreview() {
                         ),
                         limbSide = LegSide.LEFT,
                         limbLevel = LimbLevel.BELOW_KNEE,
-                        prostheticType = ProstheticTypeEnum.BELOW_KNEE_PINLOCK_BUTTON,
+                        prostheticType = ProstheticTypeEnumDto.BELOW_KNEE_PINLOCK_BUTTON,
                         color = ProductColor("Carbon Black", "#1a1a1a"),
                         material = Material.CARBON_FIBER,
                         texture = Texture("t1", "Matte", null, null),
-                        fasteningType = FasteningType.STRAP,
+                        suspensionType = SuspensionType.STRAP,
                         createdAt = System.currentTimeMillis()
                     ), status = OrderStatus.IN_PRODUCTION
                 )

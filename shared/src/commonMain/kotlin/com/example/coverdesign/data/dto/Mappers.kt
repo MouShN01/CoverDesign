@@ -1,9 +1,8 @@
 package com.example.coverdesign.data.dto
 
-import com.example.coverdesign.domain.model.AdaptedModel3D
 import com.example.coverdesign.domain.model.AdditionalElement
 import com.example.coverdesign.domain.model.ButtonPlacement
-import com.example.coverdesign.domain.model.FasteningType
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.model.InsoleFootConfig
 import com.example.coverdesign.domain.model.InsoleOrderConfig
 import com.example.coverdesign.domain.model.LegSide
@@ -19,8 +18,8 @@ import com.example.coverdesign.domain.model.ProductColor
 import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.ProstheticCommonMeasurements
 import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
-import com.example.coverdesign.domain.model.ProstheticTypeEnum
 import com.example.coverdesign.domain.model.SizeLabel
+import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.Token
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
@@ -163,9 +162,9 @@ fun ProductConfig.toDto() = ProductConfigDto(
     additionalNotes = additionalNotes,
 )
 
-fun AdaptedModel3DDto.toDomain() = AdaptedModel3D(
+fun GenerationTaskDto.toDomain() = GenerationTask(
     id = taskId,
-    configId = configId,
+    configId = orderId,
     baseModelId = baseModelId,
     modelUrl = modelUrl.toString(),
     previewImageUrl = previewImageUrl.toString(),
@@ -228,7 +227,7 @@ fun ProstheticCoverOrderConfigDto.toDomain() = ProstheticCoverOrderConfig(
     priceEstimate = priceEstimate.toDomain(),
     limbSide = LegSide.valueOf(limbSide.uppercase()),
     limbLevel = LimbLevel.valueOf(limbLevel.uppercase()),
-    prostheticType = prostheticType?.let { runCatching { ProstheticTypeEnum.valueOf(it) }.getOrNull() },
+    prostheticType = prostheticType?.let { runCatching { ProstheticTypeEnumDto.valueOf(it) }.getOrNull() },
     commonMeasurements = ProstheticCommonMeasurements(
         circumferenceMm = circumferenceMm,
         kneeApexToFootshellTopMm = kneeApexToFootshellTopMm
@@ -236,7 +235,7 @@ fun ProstheticCoverOrderConfigDto.toDomain() = ProstheticCoverOrderConfig(
     typeSpecificMeasurementMm = typeSpecificMeasurementMm,
     secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
     buttonPlacement = buttonPlacement?.let { runCatching { ButtonPlacement.valueOf(it.uppercase()) }.getOrNull() },
-    fasteningType = runCatching { FasteningType.valueOf(fasteningType.uppercase()) }.getOrDefault(FasteningType.STRAP),
+    suspensionType = runCatching { SuspensionType.valueOf(fasteningType.uppercase()) }.getOrDefault(SuspensionType.STRAP),
     color = ProductColor(name = colorName, hex = colorHex),
     material = Material.valueOf(material.uppercase()),
     texture = Texture(
@@ -252,43 +251,23 @@ fun ProstheticCoverOrderConfigDto.toDomain() = ProstheticCoverOrderConfig(
 )
 
 fun ProstheticCoverOrderConfig.toGenerateModelRequest(): GenerateModelRequestDto {
-    val prompt = buildString {
-        append("Prosthetic cosmetic cover")
-        append(", ${limbSide.name.lowercase()} side")
-        append(", ${limbLevel.name.lowercase().replace('_', ' ')}")
-        prostheticType?.let { append(", ${it.name.lowercase().replace('_', ' ')}") }
-        append(". Material: ${material.name.lowercase()}")
-        append(", color: ${color.name} (${color.hex})")
-        if (texture.name.isNotBlank()) append(", texture: ${texture.name}")
-        append(". Circumference: ${commonMeasurements.circumferenceMm}mm")
-        append(", length: ${commonMeasurements.kneeApexToFootshellTopMm}mm")
-        if (typeSpecificMeasurementMm > 0f) append(", type measurement: ${typeSpecificMeasurementMm}mm")
-        if (secondTypeSpecificMeasurementMm > 0f) append(", secondary measurement: ${secondTypeSpecificMeasurementMm}mm")
-        append(". Fastening: ${fasteningType.name.lowercase()}")
-        if (additionalNotes.isNotBlank()) append(". $additionalNotes")
-    }
-
-    val params = ProstheticGenerationParameters(
+    val params = ProstheticGenerationParametersDto(
         limbSide = limbSide.name,
-        limbLevel = limbLevel.name,
-        prostheticType = prostheticType?.name,
+        prostheticType = requireNotNull(prostheticType) { "prostheticType is required for model generation" },
         circumferenceMm = commonMeasurements.circumferenceMm,
         kneeApexToFootshellTopMm = commonMeasurements.kneeApexToFootshellTopMm,
         typeSpecificMeasurementMm = typeSpecificMeasurementMm,
         secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
         buttonPlacement = buttonPlacement?.name,
-        fasteningType = fasteningType.name,
+        suspensionType = suspensionType.name,
         colorName = color.name,
         colorHex = color.hex,
-        textureId = texture.id,
         textureName = texture.name,
-        quantity = quantity,
         additionalNotes = additionalNotes,
     )
 
     return GenerateModelRequestDto(
         configId = orderId,
-        prompt = prompt,
         textureUrl = texture.previewUrl,
         material = material.name.lowercase(),
         enablePbr = true,
@@ -311,7 +290,7 @@ fun ProstheticCoverOrderConfig.toDto() = ProstheticCoverOrderConfigDto(
     typeSpecificMeasurementMm = typeSpecificMeasurementMm,
     secondTypeSpecificMeasurementMm = secondTypeSpecificMeasurementMm,
     buttonPlacement = buttonPlacement?.name?.lowercase(),
-    fasteningType = fasteningType.name.lowercase(),
+    fasteningType = suspensionType.name.lowercase(),
     colorName = color.name,
     colorHex = color.hex,
     material = material.name.lowercase(),

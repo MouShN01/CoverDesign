@@ -3,7 +3,7 @@ package com.example.coverdesign.ui.mapper
 import com.example.coverdesign.domain.model.ButtonPlacement
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProstheticType
-import com.example.coverdesign.domain.model.ProstheticTypeEnum
+import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.util.currentEpochMillis
 import com.example.coverdesign.domain.util.generateUuid
@@ -17,7 +17,7 @@ internal fun ProstheticOrderUiState.toDomainConfig(): DomainProstheticCoverOrder
 
     return DomainProstheticCoverOrderConfig(
         orderId = orderId,
-        category = OrderCategory.COSMETIC_COVER,
+        category = OrderCategory.PROSTHETIC_COVER,
         quantity = quantity,
         priceEstimate = PriceEstimate(
             configId = orderId, basePrice = 0.0, subtotal = 0.0, total = 0.0
@@ -30,7 +30,7 @@ internal fun ProstheticOrderUiState.toDomainConfig(): DomainProstheticCoverOrder
         typeSpecificMeasurementMm = prostheticType?.typeSpecificMeasurementMm() ?: 0f,
         secondTypeSpecificMeasurementMm = prostheticType?.secondTypeSpecificMeasurementMm() ?: 0f,
         buttonPlacement = prostheticType?.buttonPlacementOrNull(),
-        fasteningType = fasteningType,
+        suspensionType = suspensionType,
         color = color,
         material = material,
         texture = texture,
@@ -38,23 +38,23 @@ internal fun ProstheticOrderUiState.toDomainConfig(): DomainProstheticCoverOrder
         createdAt = currentEpochMillis())
 }
 
-internal fun ProstheticType.toEnum(): ProstheticTypeEnum = when (this) {
-    is ProstheticType.AboveKnee.PolycentricKnee -> ProstheticTypeEnum.ABOVE_KNEE_POLYCENTRIC_KNEE
-    is ProstheticType.AboveKnee.TotalKnee -> ProstheticTypeEnum.ABOVE_KNEE_TOTAL_KNEE
-    ProstheticType.AboveKnee.ThroughKnee -> ProstheticTypeEnum.ABOVE_KNEE_THROUGH_KNEE
-    is ProstheticType.AboveKnee.HighProfile -> ProstheticTypeEnum.ABOVE_KNEE_HIGH_PROFILE
-    is ProstheticType.AboveKnee.Blade -> ProstheticTypeEnum.ABOVE_KNEE_BLADE
-    is ProstheticType.AboveKnee.Microprocessor -> ProstheticTypeEnum.ABOVE_KNEE_MICROPROCESSOR
-    is ProstheticType.AboveKnee.HydraulicFoot -> ProstheticTypeEnum.ABOVE_KNEE_HYDRAULIC_FOOT
-    is ProstheticType.BelowKnee.ReleaseButton -> ProstheticTypeEnum.BELOW_KNEE_RELEASE_BUTTON
-    is ProstheticType.BelowKnee.ReleaseValve -> ProstheticTypeEnum.BELOW_KNEE_RELEASE_VALVE
-    is ProstheticType.BelowKnee.PinlockButton -> ProstheticTypeEnum.BELOW_KNEE_PINLOCK_BUTTON
-    is ProstheticType.BelowKnee.HighProfile -> ProstheticTypeEnum.BELOW_KNEE_HIGH_PROFILE
-    is ProstheticType.BelowKnee.Blade -> ProstheticTypeEnum.BELOW_KNEE_BLADE
-    is ProstheticType.BelowKnee.Microprocessor -> ProstheticTypeEnum.BELOW_KNEE_MICROPROCESSOR
-    is ProstheticType.BelowKnee.HydraulicFoot -> ProstheticTypeEnum.BELOW_KNEE_HYDRAULIC_FOOT
-    is ProstheticType.BelowKnee.Rotationplasty -> ProstheticTypeEnum.BELOW_KNEE_ROTATIONPLASTY
-    ProstheticType.BelowKnee.SymesSocket -> ProstheticTypeEnum.BELOW_KNEE_SYMES_SOCKET
+internal fun ProstheticType.toEnum(): ProstheticTypeEnumDto = when (this) {
+    is ProstheticType.AboveKnee.PolycentricKnee -> ProstheticTypeEnumDto.ABOVE_KNEE_POLYCENTRIC_KNEE
+    is ProstheticType.AboveKnee.TotalKnee -> ProstheticTypeEnumDto.ABOVE_KNEE_TOTAL_KNEE
+    ProstheticType.AboveKnee.ThroughKnee -> ProstheticTypeEnumDto.ABOVE_KNEE_THROUGH_KNEE
+    is ProstheticType.AboveKnee.HighProfile -> ProstheticTypeEnumDto.ABOVE_KNEE_HIGH_PROFILE
+    is ProstheticType.AboveKnee.Blade -> ProstheticTypeEnumDto.ABOVE_KNEE_BLADE
+    is ProstheticType.AboveKnee.Microprocessor -> ProstheticTypeEnumDto.ABOVE_KNEE_MICROPROCESSOR
+    is ProstheticType.AboveKnee.HydraulicFoot -> ProstheticTypeEnumDto.ABOVE_KNEE_HYDRAULIC_FOOT
+    is ProstheticType.BelowKnee.ReleaseButton -> ProstheticTypeEnumDto.BELOW_KNEE_RELEASE_BUTTON
+    is ProstheticType.BelowKnee.ReleaseValve -> ProstheticTypeEnumDto.BELOW_KNEE_RELEASE_VALVE
+    is ProstheticType.BelowKnee.PinlockButton -> ProstheticTypeEnumDto.BELOW_KNEE_PINLOCK_BUTTON
+    is ProstheticType.BelowKnee.HighProfile -> ProstheticTypeEnumDto.BELOW_KNEE_HIGH_PROFILE
+    is ProstheticType.BelowKnee.Blade -> ProstheticTypeEnumDto.BELOW_KNEE_BLADE
+    is ProstheticType.BelowKnee.Microprocessor -> ProstheticTypeEnumDto.BELOW_KNEE_MICROPROCESSOR
+    is ProstheticType.BelowKnee.HydraulicFoot -> ProstheticTypeEnumDto.BELOW_KNEE_HYDRAULIC_FOOT
+    is ProstheticType.BelowKnee.Rotationplasty -> ProstheticTypeEnumDto.BELOW_KNEE_ROTATIONPLASTY
+    ProstheticType.BelowKnee.SymesSocket -> ProstheticTypeEnumDto.BELOW_KNEE_SYMES_SOCKET
 }
 
 internal fun ProstheticType.typeSpecificMeasurementMm(): Float = when (this) {

@@ -3,7 +3,6 @@ package com.example.coverdesign.ui.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.example.coverdesign.data.dto.toDto
 import com.example.coverdesign.domain.model.AdditionalElement
-import com.example.coverdesign.domain.model.FasteningType
 import com.example.coverdesign.domain.model.Material
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.OrderCategory
@@ -13,6 +12,7 @@ import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.ProstheticCommonMeasurements
 import com.example.coverdesign.domain.model.ProstheticType
 import com.example.coverdesign.domain.model.SizeLabel
+import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
 import com.example.coverdesign.domain.model.pricing.PricingEngine
@@ -70,7 +70,7 @@ data class ProstheticOrderUiState(
     val limbLevel: LimbLevel? = null,
     val prostheticType: ProstheticType? = null,
     val commonMeasurements: ProstheticCommonMeasurements = ProstheticCommonMeasurements(),
-    val fasteningType: FasteningType = FasteningType.STRAP,
+    val suspensionType: SuspensionType = SuspensionType.STRAP,
     val material: Material = Material.CARBON_FIBER,
     val color: ProductColor = ProductColor("Black", "#000000"),
     val texture: Texture = Texture("", "Smooth", null, "Smooth matte surface"),
@@ -99,8 +99,8 @@ class ProductConfigViewModel(
         when (action) {
             // ── existing flow ──────────────────────────────────────────────
             is ProductConfigAction.Enter -> onEnter(action.mode)
-            is ProductConfigAction.ResumePreviousConfig -> resumeConfig(action.config)
-            is ProductConfigAction.StartFreshConfig -> startFresh(action.product)
+            is ProductConfigAction.ResumePreviousConfig -> resumeProductConfig(action.config)
+            is ProductConfigAction.StartFreshConfig -> startFreshWithProduct(action.product)
             is ProductConfigAction.UpdateMeasurement -> onMeasurementUpdated(
                 action.measurement, action.category
             )
@@ -228,7 +228,7 @@ class ProductConfigViewModel(
             }
 
             is ProductConfigAction.UpdateFasteningType -> setState {
-                copy(prostheticConfig = prostheticConfig.copy(fasteningType = action.type))
+                copy(prostheticConfig = prostheticConfig.copy(suspensionType = action.type))
             }
 
             is ProductConfigAction.UpdateProstheticAdditionalNotes -> setState {
@@ -277,7 +277,7 @@ class ProductConfigViewModel(
                         if (lastConfig != null) {
                             setState { copy(pendingResumePrompt = lastConfig) }
                         } else {
-                            startFresh(product)
+                            startFreshWithProduct(product)
                         }
                     }.onError { message, _ ->
                         setState { copy(isLoading = false, error = message) }
@@ -287,11 +287,11 @@ class ProductConfigViewModel(
         }
     }
 
-    private fun resumeConfig(config: ProductConfig) {
+    private fun resumeProductConfig(config: ProductConfig) {
         setState { copy(currentConfig = config, pendingResumePrompt = null) }
     }
 
-    private fun startFresh(product: Product) { // Not use in the prosthetic cover app
+    private fun startFreshWithProduct(product: Product) { // Not use in the prosthetic cover app
         val draft = ProductConfig(
             id = generateUuid(),
             productId = product.id,
@@ -368,7 +368,6 @@ class ProductConfigViewModel(
         setState { copy(priceEstimate = estimate, isPriceLoading = false) }
     }
 
-    // ── insole submission ─────────────────────────────────────────────────────
 
     private fun onSubmitInsole() {
         viewModelScope.launch {
@@ -387,8 +386,6 @@ class ProductConfigViewModel(
         }
     }
 
-    // ── prosthetic submission (→ 3D model generation) ─────────────────────────
-
     private fun onSubmitProsthetic() {
         val pc = uiState.value.prostheticConfig
         pc.prostheticType ?: return
@@ -397,12 +394,10 @@ class ProductConfigViewModel(
 
         viewModelScope.launch {
             setState { copy(isSaving = true, isLockedAfterSave = true, error = null) }
-            submitProstheticOrder(domainConfig)
-                .onSuccess { taskId ->
+            submitProstheticOrder(domainConfig).onSuccess { taskId ->
                     setState { copy(isSaving = false, uploadProgress = null) }
                     sendEvent(ProductConfigUiEvent.NavigateToPreview(taskId, domainConfig.orderId))
-                }
-                .onError { message, _ ->
+                }.onError { message, _ ->
                     setState { copy(isSaving = false, isLockedAfterSave = false, error = message) }
                 }
         }
@@ -434,20 +429,6 @@ class ProductConfigViewModel(
             productRepo.saveConfig(updatedConfig)
             saveOrderLocally(
                 updatedConfig, uiState.value.priceEstimate
-//                    ?: PriceEstimate(
-//                    configId = updatedConfig.id,
-//                    currency = "USD",
-//                    basePrice = 0.0,
-//                    materialSurcharges = emptyMap(),
-//                    textureSurcharge = 0.0,
-//                    inscriptionSurcharge = 0.0,
-//                    elementSurcharges = emptyMap(),
-//                    sizeMultiplier = 1.0,
-//                    sizeMultiplierLabel = "",
-//                    quantity = updatedConfig.quantity,
-//                    subtotal = 0.0,
-//                    total = 0.0
-//                )
             ).onError { string, _ ->
                 setState { copy(isSaving = false, error = string) }
             }
@@ -561,7 +542,7 @@ sealed class ProductConfigAction {
     data class UpdateProstheticColor(val color: ProductColor) : ProductConfigAction()
     data class UpdateProstheticTexture(val texture: Texture) : ProductConfigAction()
     data class UpdateProstheticQuantity(val qty: Int) : ProductConfigAction()
-    data class UpdateFasteningType(val type: FasteningType) : ProductConfigAction()
+    data class UpdateFasteningType(val type: SuspensionType) : ProductConfigAction()
     data class UpdateProstheticAdditionalNotes(val text: String) : ProductConfigAction()
     object SubmitProstheticOrder : ProductConfigAction()
 }

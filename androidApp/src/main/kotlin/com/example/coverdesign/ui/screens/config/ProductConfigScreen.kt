@@ -308,7 +308,7 @@ internal fun allowedMaterials(category: OrderCategory): List<Material> = when (c
         Material.TPU, Material.SILICONE, Material.RUBBER, Material.NYLON, Material.LEATHER
     )
 
-    OrderCategory.COSMETIC_COVER -> listOf(
+    OrderCategory.PROSTHETIC_COVER -> listOf(
         Material.PLA, Material.ABS, Material.NYLON, Material.PETG, Material.RESIN, Material.TPU
     )
 

@@ -19,6 +19,6 @@ sealed class OrderDetail {
     data class ProstheticCoverOrder(
         val config: ProstheticCoverOrderConfig,
         override val status: OrderStatus,
-        val adaptedModels: List<AdaptedModel3D> = emptyList(),
+        val adaptedModels: List<GenerationTask> = emptyList(),
     ) : OrderDetail()
 }

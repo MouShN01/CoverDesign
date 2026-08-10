@@ -40,9 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.ButtonPlacement
-import com.example.coverdesign.domain.model.FasteningType
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.ProstheticType
+import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.ui.constants.UIConstants.DEFAULT_TEXTURES
 import com.example.coverdesign.ui.viewmodel.LegSide
 import com.example.coverdesign.ui.viewmodel.LimbLevel
@@ -127,14 +127,14 @@ internal fun ProstheticCoverConfigContent(
         }
         ConfigSection(title = "Fastening") {
             FasteningTypePicker(
-                selected = pc.fasteningType,
+                selected = pc.suspensionType,
                 onChanged = { onAction(ProductConfigAction.UpdateFasteningType(it)) }
             )
         }
         ConfigSection(title = "Appearance") {
             MaterialSelector(
                 selected = pc.material,
-                allowedMaterials = allowedMaterials(OrderCategory.COSMETIC_COVER),
+                allowedMaterials = allowedMaterials(OrderCategory.PROSTHETIC_COVER),
                 onChanged = { onAction(ProductConfigAction.UpdateProstheticMaterial(it)) }
             )
             ColorPicker(
@@ -153,13 +153,13 @@ internal fun ProstheticCoverConfigContent(
                 onAction = onAction
             )
         }
-        ConfigSection(title = "Order") {
-            QuantitySelector(
-                value = pc.quantity,
-                error = null,
-                onChanged = { onAction(ProductConfigAction.UpdateProstheticQuantity(it)) }
-            )
-        }
+//        ConfigSection(title = "Order") {
+//            QuantitySelector(
+//                value = pc.quantity,
+//                error = null,
+//                onChanged = { onAction(ProductConfigAction.UpdateProstheticQuantity(it)) }
+//            )
+//        }
         ConfigSection(title = "Additional Notes") {
             OutlinedTextField(
                 value = pc.additionalNotes,
@@ -462,11 +462,11 @@ private fun subtypesForLevel(level: LimbLevel): List<ProstheticType> = when (lev
 
 @Composable
 private fun FasteningTypePicker(
-    selected: FasteningType,
-    onChanged: (FasteningType) -> Unit
+    selected: SuspensionType,
+    onChanged: (SuspensionType) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        FasteningType.entries.forEach { type ->
+        SuspensionType.entries.forEach { type ->
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = if (type == selected)

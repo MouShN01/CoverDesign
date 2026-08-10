@@ -1,6 +1,6 @@
 package com.example.coverdesign.domain.usecase
 
-import com.example.coverdesign.domain.model.AdaptedModel3D
+import com.example.coverdesign.domain.model.GenerationTask
 import com.example.coverdesign.domain.model.ModelStatus
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.util.Resource
@@ -17,7 +17,7 @@ class PollModelStatusUseCase(
         private const val MAX_ATTEMPTS = 60    // ~3–15 min depending on interval
     }
 
-    operator fun invoke(taskId: String): Flow<Resource<AdaptedModel3D>> = flow {
+    operator fun invoke(taskId: String): Flow<Resource<GenerationTask>> = flow {
         var attempts = 0
         println("loadAdaptedModel PollModelStatusUseCase")
         while (attempts < MAX_ATTEMPTS) {
