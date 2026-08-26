@@ -1,35 +1,93 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# CoverDesign
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
-
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
-
-### Running the apps
-
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
-
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+A Kotlin Multiplatform (KMM) application for designing, configuring, and ordering customized prosthetic covers, insoles, and accessories. The app supports AI-driven 3D model generation from user specifications and AR-based virtual try-on powered by ARCore.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Tech Stack
+
+| Category | Libraries / Tools |
+| --- | --- |
+| Languages & Platform | Kotlin 2.4.0, Kotlin Multiplatform (KMM), JVM 17 |
+| UI | Compose Multiplatform 1.11.0, Material3 1.11.0-alpha07, Navigation Compose 2.9.8 |
+| 3D / AR | SceneView 4.18.0, ARSceneView 4.18.0, ARCore 1.54.0 |
+| Networking | Ktor Client 3.5.0 (OkHttp engine), Kotlinx Serialization |
+| Image Loading | Coil3 3.5.0 (Ktor backend) |
+| Backend / Firebase | Firebase BOM 34.15.0, GitLive Firebase Multiplatform (Auth, Firestore, Storage) |
+| Authentication | Google Sign-In (googleid 1.2.0), Androidx Credentials 1.6.0, Biometric 1.2.0-alpha05 |
+| Local Storage | SQLDelight 2.3.2 (multiplatform), DataStore Preferences 1.2.1, Security Crypto 1.1.0 |
+| DI | Koin 4.2.1 (core, Android, Compose) |
+| Async | Kotlinx Coroutines 1.11.0 |
+| Accompanist | Flow Layout, System UI Controller, Permissions — all 0.34.0 |
+| Build | AGP 9.0.1, Gradle Kotlin DSL, Version Catalog (`libs.versions.toml`) |
+| Testing | JUnit 4.13.2, Kotlin Test, Espresso 3.7.0, Compose UI Test |
+
+---
+
+## Features (stable/v1)
+
+- **Authentication** — Google Sign-In, role selection (user / admin), biometric unlock, encrypted token storage
+- **Product Configuration** — per-category sizing (EU foot size, clothing sizes, ring sizes), material selection (Silicone, Carbon Fiber, etc.), color/texture picker with hex input, photo upload for reference
+- **3D Model Generation** — AI-driven model generation from configuration; background status polling; generated model URL download
+- **3D Model Preview** — SceneView-based interactive 3D viewer with generation task state tracking
+- **AR Virtual Try-On** — ARCore + ARSceneView camera overlay for prosthetic cover try-on; camera permission handling
+- **Order Management** — create orders for any product type; dynamic pricing engine (base + material + texture + quantity); order review before submission; order history and detail view; local persistence via SQLDelight
+- **Rehabilitation Tracking** — rehab history records, gait session data, prosthetic type and suspension type enumerations, limb measurement capture
+
+---
+
+## Project Structure
+
+```
+CoverDesign/
+├── androidApp/          # Android Compose entry point, navigation, screens
+├── shared/              # KMM shared module
+│   └── src/
+│       ├── commonMain/  # data/, domain/, ui/, di/
+│       ├── androidMain/ # Android-specific implementations
+│       └── iosMain/     # iOS-specific implementations
+├── desktopApp/          # JVM desktop entry point
+├── iosApp/              # Swift/Xcode entry point
+└── gradle/
+    └── libs.versions.toml  # centralized version catalog
+```
+
+---
+
+## Build Requirements
+
+- **minSdk:** 30 (Android 11)
+- **targetSdk / compileSdk:** 36 (Android 15)
+- **JDK:** 17
+- **IDE:** Android Studio Ladybug or newer (with KMM plugin)
+
+---
+
+## Running the App
+
+```bash
+# Android
+./gradlew :androidApp:assembleDebug
+
+# Desktop
+./gradlew :desktopApp:run
+# or with hot reload:
+./gradlew :desktopApp:hotRun --auto
+```
+
+iOS: open the `/iosApp` directory in Xcode and run from there.
+
+---
+
+## Running Tests
+
+```bash
+# Android (host)
+./gradlew :shared:testAndroidHostTest
+
+# Desktop (JVM)
+./gradlew :shared:jvmTest
+
+# iOS Simulator
+./gradlew :shared:iosSimulatorArm64Test
+```
