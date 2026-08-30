@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens
+package com.example.coverdesign.ui.screens.patient.order
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

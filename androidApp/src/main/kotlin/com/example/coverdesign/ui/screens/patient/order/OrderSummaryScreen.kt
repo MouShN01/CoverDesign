@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens
+package com.example.coverdesign.ui.screens.patient.order
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -38,22 +38,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.coverdesign.domain.model.AdditionalElement
+import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
 import com.example.coverdesign.domain.model.InsoleFootConfig
 import com.example.coverdesign.domain.model.InsoleOrderConfig
 import com.example.coverdesign.domain.model.LegSide
 import com.example.coverdesign.domain.model.LimbLevel
 import com.example.coverdesign.domain.model.Material
-import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.Order
-import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.OrderDetail
 import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.domain.model.ProductColor
-import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.ProstheticCoverOrderConfig
-import com.example.coverdesign.data.dto.ProstheticTypeEnumDto
-import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.SuspensionType
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
@@ -136,38 +130,7 @@ internal fun OrderSummaryScreenContent(
                     )
                 }
                 when (val detail = uiState.orderDetail) {
-                    is OrderDetail.CatalogOrder -> {
-                        Column {
-                            detail.order.adaptedModelId?.let { adaptedModelId ->
-                                if (onView3DModel != null) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            onView3DModel(
-                                                detail.order.config.id, adaptedModelId
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 20.dp, vertical = 4.dp)
-                                            .height(52.dp),
-                                        shape = RoundedCornerShape(14.dp)
-                                    ) {
-                                        Icon(Icons.Default.ViewInAr, null, Modifier.size(20.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            "View 3D Model",
-                                            style = MaterialTheme.typography.titleSmall
-                                        )
-                                    }
-                                }
-                            }
-                            SubmitOrderBar(
-                                isSubmitting = uiState.isSubmitting,
-                                enabled = detail.order.status == OrderStatus.DRAFT,
-                                onSubmit = onSubmit
-                            )
-                        }
-                    }
+                    is OrderDetail.CatalogOrder -> {}
 
                     is OrderDetail.InsoleOrder -> {
                         SubmitOrderBar(
@@ -235,42 +198,9 @@ internal fun OrderSummaryScreenContent(
 @Composable
 private fun OrderDetailContent(detail: OrderDetail, modifier: Modifier = Modifier) {
     when (detail) {
-        is OrderDetail.CatalogOrder -> CatalogOrderContent(detail.order, modifier)
+        is OrderDetail.CatalogOrder -> {}
         is OrderDetail.InsoleOrder -> InsoleOrderContent(detail, modifier)
         is OrderDetail.ProstheticCoverOrder -> ProstheticCoverOrderContent(detail, modifier)
-    }
-}
-
-// ── Catalog order ──────────────────────────────────────────────────────────────
-
-@Composable
-private fun CatalogOrderContent(order: Order, modifier: Modifier = Modifier) {
-    val config = order.config
-    SummaryColumn(modifier) {
-        SummarySection(title = "Product") {
-            SummaryRow("Type", config.orderCategory.name)
-            SummaryRow("Material", config.material.displayName)
-            config.texture?.let { SummaryRow("Texture", it.name) }
-            SummaryRow("Color", config.color.name)
-        }
-        SummarySection(title = "Measurements") {
-            SummaryRow("Height", "${config.measurement.height} mm")
-            SummaryRow("Width", "${config.measurement.width} mm")
-            SummaryRow("Depth", "${config.measurement.depth} mm")
-            config.sizeLabel?.let { SummaryRow("Size", it.name) }
-        }
-        if (config.inscription.isNotEmpty() || config.additionalElements.isNotEmpty()) {
-            SummarySection(title = "Personalisation") {
-                if (config.inscription.isNotEmpty()) SummaryRow("Inscription", config.inscription)
-                if (config.additionalElements.isNotEmpty()) SummaryRow(
-                    "Elements", config.additionalElements.joinToString { it.displayName })
-            }
-        }
-        SummarySection(title = "Order") {
-            SummaryRow("Quantity", config.quantity.toString())
-            SummaryRow("Status", order.status.name)
-        }
-        PriceCard(price = order.priceEstimate)
     }
 }
 
@@ -301,7 +231,7 @@ private fun InsoleOrderContent(detail: OrderDetail.InsoleOrder, modifier: Modifi
 }
 
 @Composable
-private fun ColumnScope.FootConfigRows(foot: com.example.coverdesign.domain.model.InsoleFootConfig) {
+private fun ColumnScope.FootConfigRows(foot: InsoleFootConfig) {
     SummaryRow("EU Size", foot.euSize.toString())
     SummaryRow("Length", "${foot.lengthMm} mm")
     SummaryRow("Width", "${foot.widthMm} mm")
@@ -437,7 +367,7 @@ private fun SubmitOrderBar(
 private fun OrderSubmittedDialog(orderTypeLabel: String, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary) },
+        icon = { Icon(Icons.Default.CheckCircle, null, tint = colorScheme.primary) },
         title = { Text("$orderTypeLabel submitted successfully") },
         text = { Text("Please wait till it will be processed.") },
         confirmButton = { Button(onClick = onDismiss) { Text("OK") } }
@@ -445,17 +375,6 @@ private fun OrderSubmittedDialog(orderTypeLabel: String, onDismiss: () -> Unit) 
 }
 
 // ── Previews ───────────────────────────────────────────────────────────────────
-
-@Preview(showBackground = true)
-@Composable
-private fun CatalogOrderPreview() {
-    AppTheme {
-        OrderSummaryScreenContent(
-            uiState = OrderSummaryUiState(
-                orderDetail = OrderDetail.CatalogOrder(sampleCatalogOrder)
-            ), onBack = {}, onSubmit = {})
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -508,23 +427,3 @@ private fun ProstheticCoverOrderPreview() {
             ), onBack = {}, onSubmit = {})
     }
 }
-
-private val sampleCatalogOrder = Order(
-    id = "ord_1", adaptedModelId = null, config = ProductConfig(
-        id = "conf_1",
-        productId = "prod_1",
-        orderCategory = OrderCategory.ACCESSORY,
-        measurement = Measurement(100.0, 50.0, 10.0),
-        sizeLabel = SizeLabel.M,
-        color = ProductColor("Black", "#000000"),
-        material = Material.METAL,
-        texture = Texture("txt_1", "Brushed", null, null),
-        inscription = "Custom Text",
-        userPhotoUri = null,
-        additionalElements = listOf(AdditionalElement.LOGO),
-        quantity = 1,
-        createdAt = 0L
-    ), priceEstimate = PriceEstimate(
-        "conf_1", basePrice = 100.0, subtotal = 110.0, total = 110.0, quantity = 1
-    ), status = OrderStatus.DRAFT, createdAt = 0L
-)

@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.ar
+package com.example.coverdesign.ui.screens.patient.ar
 
 import androidx.compose.runtime.Composable
 import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel

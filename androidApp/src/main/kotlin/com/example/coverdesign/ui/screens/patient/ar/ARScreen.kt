@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.ar
+package com.example.coverdesign.ui.screens.patient.ar
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box

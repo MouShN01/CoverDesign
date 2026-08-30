@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.rehab
+package com.example.coverdesign.ui.screens.patient.rehab
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -111,7 +112,7 @@ internal fun RehabHistoryContent(
                 .fillMaxSize()
                 .padding(padding),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            contentPadding = PaddingValues(
                 horizontal = 16.dp, vertical = 12.dp
             )
         ) {

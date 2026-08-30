@@ -17,6 +17,7 @@ import com.example.coverdesign.domain.model.ProductConfig
 import com.example.coverdesign.domain.model.SizeLabel
 import com.example.coverdesign.domain.model.Texture
 import com.example.coverdesign.domain.model.pricing.PriceEstimate
+import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreenContent
 import com.example.coverdesign.ui.viewmodel.OrderSummaryUiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule

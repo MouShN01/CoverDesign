@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.preview
+package com.example.coverdesign.ui.screens.patient.preview
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

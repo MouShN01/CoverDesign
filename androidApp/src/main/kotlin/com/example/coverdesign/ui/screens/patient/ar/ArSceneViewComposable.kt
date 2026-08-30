@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.ar
+package com.example.coverdesign.ui.screens.patient.ar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

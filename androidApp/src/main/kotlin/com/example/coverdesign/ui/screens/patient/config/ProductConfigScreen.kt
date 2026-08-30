@@ -163,10 +163,6 @@ fun ProductConfigScreen(
                     state = state, onAction = viewModel::onAction, modifier = Modifier.padding(padding)
                 )
 
-                state.orderType == null && state.currentConfig == null -> TypePickerContent(
-                    onAction = viewModel::onAction, modifier = Modifier.padding(padding)
-                )
-
                 state.currentConfig != null -> ProductConfigContent(
                     state = state, onAction = viewModel::onAction, modifier = Modifier.padding(padding)
                 )

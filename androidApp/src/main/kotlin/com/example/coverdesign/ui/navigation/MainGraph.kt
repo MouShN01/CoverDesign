@@ -4,15 +4,14 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.example.coverdesign.ui.screens.CatalogScreen
-import com.example.coverdesign.ui.screens.OrderSummaryScreen
-import com.example.coverdesign.ui.screens.OrdersListScreen
+import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreen
+import com.example.coverdesign.ui.screens.patient.order.OrdersListScreen
 import com.example.coverdesign.ui.screens.ProfileScreen
-import com.example.coverdesign.ui.screens.ar.VirtualTryOnPlaceholderScreen
 import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
-import com.example.coverdesign.ui.screens.preview.ModifiableModelPreviewScreen
-import com.example.coverdesign.ui.screens.rehab.RehabHistoryScreen
+import com.example.coverdesign.ui.screens.patient.ar.VirtualTryOnPlaceholderScreen
+import com.example.coverdesign.ui.screens.patient.preview.ModifiableModelPreviewScreen
+import com.example.coverdesign.ui.screens.patient.rehab.RehabHistoryScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
 import com.example.coverdesign.ui.viewmodel.OrderType
@@ -87,15 +86,6 @@ fun NavGraphBuilder.mainGraph(
             ProfileScreen()
         }
 
-        // ── catalog → config flow ─────────────────────────────────────
-        composable(Screen.Catalog.route) {
-            CatalogScreen(
-                onProductSelected = { product ->
-                    navController.navigate(Screen.ProductConfigFromCatalog.createRoute(product.id))
-                    //navController.navigate(Screen.ProductConfig.createRoute(product.id))
-                }
-            )
-        }
         composable(Screen.NewOrder.route) {
             ProductConfigScreen(
                 entryMode = ConfigEntryMode.DirectNew(),
@@ -113,21 +103,6 @@ fun NavGraphBuilder.mainGraph(
                 entryMode = ConfigEntryMode.DirectNew(OrderType.INSOLE),
                 onProceed = { taskId, configId ->
                     navController.navigate(Screen.ModelPreview.createRoute(taskId, configId))
-                },
-                onOrderSummary = { configId ->
-                    navController.navigate(Screen.OrderSummary.createRoute(configId))
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.ProductConfigFromCatalog.route) { entry ->
-            val productId = entry.arguments?.getString("productId") ?: return@composable
-            ProductConfigScreen(
-                entryMode = ConfigEntryMode.FromProduct(productId),
-                onProceed = { taskId, configId ->
-                    navController.navigate(
-                        Screen.ModelPreview.createRoute(taskId, configId)
-                    )
                 },
                 onOrderSummary = { configId ->
                     navController.navigate(Screen.OrderSummary.createRoute(configId))

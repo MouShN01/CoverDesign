@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.preview
+package com.example.coverdesign.ui.screens.patient.preview
 
 // androidApp/ui/screens/preview/ModelViewerComposable.kt
 import androidx.compose.foundation.layout.Arrangement

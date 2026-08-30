@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.preview
+package com.example.coverdesign.ui.screens.patient.preview
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
