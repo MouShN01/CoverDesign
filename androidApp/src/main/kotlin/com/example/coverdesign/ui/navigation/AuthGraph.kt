@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.example.coverdesign.domain.model.UserRole
 import com.example.coverdesign.ui.screens.auth.LoginScreen
 import com.example.coverdesign.ui.screens.auth.RegisterScreen
 import com.example.coverdesign.ui.screens.auth.SelectRoleScreen
@@ -37,10 +38,13 @@ fun NavGraphBuilder.authGraph(
             LoginScreen(
                 viewModel = sharedViewModel,
                 onLoginSuccess = {
-                    println("Login success with ROLE ${sharedViewModel.uiState.value.role}")
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.SelectRole.route) { inclusive = true }
-                        //popUpTo(Screen.Auth.route) { inclusive = true }
+                    val destination =
+                        if (sharedViewModel.uiState.value.role == UserRole.DOCTOR)
+                            Screen.ClinicianMain.route
+                        else
+                            Screen.PatientMain.route
+                    navController.navigate(destination) {
+                        popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
@@ -56,8 +60,13 @@ fun NavGraphBuilder.authGraph(
             RegisterScreen(
                 viewModel = sharedViewModel,
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.SelectRole.route) { inclusive = true }
+                    val destination =
+                        if (sharedViewModel.uiState.value.role == UserRole.DOCTOR)
+                            Screen.ClinicianMain.route
+                        else
+                            Screen.PatientMain.route
+                    navController.navigate(destination) {
+                        popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 },
                 onNavigateBack = { navController.popBackStack() }

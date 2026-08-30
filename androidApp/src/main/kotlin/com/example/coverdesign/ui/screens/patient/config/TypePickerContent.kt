@@ -31,6 +31,8 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.coverdesign.ui.theme.StatusBlue
+import com.example.coverdesign.ui.theme.StatusGreen
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.ui.viewmodel.OrderType
 import com.example.coverdesign.ui.viewmodel.ProductConfigAction
@@ -58,14 +60,14 @@ internal fun TypePickerContent(
             title = "Insole",
             description = "Custom orthopaedic insole sized and shaped to your foot measurements.",
             icon = Icons.Outlined.FaceRetouchingNatural,
-            tint = Color(0xFF2E7D32),
+            tint = StatusGreen,
             onClick = { onAction(ProductConfigAction.SelectOrderType(OrderType.INSOLE)) }
         )
         OrderTypeCard(
             title = "Prosthetic Cover",
             description = "3D-printed cosmetic cover matched to your prosthesis type and measurements.",
             icon = Icons.Default.ViewInAr,
-            tint = Color(0xFF1565C0),
+            tint = StatusBlue,
             onClick = { onAction(ProductConfigAction.SelectOrderType(OrderType.PROSTHETIC_COVER)) }
         )
     }

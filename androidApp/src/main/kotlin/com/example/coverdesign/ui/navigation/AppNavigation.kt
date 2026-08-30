@@ -1,27 +1,60 @@
 package com.example.coverdesign.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.coverdesign.domain.model.UserRole
 import com.example.coverdesign.domain.repo.FireAuthRepository
+import com.example.coverdesign.ui.viewmodel.AppViewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AppScaffold() {
+    val authRepo: FireAuthRepository = koinInject()
+    val appViewModel: AppViewModel = koinViewModel()
+    val userRole by appViewModel.userRole.collectAsStateWithLifecycle()
+    val isResolving by appViewModel.isResolving.collectAsStateWithLifecycle()
+    val isAuthenticated = remember { authRepo.getCurrentUserId() != null }
+
+    // Block NavHost until the role is known for authenticated sessions so the
+    // startDestination is always stable when NavHost first composes.
+    if (isAuthenticated && isResolving) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val startDestination = remember {
+        when {
+            !isAuthenticated -> Screen.Auth.route
+            userRole == UserRole.DOCTOR -> Screen.ClinicianMain.route
+            else -> Screen.PatientMain.route
+        }
+    }
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val hideBottomBar = currentRoute in listOf(
+    val isClinicianRoute = currentRoute?.startsWith("clinician") == true
+
+    // Patient screens that suppress the bottom bar
+    val patientHiddenRoutes = setOf(
         Screen.ModelPreview.route,
         Screen.ModelPreviewFromOrder.route,
         Screen.ArTryOn.route,
@@ -36,10 +69,26 @@ fun AppScaffold() {
         Screen.RehabHistory.route
     )
 
+    val hidePatientBottomBar = !isClinicianRoute && currentRoute in patientHiddenRoutes
+
+    val isAuthenticated2 by authRepo.isAuthenticated()
+        .collectAsStateWithLifecycle(initialValue = isAuthenticated)
+
     Scaffold(
         bottomBar = {
-            if (!hideBottomBar) {
-                AppBottomNavBar(
+            when {
+                isClinicianRoute -> ClinicianBottomNavBar(
+                    currentRoute = currentRoute,
+                    onItemSelected = { item ->
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+                !hidePatientBottomBar -> AppBottomNavBar(
                     currentRoute = currentRoute,
                     onItemSelected = { item ->
                         navController.navigate(item.route) {
@@ -53,23 +102,8 @@ fun AppScaffold() {
             }
         }
     ) { padding ->
-        val authRepo: FireAuthRepository = koinInject()
-
-        // Compute once at composition time — never changes, so the NavHost
-        // never resets when auth state toggles during a sign-in attempt.
-        val startDestination = remember {
-            if (authRepo.getCurrentUserId() != null) Screen.Main.route else Screen.Auth.route
-        }
-
-        // Only used to detect a real sign-out from the main graph and redirect
-        // back to auth. We do NOT use this to change startDestination.
-        val isAuthenticated by authRepo.isAuthenticated()
-            .collectAsStateWithLifecycle(initialValue = authRepo.getCurrentUserId() != null)
-
-        LaunchedEffect(isAuthenticated) {
-            if (!isAuthenticated) {
-                // If the user is already on an auth screen (e.g. role-check failure
-                // signed them out mid-login), there is nothing to do — they stay put.
+        LaunchedEffect(isAuthenticated2) {
+            if (!isAuthenticated2) {
                 val authScreens = setOf(
                     Screen.SelectRole.route,
                     Screen.Login.route,
@@ -91,7 +125,8 @@ fun AppScaffold() {
             modifier = Modifier.padding(padding)
         ) {
             authGraph(navController)
-            mainGraph(navController)
+            patientGraph(navController)
+            clinicianGraph(navController)
         }
     }
 }

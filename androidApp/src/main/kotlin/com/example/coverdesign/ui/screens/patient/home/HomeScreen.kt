@@ -62,6 +62,16 @@ import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.ui.components.EventHandler
+import com.example.coverdesign.ui.theme.ChartEndRed
+import com.example.coverdesign.ui.theme.ChartStartGreen
+import com.example.coverdesign.ui.theme.NeutralMid
+import com.example.coverdesign.ui.theme.StatusBlue
+import com.example.coverdesign.ui.theme.StatusBlueBg
+import com.example.coverdesign.ui.theme.StatusGreen
+import com.example.coverdesign.ui.theme.StatusGreenBg
+import com.example.coverdesign.ui.theme.StatusPurple
+import com.example.coverdesign.ui.theme.StatusPurpleBg
+import com.example.coverdesign.ui.theme.StatusViolet
 import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiEvent
@@ -125,7 +135,7 @@ internal fun HomeContent(
             ToolCard(
                 icon = Icons.Outlined.FaceRetouchingNatural,
                 label = "Virtual Try-On",
-                tint = Color(0xFF9C27B0),
+                tint = StatusViolet,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
@@ -325,7 +335,7 @@ private fun ScoreChip(label: String, score: Float, modifier: Modifier = Modifier
 private fun StabilogramMiniChart(copPoints: List<CopPoint>, modifier: Modifier = Modifier) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
-    val axisColor = Color.Gray.copy(alpha = 0.35f)
+    val axisColor = NeutralMid.copy(alpha = 0.35f)
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -362,12 +372,12 @@ private fun StabilogramMiniChart(copPoints: List<CopPoint>, modifier: Modifier =
         val first = copPoints.first()
         val last = copPoints.last()
         drawCircle(
-            Color(0xFF4CAF50),
+            ChartStartGreen,
             radius = 3.dp.toPx(),
             center = Offset(cx + first.x * scaleX, cy - first.y * scaleY)
         )
         drawCircle(
-            Color(0xFFF44336),
+            ChartEndRed,
             radius = 3.dp.toPx(),
             center = Offset(cx + last.x * scaleX, cy - last.y * scaleY)
         )
@@ -390,7 +400,7 @@ private fun DeviationMiniChart(series: List<BodyPosition>, modifier: Modifier = 
 
         // zero line
         drawLine(
-            color = Color(0xFF4CAF50),
+            color = ChartStartGreen,
             start = Offset(0f, midY),
             end = Offset(w, midY),
             strokeWidth = 1.dp.toPx(),
@@ -717,24 +727,24 @@ private fun ContactCard(modifier: Modifier = Modifier) {
 
             ContactRow(
                 icon = Icons.Outlined.Phone,
-                tint = Color(0xFF2E7D32),
+                tint = StatusGreen,
                 label = stringResource(R.string.phone),
                 value = stringResource(R.string.contact_number),
-                bgColor = Color(0xFFE8F5E9)
+                bgColor = StatusGreenBg
             )
             ContactRow(
                 icon = Icons.Outlined.Email,
-                tint = Color(0xFF1565C0),
+                tint = StatusBlue,
                 label = "Email",
                 value = stringResource(R.string.info_email),
-                bgColor = Color(0xFFE3F2FD)
+                bgColor = StatusBlueBg
             )
             ContactRow(
                 icon = Icons.Outlined.Chat,
-                tint = Color(0xFF6A1B9A),
+                tint = StatusPurple,
                 label = stringResource(R.string.online_chat),
                 value = stringResource(R.string.available_24_7),
-                bgColor = Color(0xFFF3E5F5)
+                bgColor = StatusPurpleBg
             )
         }
     }

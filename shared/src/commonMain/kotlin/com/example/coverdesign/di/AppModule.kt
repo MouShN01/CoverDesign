@@ -37,9 +37,11 @@ import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
 import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
 import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.validator.MeasurementValidator
+import com.example.coverdesign.ui.viewmodel.AppViewModel
 import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
 import com.example.coverdesign.ui.viewmodel.AuthViewModel
 import com.example.coverdesign.ui.viewmodel.CatalogViewModel
+import com.example.coverdesign.ui.viewmodel.ClinicianHomeViewModel
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
 import com.example.coverdesign.ui.viewmodel.OrderListViewModel
@@ -171,6 +173,8 @@ val viewModelModule = module {
     viewModel { HomeViewModel(getOrderList = get(), authRepo = get()) }
     viewModel { AuthViewModel(get(), get()) }
     viewModel { RehabViewModel(authRepo = get()) }
+    viewModel { AppViewModel(authRepo = get()) }
+    viewModel { ClinicianHomeViewModel(authRepo = get()) }
 
 }
 

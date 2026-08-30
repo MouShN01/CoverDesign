@@ -6,7 +6,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -70,7 +69,7 @@ private val DarkColorScheme = darkColorScheme(
 
     error             = ErrorRed,
     onError           = NeutralWhite,
-    errorContainer    = Color(0xFF501313),
+    errorContainer    = ErrorContainerDark,
     onErrorContainer  = ErrorRed
 )
 

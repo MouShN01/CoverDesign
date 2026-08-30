@@ -56,6 +56,13 @@ import com.example.coverdesign.domain.model.CopPoint
 import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.theme.AppTheme
+import com.example.coverdesign.ui.theme.ChartEndRed
+import com.example.coverdesign.ui.theme.ChartStartGreen
+import com.example.coverdesign.ui.theme.NeutralMid
+import com.example.coverdesign.ui.theme.NeutralWhite
+import com.example.coverdesign.ui.theme.StatusBlue
+import com.example.coverdesign.ui.theme.StatusGreen
+import com.example.coverdesign.ui.theme.StatusPurple
 import com.example.coverdesign.ui.viewmodel.RehabAction
 import com.example.coverdesign.ui.viewmodel.RehabMockData
 import com.example.coverdesign.ui.viewmodel.RehabUiEvent
@@ -174,9 +181,9 @@ private fun ScoreTrendCard(sessions: List<GaitSession>, modifier: Modifier = Mod
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(bottom = 8.dp)
             ) {
-                LegendDot(Color(0xFF1565C0), "Posture")
-                LegendDot(Color(0xFF2E7D32), "Balance")
-                LegendDot(Color(0xFF6A1B9A), "Symmetry")
+                LegendDot(StatusBlue, "Posture")
+                LegendDot(StatusGreen, "Balance")
+                LegendDot(StatusPurple, "Symmetry")
             }
 
             ScoreTrendChart(
@@ -206,12 +213,12 @@ private fun LegendDot(color: Color, label: String) {
 
 @Composable
 private fun ScoreTrendChart(sessions: List<GaitSession>, modifier: Modifier = Modifier) {
-    val postureColor = Color(0xFF1565C0)
-    val balanceColor = Color(0xFF2E7D32)
-    val symmetryColor = Color(0xFF6A1B9A)
-    val gridColor = Color.Gray.copy(alpha = 0.2f)
-    val axisColor = Color.Gray.copy(alpha = 0.5f)
-    Color.Gray.copy(alpha = 0.7f)
+    val postureColor = StatusBlue
+    val balanceColor = StatusGreen
+    val symmetryColor = StatusPurple
+    val gridColor = NeutralMid.copy(alpha = 0.2f)
+    val axisColor = NeutralMid.copy(alpha = 0.5f)
+    NeutralMid.copy(alpha = 0.7f)
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -276,7 +283,7 @@ private fun ScoreTrendChart(sessions: List<GaitSession>, modifier: Modifier = Mo
                     radius = 4.dp.toPx(),
                     center = Offset(xPos(i), yPos(score))
                 )
-                drawCircle(Color.White, radius = 2.dp.toPx(), center = Offset(xPos(i), yPos(score)))
+                drawCircle(NeutralWhite, radius = 2.dp.toPx(), center = Offset(xPos(i), yPos(score)))
             }
         }
     }
@@ -328,9 +335,9 @@ private fun SessionCard(
 
             // Score row
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MiniScoreBadge("Posture", session.gaitAnalysis.postureScore, Color(0xFF1565C0))
-                MiniScoreBadge("Balance", session.gaitAnalysis.balanceScore, Color(0xFF2E7D32))
-                MiniScoreBadge("Symmetry", session.gaitAnalysis.symmetryScore, Color(0xFF6A1B9A))
+                MiniScoreBadge("Posture", session.gaitAnalysis.postureScore, StatusBlue)
+                MiniScoreBadge("Balance", session.gaitAnalysis.balanceScore, StatusGreen)
+                MiniScoreBadge("Symmetry", session.gaitAnalysis.symmetryScore, StatusPurple)
             }
 
             // Expanded detail
@@ -441,7 +448,7 @@ private fun MiniScoreBadge(label: String, score: Float, color: Color) {
 private fun StabilogramChart(copPoints: List<CopPoint>, modifier: Modifier = Modifier) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
-    val axisColor = Color.Gray.copy(alpha = 0.35f)
+    val axisColor = NeutralMid.copy(alpha = 0.35f)
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -475,12 +482,12 @@ private fun StabilogramChart(copPoints: List<CopPoint>, modifier: Modifier = Mod
         val first = copPoints.first()
         val last = copPoints.last()
         drawCircle(
-            Color(0xFF4CAF50),
+            ChartStartGreen,
             radius = 4.dp.toPx(),
             center = Offset(cx + first.x * scaleX, cy - first.y * scaleY)
         )
         drawCircle(
-            Color(0xFFF44336),
+            ChartEndRed,
             radius = 4.dp.toPx(),
             center = Offset(cx + last.x * scaleX, cy - last.y * scaleY)
         )
@@ -492,7 +499,7 @@ private fun DeviationChart(series: List<BodyPosition>, modifier: Modifier = Modi
     val primary = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
-    val gridColor = Color.Gray.copy(alpha = 0.2f)
+    val gridColor = NeutralMid.copy(alpha = 0.2f)
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -510,7 +517,7 @@ private fun DeviationChart(series: List<BodyPosition>, modifier: Modifier = Modi
 
         // Zero line
         drawLine(
-            color = Color(0xFF4CAF50),
+            color = ChartStartGreen,
             start = Offset(0f, midY),
             end = Offset(w, midY),
             strokeWidth = 1.5.dp.toPx(),

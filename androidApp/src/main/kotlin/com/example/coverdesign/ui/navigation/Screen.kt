@@ -56,4 +56,9 @@ sealed class Screen(val route: String) {
     object RehabHistory : Screen("rehab_history")
     object NewOrder : Screen("order/new")
     object NewInsoleOrder : Screen("order/new/insole")
+
+    // role-specific graph roots
+    object PatientMain : Screen("patient_main")
+    object ClinicianMain : Screen("clinician_main")
+    object ClinicianHome : Screen("clinician_home")
 }

@@ -172,8 +172,9 @@ class FireAuthRepositoryImpl : FireAuthRepository {
     ): Resource<FirebaseUser> = try {
         val result = auth.createUserWithEmailAndPassword(email, password)
         val user = result.user ?: return Resource.Error("Registration returned no user")
-
+        println("in registerWithEmail:passed createUserWithEmailAndPassword with \r\n user: $user")
         if (result.additionalUserInfo?.isNewUser == true) {
+            println("in registerWithEmail: inside if result.additionalUserInfo?.isNewUser == true")
             createUserProfile(
                 AppUser(
                     uid = user.uid,
@@ -187,6 +188,7 @@ class FireAuthRepositoryImpl : FireAuthRepository {
 
         Resource.Success(user)
     } catch (e: Exception) {
+        println("Exception in registerWithEmail: ${e.message}")
         Resource.Error(e.toAuthMessage("Registration failed"), e)
     }
 

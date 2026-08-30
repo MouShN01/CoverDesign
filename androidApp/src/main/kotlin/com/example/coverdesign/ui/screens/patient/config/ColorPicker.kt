@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.ProductColor
+import com.example.coverdesign.ui.theme.NeutralMid
 
 @Composable
 fun ColorPicker(selected: ProductColor, onChanged: (ProductColor) -> Unit) {
@@ -49,7 +50,7 @@ fun ColorPicker(selected: ProductColor, onChanged: (ProductColor) -> Unit) {
                     Color(parseColor(formattedHex))
                 } catch (e: Exception) {
                     errorFlag = true
-                    Color.Gray
+                    NeutralMid
                 }
                 Box(
                     modifier = Modifier
