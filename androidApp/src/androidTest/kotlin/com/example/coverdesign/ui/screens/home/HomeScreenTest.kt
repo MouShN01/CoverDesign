@@ -4,16 +4,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.example.coverdesign.domain.model.Material
-import com.example.coverdesign.domain.model.Measurement
-import com.example.coverdesign.domain.model.Order
-import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.domain.model.OrderCategory
-import com.example.coverdesign.domain.model.ProductColor
-import com.example.coverdesign.domain.model.ProductConfig
-import com.example.coverdesign.domain.model.SizeLabel
-import com.example.coverdesign.domain.model.Texture
-import com.example.coverdesign.domain.model.pricing.PriceEstimate
+import com.example.coverdesign.domain.model.OrderListItem
+import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiState
 import org.junit.Assert.assertEquals
@@ -25,32 +18,12 @@ class HomeScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val sampleOrder = Order(
-        id = "order_1",
-        adaptedModelId = null,
-        config = ProductConfig(
-            id = "config_1",
-            productId = "prod_1",
-            orderCategory = OrderCategory.THREE_D_PRINT,
-            measurement = Measurement(10.0, 10.0, 10.0),
-            sizeLabel = SizeLabel.M,
-            color = ProductColor("Red", "#FF0000"),
-            material = Material.PLA,
-            texture = Texture("t1", "Smooth", null, null),
-            inscription = "",
-            userPhotoUri = null,
-            additionalElements = emptyList(),
-            quantity = 1,
-            createdAt = 123456789L
-        ),
-        priceEstimate = PriceEstimate(
-            configId = "config_1",
-            basePrice = 100.0,
-            subtotal = 100.0,
-            total = 100.0
-        ),
-        status = OrderStatus.SUBMITTED,
-        createdAt = 123456789L
+    private val sampleOrderItem = OrderListItem(
+        orderId    = "order_1",
+        category   = OrderCategory.PROSTHETIC_COVER,
+        createdAt  = 123456789L,
+        totalPrice = 100.0,
+        status     = OrderStatus.SUBMITTED
     )
 
     @Test
@@ -58,7 +31,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state = HomeUiState(),
+                state    = HomeUiState(),
                 onAction = { actionReceived = it }
             )
         }
@@ -68,17 +41,14 @@ class HomeScreenTest {
     }
 
     @Test
-    fun testToolCardsClick() {
+    fun testVirtualTryOnClick() {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state = HomeUiState(),
+                state    = HomeUiState(),
                 onAction = { actionReceived = it }
             )
         }
-
-        composeTestRule.onNodeWithText("3D Visualisation").performClick()
-        assertEquals(HomeAction.Open3D, actionReceived)
 
         composeTestRule.onNodeWithText("Virtual Try-On").performClick()
         assertEquals(HomeAction.OpenTryOn, actionReceived)
@@ -88,7 +58,7 @@ class HomeScreenTest {
     fun testEmptyOrdersState() {
         composeTestRule.setContent {
             HomeContent(
-                state = HomeUiState(recentOrders = emptyList()),
+                state    = HomeUiState(recentOrders = emptyList()),
                 onAction = {}
             )
         }
@@ -97,16 +67,29 @@ class HomeScreenTest {
     }
 
     @Test
+    fun testEmptyRehabState() {
+        composeTestRule.setContent {
+            HomeContent(
+                state    = HomeUiState(rehabSessions = emptyList()),
+                onAction = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("No sessions recorded yet").assertIsDisplayed()
+    }
+
+    @Test
     fun testRecentOrderClick() {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state = HomeUiState(recentOrders = listOf(sampleOrder)),
+                state    = HomeUiState(recentOrders = listOf(sampleOrderItem)),
                 onAction = { actionReceived = it }
             )
         }
 
-        composeTestRule.onNodeWithText("THREE_D_PRINT").performClick()
+        // RecentOrderCard shows category.label — PROSTHETIC_COVER → "Prosthetic Cover"
+        composeTestRule.onNodeWithText("Prosthetic Cover").performClick()
         assertEquals(HomeAction.OpenOrder("order_1"), actionReceived)
     }
 
@@ -115,12 +98,26 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state = HomeUiState(recentOrders = listOf(sampleOrder)),
+                state    = HomeUiState(recentOrders = listOf(sampleOrderItem)),
                 onAction = { actionReceived = it }
             )
         }
 
         composeTestRule.onNodeWithText("See all").performClick()
         assertEquals(HomeAction.SeeAllOrders, actionReceived)
+    }
+
+    @Test
+    fun testViewRehabHistoryClick() {
+        var actionReceived: HomeAction? = null
+        composeTestRule.setContent {
+            HomeContent(
+                state    = HomeUiState(),
+                onAction = { actionReceived = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("View History").performClick()
+        assertEquals(HomeAction.OpenRehabHistory, actionReceived)
     }
 }
