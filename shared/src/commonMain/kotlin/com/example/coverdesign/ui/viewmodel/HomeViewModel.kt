@@ -31,8 +31,9 @@ class HomeViewModel(
             is HomeAction.OpenTryOn         -> sendEvent(HomeUiEvent.NavigateToTryOn)
             is HomeAction.OpenOrder         -> sendEvent(HomeUiEvent.NavigateToOrder(action.orderId))
             is HomeAction.SeeAllOrders      -> sendEvent(HomeUiEvent.NavigateToAllOrders)
-            is HomeAction.OpenRehabHistory  -> sendEvent(HomeUiEvent.NavigateToRehabHistory)
-            is HomeAction.OrderInsoles      -> sendEvent(HomeUiEvent.NavigateToInsoleOrder)
+            is HomeAction.OpenRehabHistory      -> sendEvent(HomeUiEvent.NavigateToRehabHistory)
+            is HomeAction.OpenRecommendations   -> sendEvent(HomeUiEvent.NavigateToRecommendations)
+            is HomeAction.OrderInsoles          -> sendEvent(HomeUiEvent.NavigateToInsoleOrder)
             is HomeAction.Logout            -> logout()
         }
     }
@@ -74,8 +75,9 @@ sealed class HomeUiEvent : UiEvent {
     object NavigateTo3D            : HomeUiEvent()
     object NavigateToTryOn         : HomeUiEvent()
     object NavigateToAllOrders     : HomeUiEvent()
-    object NavigateToRehabHistory  : HomeUiEvent()
-    object NavigateToInsoleOrder   : HomeUiEvent()
+    object NavigateToRehabHistory       : HomeUiEvent()
+    object NavigateToRecommendations    : HomeUiEvent()
+    object NavigateToInsoleOrder        : HomeUiEvent()
     data class NavigateToOrder(val orderId: String) : HomeUiEvent()
 }
 
@@ -85,8 +87,9 @@ sealed class HomeAction {
     object Open3D            : HomeAction()
     object OpenTryOn         : HomeAction()
     object SeeAllOrders      : HomeAction()
-    object OpenRehabHistory  : HomeAction()
-    object OrderInsoles      : HomeAction()
+    object OpenRehabHistory      : HomeAction()
+    object OpenRecommendations   : HomeAction()
+    object OrderInsoles          : HomeAction()
     object Logout            : HomeAction()
     data class OpenOrder(val orderId: String) : HomeAction()
 }

@@ -166,6 +166,11 @@ fun ProductConfigScreen(
                 state.currentConfig != null -> ProductConfigContent(
                     state = state, onAction = viewModel::onAction, modifier = Modifier.padding(padding)
                 )
+
+                else -> TypePickerContent(
+                    onAction = viewModel::onAction,
+                    modifier = Modifier.padding(padding)
+                )
             }
 
             if (state.isLockedAfterSave) {

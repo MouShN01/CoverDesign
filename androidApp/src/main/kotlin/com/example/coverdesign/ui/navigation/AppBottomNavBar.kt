@@ -3,9 +3,11 @@ package com.example.coverdesign.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -53,6 +55,11 @@ sealed class BottomNavItem(
         Icons.Filled.ShoppingBag
     )
 
+    object Scanner : BottomNavItem(
+        Screen.SensorCamera.route, "Scan",
+        Icons.Outlined.Sensors, Icons.Filled.Sensors
+    )
+
     object Profile : BottomNavItem(
         "profile", "Profile", Icons.Outlined.Person,
         Icons.Filled.Person
@@ -62,5 +69,6 @@ sealed class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem.Home,
     BottomNavItem.Orders,
+    BottomNavItem.Scanner,
     BottomNavItem.Profile
 )

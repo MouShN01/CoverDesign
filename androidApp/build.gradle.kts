@@ -42,12 +42,20 @@ dependencies {
 
     //implementation(libs.firebase.storage.ktx)
     implementation(platform(libs.firebase.bom))
-//    implementation(libs.firebase.storage)
+    implementation(libs.firebase.storage)
 //    implementation(libs.firebase.firestore)
     //implementation(libs.firebase.firestore)
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
+    // MediaPipe pose landmarker + CameraX
+    implementation(libs.mediapipe.tasks.vision)
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.camerax.video)
 
     // Testing dependencies
     testImplementation(libs.junit)
@@ -73,6 +81,12 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            // MediaPipe native libraries are not always picked up correctly by AGP 8+
+            // without legacy packaging. This ensures libmediapipe_tasks_vision_jni.so
+            // is included in the APK rather than left uncompressed and inaccessible.
+            useLegacyPackaging = true
         }
     }
     buildTypes {

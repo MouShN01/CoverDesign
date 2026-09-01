@@ -54,6 +54,8 @@ sealed class Screen(val route: String) {
     }
 
     object RehabHistory : Screen("rehab_history")
+    object PatientRecommendations : Screen("patient_recommendations")
+    object SensorCamera : Screen("sensor_camera")
     object NewOrder : Screen("order/new")
     object NewInsoleOrder : Screen("order/new/insole")
 

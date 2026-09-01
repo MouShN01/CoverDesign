@@ -11,7 +11,9 @@ import com.example.coverdesign.ui.screens.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.patient.ar.VirtualTryOnPlaceholderScreen
 import com.example.coverdesign.ui.screens.patient.preview.ModifiableModelPreviewScreen
+import com.example.coverdesign.ui.screens.patient.rehab.RecommendationsScreen
 import com.example.coverdesign.ui.screens.patient.rehab.RehabHistoryScreen
+import com.example.coverdesign.ui.screens.patient.sensor.SensorCameraScreen
 import com.example.coverdesign.ui.viewmodel.ConfigEntryMode
 import com.example.coverdesign.ui.viewmodel.ModelPreviewAction
 import com.example.coverdesign.ui.viewmodel.OrderType
@@ -36,11 +38,18 @@ fun NavGraphBuilder.patientGraph(
                 },
                 onSeeAllOrders = { navController.navigate(Screen.Orders.route) },
                 onOpenRehabHistory = { navController.navigate(Screen.RehabHistory.route) },
+                onOpenRecommendations = { navController.navigate(Screen.PatientRecommendations.route) },
                 onOrderInsoles = { navController.navigate(Screen.NewInsoleOrder.route) }
             )
         }
         composable(Screen.RehabHistory.route) {
             RehabHistoryScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.PatientRecommendations.route) {
+            RecommendationsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.SensorCamera.route) {
+            SensorCameraScreen()
         }
 
         composable(Screen.ModelPreview.route) { entry ->

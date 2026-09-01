@@ -32,11 +32,6 @@ class FireAuthRepositoryImpl : FireAuthRepository {
 
     private fun usersCollection() = firestore.collection("users")
 
-    // ── Error mapping ─────────────────────────────────────────────────────────
-    // Firebase error codes come embedded in exception messages as uppercase tokens
-    // (e.g. "[ INVALID_LOGIN_CREDENTIALS ]"). We match those rather than exception
-    // types because GitLive wraps platform exceptions and commonMain can't see them.
-
     private fun Exception.toAuthMessage(fallback: String): String {
         val raw = message ?: return fallback
         return when {
@@ -44,7 +39,7 @@ class FireAuthRepositoryImpl : FireAuthRepository {
                     || raw.contains("network error", ignoreCase = true)
                     || raw.contains("Unable to resolve host", ignoreCase = true)
                     || raw.contains("Failed to connect", ignoreCase = true) ->
-                "No internet connection. Check your network and try again."
+                "Network error: $raw" // Changed to show the actual error for debugging
 
             raw.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true)
                     || raw.contains("INVALID_PASSWORD", ignoreCase = true)
@@ -68,11 +63,9 @@ class FireAuthRepositoryImpl : FireAuthRepository {
             raw.contains("WEAK_PASSWORD", ignoreCase = true) ->
                 "Password is too weak. Use at least 6 characters."
 
-            else -> raw.ifBlank { fallback }
+            else -> "Auth error: $raw"
         }
     }
-
-    // ── Profile ───────────────────────────────────────────────────────────────
 
     override suspend fun createUserProfile(user: AppUser): Resource<Unit> = try {
         val doc = UserDocument(
@@ -113,25 +106,12 @@ class FireAuthRepositoryImpl : FireAuthRepository {
 
     override fun getCurrentUserId(): String? = auth.currentUser?.uid
 
-    // ── Email / password ──────────────────────────────────────────────────────
-
     override suspend fun signInWithEmail(
         email: String, password: String, role: UserRole?
     ): Resource<FirebaseUser> = try {
         val result = auth.signInWithEmailAndPassword(email, password)
         val user = result.user ?: return Resource.Error("Sign-in returned no user")
 
-//        if (result.additionalUserInfo?.isNewUser == true) {
-//            createUserProfile(
-//                AppUser(
-//                    uid = user.uid,
-//                    email = user.email ?: "",
-//                    displayName = user.displayName ?: "",
-//                    role = role ?: UserRole.PATIENT,
-//                    createdAt = currentEpochMillis()
-//                )
-//            )
-//        } else
         if (role != null) {
             when (val profileResult = getUserProfile(user.uid)) {
                 is Resource.Success -> if (profileResult.data.role != role) {
@@ -172,27 +152,12 @@ class FireAuthRepositoryImpl : FireAuthRepository {
     ): Resource<FirebaseUser> = try {
         val result = auth.createUserWithEmailAndPassword(email, password)
         val user = result.user ?: return Resource.Error("Registration returned no user")
-        println("in registerWithEmail:passed createUserWithEmailAndPassword with \r\n user: $user")
-        if (result.additionalUserInfo?.isNewUser == true) {
-            println("in registerWithEmail: inside if result.additionalUserInfo?.isNewUser == true")
-            createUserProfile(
-                AppUser(
-                    uid = user.uid,
-                    email = user.email ?: "",
-                    displayName = user.displayName ?: "",
-                    role = role!!,
-                    createdAt = currentEpochMillis()
-                )
-            )
-        }
-
+        
+        // Note: Profile creation is handled in ViewModel to ensure all data (name/phone) is available
         Resource.Success(user)
     } catch (e: Exception) {
-        println("Exception in registerWithEmail: ${e.message}")
         Resource.Error(e.toAuthMessage("Registration failed"), e)
     }
-
-    // ── Google Sign-In ────────────────────────────────────────────────────────
 
     override suspend fun signInWithGoogle(
         idToken: String,
@@ -241,8 +206,6 @@ class FireAuthRepositoryImpl : FireAuthRepository {
     } catch (e: Exception) {
         Resource.Error(e.toAuthMessage("Google sign-in failed"), e)
     }
-
-    // ── Session ───────────────────────────────────────────────────────────────
 
     override suspend fun signOut(): Resource<Unit> = try {
         auth.signOut()
