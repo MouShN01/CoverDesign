@@ -14,6 +14,7 @@ data class GaitAnalysisResult(
     val postureScore: Float,       // 0-100: body posture accuracy
     val balanceScore: Float,       // 0-100: body balance
     val symmetryScore: Float,      // 0-100: gait left/right symmetry
+    val scoliosisScore: Float,     // 0-100: lateral spine alignment; 100 = straight
     val positionSeries: List<BodyPosition>,
     val abnormalities: List<String>
 )

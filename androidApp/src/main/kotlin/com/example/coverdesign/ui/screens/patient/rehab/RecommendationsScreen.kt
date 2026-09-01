@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -36,11 +40,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.domain.model.DoctorRecommendation
+import com.example.coverdesign.domain.model.FootPressureMap
 import com.example.coverdesign.domain.model.GaitAnalysisResult
 import com.example.coverdesign.domain.model.RecommendationTag
 import com.example.coverdesign.ui.components.EventHandler
@@ -110,6 +116,10 @@ internal fun RecommendationsContent(
             val prevAnalysis = state.previousSession?.gaitAnalysis
             if (analysis != null) {
                 CoefficientsSection(current = analysis, previous = prevAnalysis)
+            }
+
+            state.latestSession?.pressureData?.let { insoleData ->
+                FootLoadSection(left = insoleData.leftFoot, right = insoleData.rightFoot)
             }
 
             if (state.recommendations.isNotEmpty()) {
@@ -319,6 +329,50 @@ private fun CoefficientsSection(
                 modifier = Modifier.weight(1f)
             )
         }
+
+        val scoliosis = (100f - current.scoliosisScore) / 100f
+        val prevScoliosis = previous?.let { (100f - it.scoliosisScore) / 100f }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard(
+                label = "Balance Score",
+                value = "%.0f%%".format(current.balanceScore),
+                statusLabel = if (current.balanceScore >= 75f) "Good" else "Watch",
+                statusGood = current.balanceScore >= 75f,
+                trendIcon = {
+                    val up = previous == null || current.balanceScore >= previous.balanceScore
+                    Icon(
+                        imageVector = if (up) Icons.AutoMirrored.Outlined.TrendingUp
+                                      else Icons.Outlined.ArrowDownward,
+                        contentDescription = null,
+                        tint = if (up) PatientActiveTeal else PatientPendingAmber,
+                        modifier = Modifier.size(14.dp)
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+            MetricCard(
+                label = "Scoliosis Coeff.",
+                value = "%.2f".format(scoliosis),
+                statusLabel = when {
+                    prevScoliosis == null -> "Stable"
+                    scoliosis < prevScoliosis -> "Improving"
+                    scoliosis > prevScoliosis -> "Watch"
+                    else -> "Stable"
+                },
+                statusGood = prevScoliosis == null || scoliosis <= prevScoliosis,
+                trendIcon = {
+                    val improving = prevScoliosis == null || scoliosis <= prevScoliosis
+                    Icon(
+                        imageVector = if (improving) Icons.Outlined.ArrowDownward
+                                      else Icons.AutoMirrored.Outlined.TrendingUp,
+                        contentDescription = null,
+                        tint = if (improving) PatientActiveTeal else PatientPendingAmber,
+                        modifier = Modifier.size(14.dp)
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -509,6 +563,113 @@ private fun RecommendationTagBadge(tag: RecommendationTag) {
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
             color = text,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun FootLoadSection(left: FootPressureMap, right: FootPressureMap) {
+    val zones = listOf(
+        Triple("Heel", left.heel, right.heel),
+        Triple("Midfoot", left.midfoot, right.midfoot),
+        Triple("Forefoot", left.forefoot, right.forefoot),
+        Triple("Toes", left.toes, right.toes),
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Foot Load Distribution",
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = NeutralText
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Left",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NeutralTextSecondary,
+                        modifier = Modifier.weight(1.5f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        "Right",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NeutralTextSecondary,
+                        modifier = Modifier.weight(1.5f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                zones.forEach { (zoneName, lv, rv) -> FootZoneRow(zoneName, lv, rv) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FootZoneRow(label: String, leftVal: Float, rightVal: Float) {
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val barColor = MaterialTheme.colorScheme.primary
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            "${(leftVal * 100).toInt()}%",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            color = NeutralText,
+            modifier = Modifier.width(28.dp),
+            textAlign = TextAlign.End
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(trackColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(leftVal)
+                    .fillMaxHeight()
+                    .background(barColor.copy(alpha = 0.7f))
+            )
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = NeutralTextSecondary,
+            modifier = Modifier.width(56.dp),
+            textAlign = TextAlign.Center
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(trackColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(rightVal)
+                    .fillMaxHeight()
+                    .background(barColor.copy(alpha = 0.7f))
+            )
+        }
+        Text(
+            "${(rightVal * 100).toInt()}%",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            color = NeutralText,
+            modifier = Modifier.width(28.dp)
         )
     }
 }

@@ -21,11 +21,11 @@ object RehabMockData {
     fun generateSessions(): List<GaitSession> {
         val now = currentEpochMillis()
         return listOf(
-            buildSession("s1", now,            postureScore = 85f, balanceScore = 87f, symmetryScore = 83f, durationSec = 420),
-            buildSession("s2", now - 7 * DAY_MS,  postureScore = 78f, balanceScore = 80f, symmetryScore = 76f, durationSec = 390),
-            buildSession("s3", now - 14 * DAY_MS, postureScore = 70f, balanceScore = 74f, symmetryScore = 72f, durationSec = 360),
-            buildSession("s4", now - 21 * DAY_MS, postureScore = 63f, balanceScore = 68f, symmetryScore = 65f, durationSec = 330),
-            buildSession("s5", now - 28 * DAY_MS, postureScore = 55f, balanceScore = 60f, symmetryScore = 58f, durationSec = 300),
+            buildSession("s1", now,            postureScore = 85f, balanceScore = 87f, symmetryScore = 83f, scoliosisScore = 88f, durationSec = 420),
+            buildSession("s2", now - 7 * DAY_MS,  postureScore = 78f, balanceScore = 80f, symmetryScore = 76f, scoliosisScore = 82f, durationSec = 390),
+            buildSession("s3", now - 14 * DAY_MS, postureScore = 70f, balanceScore = 74f, symmetryScore = 72f, scoliosisScore = 75f, durationSec = 360),
+            buildSession("s4", now - 21 * DAY_MS, postureScore = 63f, balanceScore = 68f, symmetryScore = 65f, scoliosisScore = 68f, durationSec = 330),
+            buildSession("s5", now - 28 * DAY_MS, postureScore = 55f, balanceScore = 60f, symmetryScore = 58f, scoliosisScore = 60f, durationSec = 300),
         )
     }
 
@@ -60,14 +60,14 @@ object RehabMockData {
         return listOf(
             DoctorRecommendation(
                 id = "r1",
-                doctorName = "Dr. Rossi",
+                doctorName = "Dr. Petrenko",
                 timestampMs = now - 2 * DAY_MS,
                 tag = RecommendationTag.INSOLE_BASED,
                 text = "Adjust left insole angle by 2 degrees. Continue current exercises and increase walking duration to 30 min daily."
             ),
             DoctorRecommendation(
                 id = "r2",
-                doctorName = "Dr. Rossi",
+                doctorName = "Dr. Petrenko",
                 timestampMs = now - 7 * DAY_MS,
                 tag = RecommendationTag.PHOTOGRAMMETRIC,
                 text = "Posture correction exercises showing good results. Maintain current routine and focus on shoulder alignment."
@@ -81,6 +81,7 @@ object RehabMockData {
         postureScore: Float,
         balanceScore: Float,
         symmetryScore: Float,
+        scoliosisScore: Float,
         durationSec: Int
     ) = GaitSession(
         id = id,
@@ -91,6 +92,7 @@ object RehabMockData {
             postureScore = postureScore,
             balanceScore = balanceScore,
             symmetryScore = symmetryScore,
+            scoliosisScore = scoliosisScore,
             positionSeries = generateDeviationSeries(),
             abnormalities = if (postureScore < 70f) listOf("Slight anterior lean detected") else emptyList()
         ),

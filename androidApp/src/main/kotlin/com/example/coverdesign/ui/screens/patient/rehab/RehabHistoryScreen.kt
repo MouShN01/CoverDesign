@@ -5,19 +5,24 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
@@ -53,9 +58,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.domain.model.BodyPosition
 import com.example.coverdesign.domain.model.CopPoint
+import com.example.coverdesign.domain.model.FootPressureMap
 import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.theme.AppTheme
+import com.example.coverdesign.ui.theme.AccentAmber
+import com.example.coverdesign.ui.theme.AccentCoral
 import com.example.coverdesign.ui.theme.ChartEndRed
 import com.example.coverdesign.ui.theme.ChartStartGreen
 import com.example.coverdesign.ui.theme.NeutralMid
@@ -339,6 +347,19 @@ private fun SessionCard(
                 MiniScoreBadge("Balance", session.gaitAnalysis.balanceScore, StatusGreen)
                 MiniScoreBadge("Symmetry", session.gaitAnalysis.symmetryScore, StatusPurple)
             }
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MiniValueBadge(
+                    label = "Kyphosis",
+                    value = "%.1f°".format((100f - session.gaitAnalysis.postureScore) * 0.2f),
+                    color = AccentAmber
+                )
+                MiniValueBadge(
+                    label = "Scoliosis",
+                    value = "%.0f%%".format(100f - session.gaitAnalysis.scoliosisScore),
+                    color = AccentCoral
+                )
+            }
 
             // Expanded detail
             AnimatedVisibility(
@@ -413,6 +434,15 @@ private fun SessionCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+
+                    // Foot load distribution
+                    if (hasInsoles && session.pressureData != null) {
+                        Spacer(Modifier.height(10.dp))
+                        FootLoadSection(
+                            left = session.pressureData!!.leftFoot,
+                            right = session.pressureData!!.rightFoot
+                        )
                     }
                 }
             }
@@ -575,6 +605,118 @@ private fun NoInsolesPlaceholder(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun MiniValueBadge(label: String, value: String, color: Color) {
+    Surface(shape = MaterialTheme.shapes.extraSmall, color = color.copy(alpha = 0.12f)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                value,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = color
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FootLoadSection(left: FootPressureMap, right: FootPressureMap) {
+    val zones = listOf(
+        Triple("Heel", left.heel, right.heel),
+        Triple("Midfoot", left.midfoot, right.midfoot),
+        Triple("Forefoot", left.forefoot, right.forefoot),
+        Triple("Toes", left.toes, right.toes),
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Foot Load Distribution", style = MaterialTheme.typography.labelMedium)
+        Spacer(Modifier.height(2.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Left",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1.5f),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                "Right",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1.5f),
+                textAlign = TextAlign.Center
+            )
+        }
+        zones.forEach { (zoneName, lv, rv) -> FootZoneRow(zoneName, lv, rv) }
+    }
+}
+
+@Composable
+private fun FootZoneRow(label: String, leftVal: Float, rightVal: Float) {
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val barColor = MaterialTheme.colorScheme.primary
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            "${(leftVal * 100).toInt()}%",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.width(28.dp),
+            textAlign = TextAlign.End
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(trackColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(leftVal)
+                    .fillMaxHeight()
+                    .background(barColor.copy(alpha = 0.7f))
+            )
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(56.dp),
+            textAlign = TextAlign.Center
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(trackColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(rightVal)
+                    .fillMaxHeight()
+                    .background(barColor.copy(alpha = 0.7f))
+            )
+        }
+        Text(
+            "${(rightVal * 100).toInt()}%",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.width(28.dp)
+        )
     }
 }
 
