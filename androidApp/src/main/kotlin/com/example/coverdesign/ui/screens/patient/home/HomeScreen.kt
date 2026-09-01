@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.outlined.BluetoothDisabled
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.FaceRetouchingNatural
+import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.ShoppingBag
@@ -71,7 +71,7 @@ import com.example.coverdesign.ui.theme.StatusGreen
 import com.example.coverdesign.ui.theme.StatusGreenBg
 import com.example.coverdesign.ui.theme.StatusPurple
 import com.example.coverdesign.ui.theme.StatusPurpleBg
-import com.example.coverdesign.ui.theme.StatusViolet
+import com.example.coverdesign.ui.theme.PatientActiveTeal
 import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiEvent
@@ -92,6 +92,7 @@ fun HomeScreen(
     onOrderClick: (String) -> Unit,
     onSeeAllOrders: () -> Unit,
     onOpenRehabHistory: () -> Unit,
+    onOpenRecommendations: () -> Unit = {},
     onOrderInsoles: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -103,8 +104,9 @@ fun HomeScreen(
             is HomeUiEvent.NavigateToTryOn       -> onVirtualTryOn()
             is HomeUiEvent.NavigateToAllOrders   -> onSeeAllOrders()
             is HomeUiEvent.NavigateToOrder       -> onOrderClick(event.orderId)
-            is HomeUiEvent.NavigateToRehabHistory -> onOpenRehabHistory()
-            is HomeUiEvent.NavigateToInsoleOrder -> onOrderInsoles()
+            is HomeUiEvent.NavigateToRehabHistory    -> onOpenRehabHistory()
+            is HomeUiEvent.NavigateToRecommendations -> onOpenRecommendations()
+            is HomeUiEvent.NavigateToInsoleOrder     -> onOrderInsoles()
         }
     }
 
@@ -133,13 +135,13 @@ internal fun HomeContent(
             // ── Tools section ─────────────────────────────────────────────
             HomeSectionHeader(title = "Tools")
             ToolCard(
-                icon = Icons.Outlined.FaceRetouchingNatural,
-                label = "Virtual Try-On",
-                tint = StatusViolet,
+                icon = Icons.Outlined.AssignmentTurnedIn,
+                label = "View Recommendations",
+                tint = PatientActiveTeal,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
-                onClick = { onAction(HomeAction.OpenTryOn) })
+                onClick = { onAction(HomeAction.OpenRecommendations) })
 
             Spacer(Modifier.height(24.dp))
 

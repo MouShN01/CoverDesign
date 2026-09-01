@@ -2,10 +2,12 @@ package com.example.coverdesign.ui.viewmodel
 
 import com.example.coverdesign.domain.model.BodyPosition
 import com.example.coverdesign.domain.model.CopPoint
+import com.example.coverdesign.domain.model.DoctorRecommendation
 import com.example.coverdesign.domain.model.FootPressureMap
 import com.example.coverdesign.domain.model.GaitAnalysisResult
 import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.domain.model.InsoleData
+import com.example.coverdesign.domain.model.RecommendationTag
 import com.example.coverdesign.domain.util.currentEpochMillis
 import kotlin.math.PI
 import kotlin.math.cos
@@ -51,6 +53,26 @@ object RehabMockData {
                 deviationY = (6.0 * exp(-1.5 * t) * cos(5.0 * PI * t)).toFloat()
             )
         }
+    }
+
+    fun generateRecommendations(): List<DoctorRecommendation> {
+        val now = currentEpochMillis()
+        return listOf(
+            DoctorRecommendation(
+                id = "r1",
+                doctorName = "Dr. Rossi",
+                timestampMs = now - 2 * DAY_MS,
+                tag = RecommendationTag.INSOLE_BASED,
+                text = "Adjust left insole angle by 2 degrees. Continue current exercises and increase walking duration to 30 min daily."
+            ),
+            DoctorRecommendation(
+                id = "r2",
+                doctorName = "Dr. Rossi",
+                timestampMs = now - 7 * DAY_MS,
+                tag = RecommendationTag.PHOTOGRAMMETRIC,
+                text = "Posture correction exercises showing good results. Maintain current routine and focus on shoulder alignment."
+            )
+        )
     }
 
     private fun buildSession(

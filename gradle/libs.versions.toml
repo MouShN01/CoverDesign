@@ -44,6 +44,8 @@ credentials = "1.6.0"
 credentialsPlayServicesAuth = "1.6.0"
 googleid = "1.2.0"
 animation = "1.11.4"
+mediapipe = "0.10.14"
+camerax = "1.4.1"
 
 
 [libraries]
@@ -120,6 +122,12 @@ androidx-animation = { group = "androidx.compose.animation", name = "animation",
 
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4-android", version.ref = "animation" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "animation" }
+mediapipe-tasks-vision = { module = "com.google.mediapipe:tasks-vision", version.ref = "mediapipe" }
+camerax-core     = { module = "androidx.camera:camera-core",      version.ref = "camerax" }
+camerax-camera2  = { module = "androidx.camera:camera-camera2",   version.ref = "camerax" }
+camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+camerax-view     = { module = "androidx.camera:camera-view",      version.ref = "camerax" }
+camerax-video    = { module = "androidx.camera:camera-video",     version.ref = "camerax" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

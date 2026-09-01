@@ -77,3 +77,6 @@ val TipsText        = Color(0xFF78350F)   // body text
 
 // ── Chip / tag container ───────────────────────────────────────────────────
 val NeutralChipBg   = Color(0xFFF3F4F6)   // unselected filter chip background
+
+// ── Sensor / pose overlay ──────────────────────────────────────────────────
+val ScannerCyan     = Color(0xFF00E5FF)   // pose skeleton lines and landmark dots
