@@ -5,5 +5,8 @@ import com.example.coverdesign.domain.repo.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
 class GetOrderListUseCase(private val repo: OrderRepository) {
-    operator fun invoke(): Flow<List<OrderListItem>> = repo.getOrderListItems()
+    operator fun invoke(): Flow<List<OrderListItem>> {
+        
+        return repo.getOrderListItems()
+    }
 }

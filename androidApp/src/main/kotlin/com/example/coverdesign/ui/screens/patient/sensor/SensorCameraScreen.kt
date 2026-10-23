@@ -9,7 +9,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview as CameraPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.FileOutputOptions
@@ -91,11 +90,12 @@ import kotlinx.coroutines.delay
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
+import androidx.camera.core.Preview as CameraPreview
 
 // Skeleton edges in MediaPipe's 33-landmark body-pose model
 private val POSE_CONNECTIONS = listOf(
     11 to 12,             // shoulders
-    11 to 13, 13 to 15,  // left arm
+    11 to 13, 13 to 15,  //  left arm
     12 to 14, 14 to 16,  // right arm
     11 to 23, 12 to 24,  // torso sides
     23 to 24,             // hips

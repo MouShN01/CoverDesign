@@ -3,7 +3,7 @@ package com.example.coverdesign.domain.model.pricing
 data class PriceEstimate(
     val configId: String,
     val currency: String = "USD",
-    val basePrice: Double,
+    val basePrice: Double = 0.0,
     val materialSurcharges: Map<String, Double> = emptyMap(),
     val textureSurcharge: Double? = 0.0,
     val inscriptionSurcharge: Double? = 0.0,
@@ -17,6 +17,8 @@ data class PriceEstimate(
     // total = subtotal × quantity
     val total: Double
 ) {
+//    val subtotal : Double get() = basePrice + totalMaterialSurcharge + (textureSurcharge ?: 0.0) + (inscriptionSurcharge ?: 0.0) + (totalElementSurcharge)
+//    val total : Double get() = subtotal * quantity todo change the signature
     /** Convenience sum of all material surcharges */
     val totalMaterialSurcharge: Double get() = materialSurcharges.values.sum()
 

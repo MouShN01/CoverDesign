@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performClick
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.domain.model.OrderStatus
+import com.example.coverdesign.ui.screens.patient.home.HomeContent
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiState
 import org.junit.Assert.assertEquals
@@ -31,7 +32,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(),
+                state = HomeUiState(),
                 onAction = { actionReceived = it }
             )
         }
@@ -45,7 +46,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(),
+                state = HomeUiState(),
                 onAction = { actionReceived = it }
             )
         }
@@ -58,7 +59,7 @@ class HomeScreenTest {
     fun testEmptyOrdersState() {
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(recentOrders = emptyList()),
+                state = HomeUiState(recentOrders = emptyList()),
                 onAction = {}
             )
         }
@@ -70,7 +71,7 @@ class HomeScreenTest {
     fun testEmptyRehabState() {
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(rehabSessions = emptyList()),
+                state = HomeUiState(rehabSessions = emptyList()),
                 onAction = {}
             )
         }
@@ -83,7 +84,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(recentOrders = listOf(sampleOrderItem)),
+                state = HomeUiState(recentOrders = listOf(sampleOrderItem)),
                 onAction = { actionReceived = it }
             )
         }
@@ -98,7 +99,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(recentOrders = listOf(sampleOrderItem)),
+                state = HomeUiState(recentOrders = listOf(sampleOrderItem)),
                 onAction = { actionReceived = it }
             )
         }
@@ -112,7 +113,7 @@ class HomeScreenTest {
         var actionReceived: HomeAction? = null
         composeTestRule.setContent {
             HomeContent(
-                state    = HomeUiState(),
+                state = HomeUiState(),
                 onAction = { actionReceived = it }
             )
         }

@@ -22,11 +22,29 @@ fun NavGraphBuilder.clinicianGraph(
             ClinicianHomeScreen(
                 onPatientClick = { patientId ->
                     navController.navigate(Screen.WriteRecommendation.createRoute(patientId))
+                },
+                onNotificationsClick = {
+                    TODO("Clinician notifications screen not yet implemented")
+                },
+                onViewAllPatientsClick = {
+                    navController.navigate(ClinicianNavItem.Patients.route)
                 }
             )
         }
         composable(Screen.Profile.route) {
             ProfileScreen()
+        }
+        // TODO: implement full patients list screen
+        composable(ClinicianNavItem.Patients.route) {
+            TODO("Clinician patients list screen not yet implemented")
+        }
+        // TODO: implement reports/analytics screen
+        composable(ClinicianNavItem.Reports.route) {
+            TODO("Clinician reports screen not yet implemented")
+        }
+        // TODO: implement clinician settings screen
+        composable(ClinicianNavItem.Settings.route) {
+            TODO("Clinician settings screen not yet implemented")
         }
         composable(
             route = Screen.WriteRecommendation.route,

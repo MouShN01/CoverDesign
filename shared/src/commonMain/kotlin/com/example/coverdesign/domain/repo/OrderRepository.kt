@@ -15,7 +15,7 @@ interface OrderRepository {
     suspend fun submitOrder(order: Order): Resource<OrderId>
     suspend fun saveOrderLocally(order: Order): Resource<Unit>
     fun getOrderHistory(): Flow<List<Order>>
-    suspend fun getOrderById(id: String): Resource<Order>
+    //suspend fun getOrderById(id: String): Resource<Order>
     suspend fun linkOrderToAdaptedModel(configId: String, adaptedModelId: String): Resource<Unit>
 
     // ── Direct order flow — Insole ─────────────────────────────────────────────
@@ -35,4 +35,6 @@ interface OrderRepository {
 
     // ── Unified detail lookup (all order types) ────────────────────────────────
     suspend fun getOrderDetailById(id: String): Resource<OrderDetail>
+    suspend fun refreshOrders(): Flow<List<OrderListItem>>
+    suspend fun getOrderById(orderId: String): Resource<Order>
 }

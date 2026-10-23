@@ -69,16 +69,25 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ClinicianHomeScreen(
     viewModel: ClinicianHomeViewModel = koinViewModel(),
-    onPatientClick: (String) -> Unit = {}
+    onPatientClick: (String) -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onViewAllPatientsClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ClinicianHomeContent(state = state, onPatientClick = onPatientClick)
+    ClinicianHomeContent(
+        state = state,
+        onPatientClick = onPatientClick,
+        onNotificationsClick = onNotificationsClick,
+        onViewAllPatientsClick = onViewAllPatientsClick
+    )
 }
 
 @Composable
 internal fun ClinicianHomeContent(
     state: ClinicianHomeUiState,
-    onPatientClick: (String) -> Unit
+    onPatientClick: (String) -> Unit,
+    onNotificationsClick: () -> Unit = {},
+    onViewAllPatientsClick: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -90,7 +99,8 @@ internal fun ClinicianHomeContent(
         item {
             TopBar(
                 doctorName = state.doctorName.ifBlank { "Doctor" },
-                notificationCount = state.notificationCount
+                notificationCount = state.notificationCount,
+                onNotificationsClick = onNotificationsClick
             )
         }
 
@@ -103,7 +113,8 @@ internal fun ClinicianHomeContent(
         item {
             RecentPatientsSection(
                 patients = state.recentPatients,
-                onPatientClick = onPatientClick
+                onPatientClick = onPatientClick,
+                onViewAllClick = onViewAllPatientsClick
             )
         }
 
@@ -119,7 +130,7 @@ internal fun ClinicianHomeContent(
 // ── Top Bar ───────────────────────────────────────────────────────────────────
 
 @Composable
-private fun TopBar(doctorName: String, notificationCount: Int) {
+private fun TopBar(doctorName: String, notificationCount: Int, onNotificationsClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -158,7 +169,8 @@ private fun TopBar(doctorName: String, notificationCount: Int) {
                 .size(44.dp)
                 .clip(CircleShape)
                 .background(NeutralWhite)
-                .border(1.dp, NeutralLight, CircleShape),
+                .border(1.dp, NeutralLight, CircleShape)
+                .clickable(onClick = onNotificationsClick),
             contentAlignment = Alignment.Center
         ) {
             BadgedBox(
@@ -255,7 +267,8 @@ private fun NotificationBanner(notifications: List<String>) {
 @Composable
 private fun RecentPatientsSection(
     patients: List<PatientSummary>,
-    onPatientClick: (String) -> Unit
+    onPatientClick: (String) -> Unit,
+    onViewAllClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -269,7 +282,7 @@ private fun RecentPatientsSection(
                 fontWeight = FontWeight.Bold,
                 color = NeutralText
             )
-            TextButton(onClick = { /* TODO: navigate to patients list */ }) {
+            TextButton(onClick = onViewAllClick) {
                 Text(
                     text = "View All",
                     fontSize = 13.sp,
@@ -632,7 +645,9 @@ private fun ClinicianHomePreview() {
                 recentPatients = samplePatients.take(2),
                 allPatients = samplePatients
             ),
-            onPatientClick = {}
+            onPatientClick = {},
+            onNotificationsClick = {},
+            onViewAllPatientsClick = {}
         )
     }
 }

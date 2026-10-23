@@ -32,7 +32,7 @@ import com.example.coverdesign.domain.model.OrderListItem
 import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.ui.components.AppTopBar
 import com.example.coverdesign.ui.components.OrderStatusChip
-import com.example.coverdesign.ui.screens.home.formatDate
+import com.example.coverdesign.ui.screens.patient.home.formatDate
 import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.viewmodel.OrderListFilter
 import com.example.coverdesign.ui.viewmodel.OrderListUiState

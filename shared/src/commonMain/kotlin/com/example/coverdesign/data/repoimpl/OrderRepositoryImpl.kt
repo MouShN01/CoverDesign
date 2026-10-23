@@ -28,8 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class OrderRepositoryImpl(
-    private val api: OrderApiService,
-    private val db: AppDatabase
+    private val api: OrderApiService, private val db: AppDatabase
 ) : OrderRepository {
 
     // ── Catalog-based order flow ───────────────────────────────────────────────
@@ -38,13 +37,11 @@ class OrderRepositoryImpl(
         withContext(Dispatchers.Default) {
             try {
                 val request = SubmitOrderRequestDto(
-                    configId = order.config.id,
-                    notes = order.config.additionalNotes
+                    configId = order.config.id, notes = order.config.additionalNotes
                 )
                 val response = api.submitOrder(request)
                 db.orderQueries.updateOrderStatus(
-                    status = OrderStatus.SUBMITTED.name,
-                    id = order.id
+                    status = OrderStatus.SUBMITTED.name, id = order.id
                 )
                 Resource.Success(OrderId(response.orderId))
             } catch (e: Exception) {
@@ -63,9 +60,7 @@ class OrderRepositoryImpl(
         }
 
     override fun getOrderHistory(): Flow<List<Order>> =
-        db.orderQueries.selectAllOrders()
-            .asFlow()
-            .mapToList(Dispatchers.Default)
+        db.orderQueries.selectAllOrders().asFlow().mapToList(Dispatchers.Default)
             .map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun getOrderById(id: String): Resource<Order> =
@@ -84,8 +79,7 @@ class OrderRepositoryImpl(
         }
 
     override suspend fun linkOrderToAdaptedModel(
-        configId: String,
-        adaptedModelId: String
+        configId: String, adaptedModelId: String
     ): Resource<Unit> {
         return try {
             val order = db.orderQueries.selectOrderByConfigId(configId).executeAsOneOrNull()
@@ -110,8 +104,7 @@ class OrderRepositoryImpl(
                 val request = config.toDto()
                 val response = api.submitInsoleOrder(request)
                 db.insoleOrderConfigQueries.updateInsoleOrderStatus(
-                    status = response.status.name,
-                    orderId = response.orderId
+                    status = response.status.name, orderId = response.orderId
                 )
                 Resource.Success(OrderId(response.orderId))
             } catch (e: Exception) {
@@ -132,16 +125,13 @@ class OrderRepositoryImpl(
         }
 
     override fun getInsoleOrderHistory(): Flow<List<InsoleOrderConfig>> =
-        db.insoleOrderConfigQueries.selectAllInsoleOrders()
-            .asFlow()
-            .mapToList(Dispatchers.Default)
+        db.insoleOrderConfigQueries.selectAllInsoleOrders().asFlow().mapToList(Dispatchers.Default)
             .map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun getInsoleOrderById(orderId: String): Resource<InsoleOrderConfig> =
         withContext(Dispatchers.Default) {
-            val entity = db.insoleOrderConfigQueries
-                .selectInsoleOrderById(orderId)
-                .executeAsOneOrNull()
+            val entity =
+                db.insoleOrderConfigQueries.selectInsoleOrderById(orderId).executeAsOneOrNull()
             if (entity != null) Resource.Success(entity.toDomain())
             else Resource.Error("Insole order not found: $orderId")
         }
@@ -150,52 +140,45 @@ class OrderRepositoryImpl(
 
     override suspend fun submitProstheticCoverOrder(
         config: ProstheticCoverOrderConfig
-    ): Resource<OrderId> =
-        withContext(Dispatchers.Default) {
-            try {
+    ): Resource<OrderId> = withContext(Dispatchers.Default) {
+        try {
 //                val request = SubmitProstheticCoverOrderRequestDto(config = config.toDto())
-                val request =  config.toDto()
-                println("Prosthetic cover order submission request is $request")
-                val response = api.submitProstheticCoverOrder(request)
-                val res = db.prostheticCoverOrderConfigQueries.updateProstheticCoverOrderStatus(
-                    status = response.status.name,
-                    orderId = response.orderId
-                )
-                println("Prosthetic cover order submission res for prostheticCoverOrderConfigQueries is $res")
-                Resource.Success(OrderId(response.orderId))
-            } catch (e: Exception) {
-                Resource.Error("Prosthetic cover order submission failed: ${e.message}", e)
-            }
+            val request = config.toDto()
+            println("Prosthetic cover order submission request is $request")
+            val response = api.submitProstheticCoverOrder(request)
+            val res = db.prostheticCoverOrderConfigQueries.updateProstheticCoverOrderStatus(
+                status = response.status.name, orderId = response.orderId
+            )
+            println("Prosthetic cover order submission res for prostheticCoverOrderConfigQueries is $res")
+            Resource.Success(OrderId(response.orderId))
+        } catch (e: Exception) {
+            Resource.Error("Prosthetic cover order submission failed: ${e.message}", e)
         }
+    }
 
     override suspend fun saveProstheticCoverOrderLocally(
         config: ProstheticCoverOrderConfig
-    ): Resource<Unit> =
-        withContext(Dispatchers.IO) {
-            try {
-                db.prostheticCoverOrderConfigQueries.insertProstheticCoverOrder(config.toEntity())
-                Resource.Success(Unit)
-            } catch (e: Exception) {
-                Resource.Error(e.message.toString(), e.cause)
-            }
+    ): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            db.prostheticCoverOrderConfigQueries.insertProstheticCoverOrder(config.toEntity())
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message.toString(), e.cause)
         }
+    }
 
     override fun getProstheticCoverOrderHistory(): Flow<List<ProstheticCoverOrderConfig>> =
-        db.prostheticCoverOrderConfigQueries.selectAllProstheticCoverOrders()
-            .asFlow()
-            .mapToList(Dispatchers.Default)
-            .map { entities -> entities.map { it.toDomain() } }
+        db.prostheticCoverOrderConfigQueries.selectAllProstheticCoverOrders().asFlow()
+            .mapToList(Dispatchers.Default).map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun getProstheticCoverOrderById(
         orderId: String
-    ): Resource<ProstheticCoverOrderConfig> =
-        withContext(Dispatchers.Default) {
-            val entity = db.prostheticCoverOrderConfigQueries
-                .selectProstheticCoverOrderById(orderId)
-                .executeAsOneOrNull()
-            if (entity != null) Resource.Success(entity.toDomain())
-            else Resource.Error("Prosthetic cover order not found: $orderId")
-        }
+    ): Resource<ProstheticCoverOrderConfig> = withContext(Dispatchers.Default) {
+        val entity = db.prostheticCoverOrderConfigQueries.selectProstheticCoverOrderById(orderId)
+            .executeAsOneOrNull()
+        if (entity != null) Resource.Success(entity.toDomain())
+        else Resource.Error("Prosthetic cover order not found: $orderId")
+    }
 
     // ── Unified detail lookup ─────────────────────────────────────────────────
 
@@ -204,30 +187,32 @@ class OrderRepositoryImpl(
             // 1. catalog order — try by orderId then by configId (post-config flow passes configId)
             val catalogEntity = db.orderQueries.selectOrderById(id).executeAsOneOrNull()
                 ?: db.orderQueries.selectOrderByConfigId(id).executeAsOneOrNull()
-            if (catalogEntity != null)
-                return@withContext Resource.Success(OrderDetail.CatalogOrder(catalogEntity.toDomain()))
+            if (catalogEntity != null) return@withContext Resource.Success(
+                OrderDetail.CatalogOrder(
+                    catalogEntity.toDomain()
+                )
+            )
 
             // 2. insole order
-            val insoleEntity = db.insoleOrderConfigQueries
-                .selectInsoleOrderById(id).executeAsOneOrNull()
-            if (insoleEntity != null)
-                return@withContext Resource.Success(
-                    OrderDetail.InsoleOrder(
-                        config = insoleEntity.toDomain(),
-                        status = OrderStatus.valueOf(insoleEntity.status)
-                    )
+            val insoleEntity =
+                db.insoleOrderConfigQueries.selectInsoleOrderById(id).executeAsOneOrNull()
+            if (insoleEntity != null) return@withContext Resource.Success(
+                OrderDetail.InsoleOrder(
+                    config = insoleEntity.toDomain(),
+                    status = OrderStatus.valueOf(insoleEntity.status)
                 )
+            )
 
             // 3. prosthetic cover order (adapted models loaded by GetOrderDetailUseCase)
-            val coverEntity = db.prostheticCoverOrderConfigQueries
-                .selectProstheticCoverOrderById(id).executeAsOneOrNull()
-            if (coverEntity != null)
-                return@withContext Resource.Success(
-                    OrderDetail.ProstheticCoverOrder(
-                        config = coverEntity.toDomain(),
-                        status = OrderStatus.valueOf(coverEntity.status)
-                    )
+            val coverEntity =
+                db.prostheticCoverOrderConfigQueries.selectProstheticCoverOrderById(id)
+                    .executeAsOneOrNull()
+            if (coverEntity != null) return@withContext Resource.Success(
+                OrderDetail.ProstheticCoverOrder(
+                    config = coverEntity.toDomain(),
+                    status = OrderStatus.valueOf(coverEntity.status)
                 )
+            )
 
             // 4. fallback — fetch catalog order from API
             try {
@@ -237,12 +222,14 @@ class OrderRepositoryImpl(
             }
         }
 
+    override suspend fun refreshOrders(): Flow<List<OrderListItem>> {
+        TODO("Not yet implemented")
+    }
+
     // ── Combined list ─────────────────────────────────────────────────────────
 
     override fun getOrderListItems(): Flow<List<OrderListItem>> = combine(
-        db.insoleOrderConfigQueries.selectAllInsoleOrders()
-            .asFlow()
-            .mapToList(Dispatchers.Default)
+        db.insoleOrderConfigQueries.selectAllInsoleOrders().asFlow().mapToList(Dispatchers.Default)
             .map { list ->
                 list.map { e ->
                     OrderListItem(
@@ -254,10 +241,8 @@ class OrderRepositoryImpl(
                     )
                 }
             },
-        db.prostheticCoverOrderConfigQueries.selectAllProstheticCoverOrders()
-            .asFlow()
-            .mapToList(Dispatchers.Default)
-            .map { list ->
+        db.prostheticCoverOrderConfigQueries.selectAllProstheticCoverOrders().asFlow()
+            .mapToList(Dispatchers.Default).map { list ->
                 list.map { e ->
                     OrderListItem(
                         orderId = e.orderId,
@@ -267,6 +252,20 @@ class OrderRepositoryImpl(
                         status = OrderStatus.valueOf(e.status)
                     )
                 }
-            }
-    ) { insoles, covers -> (insoles + covers).sortedByDescending { it.createdAt } }
+            }) { insoles, covers -> (insoles + covers).sortedByDescending { it.createdAt } }
+
+//    override suspend fun refreshOrders(): Flow<List<OrderListItem>> {
+//        val orders = api.getOrders()
+//
+//        return flowOf(
+//            orders.map { e ->
+//                OrderListItem(
+//                    orderId = e.id,
+//                    category = OrderCategory.valueOf(e.config.productCategory), // Map the API category to your domain type
+//                    createdAt = e.createdAt,
+//                    totalPrice = PriceEstimate(e.price), //TODO: Map the API price to your domain type
+//                    status = OrderStatus.valueOf(e.status)
+//                )
+//            })
+//    }
 }

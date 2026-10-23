@@ -4,12 +4,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreen
-import com.example.coverdesign.ui.screens.patient.order.OrdersListScreen
 import com.example.coverdesign.ui.screens.ProfileScreen
 import com.example.coverdesign.ui.screens.config.ProductConfigScreen
-import com.example.coverdesign.ui.screens.home.HomeScreen
 import com.example.coverdesign.ui.screens.patient.ar.VirtualTryOnPlaceholderScreen
+import com.example.coverdesign.ui.screens.patient.home.HomeScreen
+import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreen
+import com.example.coverdesign.ui.screens.patient.order.OrdersListScreen
+import com.example.coverdesign.ui.screens.patient.preview.ModelTestScreen
 import com.example.coverdesign.ui.screens.patient.preview.ModifiableModelPreviewScreen
 import com.example.coverdesign.ui.screens.patient.rehab.RecommendationsScreen
 import com.example.coverdesign.ui.screens.patient.rehab.RehabHistoryScreen
@@ -24,8 +25,13 @@ fun NavGraphBuilder.patientGraph(
 
     navigation(
         route = Screen.PatientMain.route,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Model3D.createRoute("test")
     ) {
+
+        // ── test: local 3D model on launch ───────────────────────────
+        composable(Screen.Model3D.route) {
+            ModelTestScreen(onBack = { navController.navigate(Screen.Home.route) })
+        }
 
         // ── bottom nav roots ──────────────────────────────────────────
         composable(Screen.Home.route) {

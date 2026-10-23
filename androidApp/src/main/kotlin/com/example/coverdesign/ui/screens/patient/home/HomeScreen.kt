@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.home
+package com.example.coverdesign.ui.screens.patient.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -19,10 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.BluetoothDisabled
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.ShoppingBag
@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.R
@@ -61,22 +62,25 @@ import com.example.coverdesign.domain.model.CopPoint
 import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.domain.model.OrderCategory
 import com.example.coverdesign.domain.model.OrderListItem
+import com.example.coverdesign.domain.model.OrderStatus
 import com.example.coverdesign.ui.components.EventHandler
+import com.example.coverdesign.ui.components.OrderStatusChip
+import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.theme.ChartEndRed
 import com.example.coverdesign.ui.theme.ChartStartGreen
 import com.example.coverdesign.ui.theme.NeutralMid
+import com.example.coverdesign.ui.theme.PatientActiveTeal
 import com.example.coverdesign.ui.theme.StatusBlue
 import com.example.coverdesign.ui.theme.StatusBlueBg
 import com.example.coverdesign.ui.theme.StatusGreen
 import com.example.coverdesign.ui.theme.StatusGreenBg
 import com.example.coverdesign.ui.theme.StatusPurple
 import com.example.coverdesign.ui.theme.StatusPurpleBg
-import com.example.coverdesign.ui.theme.PatientActiveTeal
-import com.example.coverdesign.ui.components.OrderStatusChip
 import com.example.coverdesign.ui.viewmodel.HomeAction
 import com.example.coverdesign.ui.viewmodel.HomeUiEvent
 import com.example.coverdesign.ui.viewmodel.HomeUiState
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
+import com.example.coverdesign.ui.viewmodel.RehabMockData
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -121,7 +125,7 @@ internal fun HomeContent(
 ) {
     Scaffold(
         topBar = {
-            HomeTopBar(onInfoClick = { /* show app info */ })
+            HomeTopBar(onInfoClick = { /* todo show app info */ })
         }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
@@ -789,46 +793,33 @@ fun formatDate(epochMillis: Long): String {
     val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     return sdf.format(Date(epochMillis))
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//private fun HomeScreenPreview() {
-//    AppTheme {
-//        HomeContent(
-//            state = HomeUiState(
-//                rehabSessions = RehabMockData.generateSessions(),
-//                hasInsoles = true,
-//                recentOrders = listOf(
-//                    Order(
-//                        id = "1",
-//                        adaptedModelId = null,
-//                        config = ProductConfig(
-//                            id = "c1",
-//                            productId = "p1",
-//                            productCategory = ProductCategory.THREE_D_PRINT,
-//                            measurement = Measurement(100.0, 50.0, 30.0),
-//                            sizeLabel = SizeLabel.M,
-//                            color = ProductColor("Cyan", "#00FFFF"),
-//                            material = Material.PLA,
-//                            texture = Texture("t1", "Smooth", null, null),
-//                            inscription = "Sample",
-//                            userPhotoUri = null,
-//                            additionalElements = emptyList(),
-//                            quantity = 1,
-//                            createdAt = System.currentTimeMillis()
-//                        ),
-//                        priceEstimate = PriceEstimate(
-//                            configId = "c1",
-//                            basePrice = 50.0,
-//                            subtotal = 55.0,
-//                            total = 55.0
-//                        ),
-//                        status = OrderStatus.SUBMITTED,
-//                        createdAt = System.currentTimeMillis()
-//                    )
-//                )
-//            ),
-//            onAction = {}
-//        )
-//    }
-//}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenPreview() {
+    AppTheme {
+        HomeContent(
+            state = HomeUiState(
+                recentOrders = listOf(
+                    OrderListItem(
+                        orderId = "1",
+                        category = OrderCategory.PROSTHETIC_COVER,
+                        createdAt = System.currentTimeMillis(),
+                        totalPrice = 250.0,
+                        status = OrderStatus.SUBMITTED
+                    ),
+                    OrderListItem(
+                        orderId = "2",
+                        category = OrderCategory.INSOLE,
+                        createdAt = System.currentTimeMillis() - 86400000,
+                        totalPrice = 85.0,
+                        status = OrderStatus.DELIVERED
+                    )
+                ),
+                rehabSessions = RehabMockData.generateSessions(),
+                hasInsoles = true
+            ),
+            onAction = {}
+        )
+    }
+}

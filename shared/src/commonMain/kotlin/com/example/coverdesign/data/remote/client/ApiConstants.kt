@@ -27,6 +27,7 @@ object ApiConstants {
         const val SUBMIT_INSOLE_ORDER = "/orders/insole"
         const val SUBMIT_COVER_ORDER = "/orders/cover"
         const val ORDER_BY_ID = "/orders/{id}"
+        const val ORDERS = "/orders"
 
         // auth
         const val LOGIN = "/auth/login"

@@ -163,11 +163,13 @@ class FireAuthRepositoryImpl : FireAuthRepository {
         idToken: String,
         role: UserRole?
     ): Resource<FirebaseUser> = try {
+        println("[DEBUG] inside signInWithGoogle")
         val credential = GoogleAuthProvider.credential(idToken, accessToken = null)
         val result = auth.signInWithCredential(credential)
         val user = result.user ?: return Resource.Error("Google sign-in returned no user")
 
         if (result.additionalUserInfo?.isNewUser == true) {
+            println("[DEBUG] inside signInWithGoogle - new user $user")
             createUserProfile(
                 AppUser(
                     uid = user.uid,
@@ -178,6 +180,7 @@ class FireAuthRepositoryImpl : FireAuthRepository {
                 )
             )
         } else if (role != null) {
+            println("[DEBUG] inside signInWithGoogle - not new user $user")
             when (val profileResult = getUserProfile(user.uid)) {
                 is Resource.Success -> if (profileResult.data.role != role) {
                     auth.signOut()

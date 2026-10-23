@@ -5,7 +5,6 @@ import com.example.coverdesign.data.dto.OrderDto
 import com.example.coverdesign.data.dto.OrderIdDto
 import com.example.coverdesign.data.dto.ProstheticCoverOrderConfigDto
 import com.example.coverdesign.data.dto.SubmitOrderRequestDto
-import com.example.coverdesign.data.dto.SubmitProstheticCoverOrderRequestDto
 import com.example.coverdesign.data.remote.client.ApiConstants
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -24,6 +23,11 @@ class OrderApiService(private val client: HttpClient) {
     suspend fun getOrderById(id: String): OrderDto =
         client.get(
             ApiConstants.Endpoints.ORDER_BY_ID.replace("{id}", id)
+        ).body()
+
+    suspend fun getOrders(): List<OrderDto> =
+        client.get(
+            ApiConstants.Endpoints.ORDERS
         ).body()
 
 //    suspend fun submitInsoleOrder(request: SubmitInsoleOrderRequestDto): OrderIdDto =
