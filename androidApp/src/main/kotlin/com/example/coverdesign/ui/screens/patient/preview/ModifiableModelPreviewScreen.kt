@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.ViewInAr
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -158,18 +156,18 @@ fun ModifiableModelPreviewScreen(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick  = { viewModel.onAction(ModelPreviewAction.ProceedToAr(configId)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    enabled = state.modelUrl != null,
-                    shape   = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Default.ViewInAr, null, Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Try On (AR)")
-                }
+//                Button( TODO add AR
+//                    onClick  = { viewModel.onAction(ModelPreviewAction.ProceedToAr(configId)) },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(52.dp),
+//                    enabled = state.modelUrl != null,
+//                    shape   = RoundedCornerShape(14.dp)
+//                ) {
+//                    Icon(Icons.Default.ViewInAr, null, Modifier.size(20.dp))
+//                    Spacer(Modifier.width(8.dp))
+//                    Text("Try On (AR)")
+//                }
                 OutlinedButton(
                     onClick  = { viewModel.onAction(ModelPreviewAction.ProceedToOrder(configId)) },
                     modifier = Modifier

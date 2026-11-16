@@ -10,7 +10,7 @@ import com.example.coverdesign.ui.screens.patient.ar.VirtualTryOnPlaceholderScre
 import com.example.coverdesign.ui.screens.patient.home.HomeScreen
 import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreen
 import com.example.coverdesign.ui.screens.patient.order.OrdersListScreen
-import com.example.coverdesign.ui.screens.patient.preview.ModelTestScreen
+import com.example.coverdesign.ui.screens.patient.preview.ModelPreviewScreen
 import com.example.coverdesign.ui.screens.patient.preview.ModifiableModelPreviewScreen
 import com.example.coverdesign.ui.screens.patient.rehab.RecommendationsScreen
 import com.example.coverdesign.ui.screens.patient.rehab.RehabHistoryScreen
@@ -25,13 +25,14 @@ fun NavGraphBuilder.patientGraph(
 
     navigation(
         route = Screen.PatientMain.route,
-        startDestination = Screen.Model3D.createRoute("test")
+        startDestination = Screen.Home.route
     ) {
 
+
         // ── test: local 3D model on launch ───────────────────────────
-        composable(Screen.Model3D.route) {
-            ModelTestScreen(onBack = { navController.navigate(Screen.Home.route) })
-        }
+//        composable(Screen.Model3D.route) {
+//            ModelTestScreen(onBack = { navController.navigate(Screen.Home.route) })
+//        }
 
         // ── bottom nav roots ──────────────────────────────────────────
         composable(Screen.Home.route) {
@@ -61,8 +62,8 @@ fun NavGraphBuilder.patientGraph(
         composable(Screen.ModelPreview.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             val taskId = entry.arguments?.getString("taskId") ?: return@composable
-            println("loadAdaptedModel before ModifiableModelPreviewScreen: $configId")
-            ModifiableModelPreviewScreen(
+            ///println("loadAdaptedModel before ModifiableModelPreviewScreen: $configId")
+            ModelPreviewScreen(
                 configId = configId,
                 taskId = taskId,
                 onTryOn = { navController.navigate(Screen.ArTryOn.createRoute(configId)) },
@@ -73,6 +74,17 @@ fun NavGraphBuilder.patientGraph(
                 },
                 onBack = { navController.popBackStack() }
             )
+//            ModifiableModelPreviewScreen(
+//                configId = configId,
+//                taskId = taskId,
+//                onTryOn = { navController.navigate(Screen.ArTryOn.createRoute(configId)) },
+//                onOrder = {
+//                    navController.navigate(
+//                        Screen.OrderSummary.createRoute(configId)
+//                    )
+//                },
+//                onBack = { navController.popBackStack() }
+//            )
         }
         composable(Screen.Orders.route) {
             OrdersListScreen(
@@ -164,14 +176,22 @@ fun NavGraphBuilder.patientGraph(
         }
         composable(Screen.ModelPreviewFromOrder.route) { entry ->
             val adaptedModelId = entry.arguments?.getString("adaptedModelId") ?: return@composable
-            ModifiableModelPreviewScreen(
+            ModelPreviewScreen(
                 configId = adaptedModelId,
-                taskId   = null,
+                taskId = null,
                 onTryOn  = { navController.navigate(Screen.ArTryOn.createRoute(adaptedModelId)) },
                 onOrder  = { navController.popBackStack() },
                 onBack   = { navController.popBackStack() },
                 loadAction = ModelPreviewAction.LoadFromOrder(adaptedModelId)
             )
+//            ModifiableModelPreviewScreen(
+//                configId = adaptedModelId,
+//                taskId   = null,
+//                onTryOn  = { navController.navigate(Screen.ArTryOn.createRoute(adaptedModelId)) },
+//                onOrder  = { navController.popBackStack() },
+//                onBack   = { navController.popBackStack() },
+//                loadAction = ModelPreviewAction.LoadFromOrder(adaptedModelId)
+//            )
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.example.coverdesign.ui.screens.ProfileScreen
 import com.example.coverdesign.ui.screens.clinician.home.ClinicianHomeScreen
+import com.example.coverdesign.ui.screens.clinician.patients.ClinicianPatientsScreen
 import com.example.coverdesign.ui.screens.clinician.recommendation.PatientRecommendationData
 import com.example.coverdesign.ui.screens.clinician.recommendation.WriteRecommendationScreen
 
@@ -34,9 +35,13 @@ fun NavGraphBuilder.clinicianGraph(
         composable(Screen.Profile.route) {
             ProfileScreen()
         }
-        // TODO: implement full patients list screen
         composable(ClinicianNavItem.Patients.route) {
-            TODO("Clinician patients list screen not yet implemented")
+            ClinicianPatientsScreen(
+                onBack = { navController.popBackStack() },
+                onPatientClick = { patientId ->
+                    navController.navigate(Screen.WriteRecommendation.createRoute(patientId))
+                }
+            )
         }
         // TODO: implement reports/analytics screen
         composable(ClinicianNavItem.Reports.route) {

@@ -42,6 +42,7 @@ import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
 import com.example.coverdesign.ui.viewmodel.AuthViewModel
 import com.example.coverdesign.ui.viewmodel.CatalogViewModel
 import com.example.coverdesign.ui.viewmodel.ClinicianHomeViewModel
+import com.example.coverdesign.ui.viewmodel.ClinicianPatientsViewModel
 import com.example.coverdesign.ui.viewmodel.HomeViewModel
 import com.example.coverdesign.ui.viewmodel.ModelPreviewViewModel
 import com.example.coverdesign.ui.viewmodel.OrderListViewModel
@@ -177,6 +178,7 @@ val viewModelModule = module {
     viewModel { RecommendationsViewModel(authRepo = get()) }
     viewModel { AppViewModel(authRepo = get()) }
     viewModel { ClinicianHomeViewModel(authRepo = get()) }
+    viewModel { ClinicianPatientsViewModel(authRepo = get()) }
 
 }
 
