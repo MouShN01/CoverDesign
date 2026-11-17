@@ -73,9 +73,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.ui.components.AppTopBar
+import com.example.coverdesign.ui.components.EventHandler
 import com.example.coverdesign.ui.theme.AppTheme
 import com.example.coverdesign.ui.theme.ScannerCyan
+import com.example.coverdesign.ui.viewmodel.SensorCameraUiEvent
+import com.example.coverdesign.ui.viewmodel.SensorCameraViewModel
+import com.example.coverdesign.ui.viewmodel.SubmitStatus
+import org.koin.compose.viewmodel.koinViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -119,7 +125,9 @@ private sealed interface RecordingUiState {
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun SensorCameraScreen() {
+fun SensorCameraScreen(
+    onSessionReady: () -> Unit = {}
+) {
     val permissions = rememberMultiplePermissionsState(
         listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
     )
@@ -137,7 +145,24 @@ fun SensorCameraScreen() {
                 .padding(padding)
         ) {
             if (cameraGranted) {
-                SensorCameraContent(hasAudio = audioGranted)
+                // ViewModel is only resolved on the camera path, so the permission-gate
+                // path renders without a Koin context (e.g. in UI tests).
+                val viewModel: SensorCameraViewModel = koinViewModel()
+                val submitState by viewModel.uiState.collectAsStateWithLifecycle()
+
+                EventHandler(viewModel.events) { event ->
+                    when (event) {
+                        is SensorCameraUiEvent.SessionReady -> onSessionReady()
+                    }
+                }
+
+                SensorCameraContent(
+                    hasAudio = audioGranted,
+                    submitStatus = submitState.status,
+                    submitError = submitState.errorMessage,
+                    onVideoUploaded = viewModel::submitVideo,
+                    onDismissSubmit = viewModel::reset
+                )
             } else {
                 CameraPermissionGate(
                     onRequest = { permissions.launchMultiplePermissionRequest() },
@@ -152,7 +177,13 @@ fun SensorCameraScreen() {
 
 @SuppressLint("MissingPermission")
 @Composable
-private fun SensorCameraContent(hasAudio: Boolean) {
+private fun SensorCameraContent(
+    hasAudio: Boolean,
+    submitStatus: SubmitStatus,
+    submitError: String?,
+    onVideoUploaded: (videoPath: String, durationSeconds: Int) -> Unit,
+    onDismissSubmit: () -> Unit
+) {
     val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val mainHandler    = remember { Handler(Looper.getMainLooper()) }
@@ -384,7 +415,11 @@ private fun SensorCameraContent(hasAudio: Boolean) {
                     onProgress = { p ->
                         recordingState = RecordingUiState.Uploading(state.file, p)
                     },
-                    onSuccess  = { recordingState = RecordingUiState.Idle },
+                    onSuccess  = { storagePath ->
+                        recordingState = RecordingUiState.Idle
+                        // Hand the Firebase path to the backend for gait processing.
+                        onVideoUploaded(storagePath, state.durationSeconds)
+                    },
                     onError    = {
                         // Return to review so the user can retry or discard
                         recordingState = RecordingUiState.Reviewing(state.file, state.durationSeconds)
@@ -399,6 +434,16 @@ private fun SensorCameraContent(hasAudio: Boolean) {
         is RecordingUiState.Uploading -> UploadProgressDialog(progress = state.progress)
         else -> {}
     }
+
+    // ── Backend processing of the uploaded session ────────────────────────────
+    when (submitStatus) {
+        SubmitStatus.Submitting, SubmitStatus.Processing -> ProcessingDialog()
+        SubmitStatus.Error -> SubmitErrorDialog(
+            message   = submitError ?: "Something went wrong",
+            onDismiss = onDismissSubmit
+        )
+        else -> {}
+    }
 }
 
 // ── Firebase upload ───────────────────────────────────────────────────────────
@@ -406,18 +451,18 @@ private fun SensorCameraContent(hasAudio: Boolean) {
 private fun uploadToFirebase(
     file: File,
     onProgress: (Float) -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (storagePath: String) -> Unit,
     onError: () -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: run { onError(); return }
-    val ref = FirebaseStorage.getInstance().reference
-        .child("sessions/$uid/${file.name}")
+    val storagePath = "sessions/$uid/${file.name}"
+    val ref = FirebaseStorage.getInstance().reference.child(storagePath)
     ref.putFile(Uri.fromFile(file))
         .addOnProgressListener { snap ->
             if (snap.totalByteCount > 0)
                 onProgress(snap.bytesTransferred.toFloat() / snap.totalByteCount)
         }
-        .addOnSuccessListener { file.delete(); onSuccess() }
+        .addOnSuccessListener { file.delete(); onSuccess(storagePath) }
         .addOnFailureListener { onError() }
 }
 
@@ -579,6 +624,40 @@ private fun UploadProgressDialog(progress: Float) {
             }
         },
         confirmButton = {}
+    )
+}
+
+@Composable
+private fun ProcessingDialog() {
+    AlertDialog(
+        onDismissRequest = {},
+        icon  = { CircularProgressIndicator(modifier = Modifier.size(28.dp)) },
+        title = { Text("Analyzing your session…") },
+        text  = {
+            Text(
+                "Your recording was uploaded. We're processing your gait and posture — " +
+                "this can take a few minutes.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = {}
+    )
+}
+
+@Composable
+private fun SubmitErrorDialog(message: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Processing failed") },
+        text  = {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = { Button(onClick = onDismiss) { Text("OK") } }
     )
 }
 

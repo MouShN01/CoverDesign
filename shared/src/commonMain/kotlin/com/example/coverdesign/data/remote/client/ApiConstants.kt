@@ -29,6 +29,11 @@ object ApiConstants {
         const val ORDER_BY_ID = "/orders/{id}"
         const val ORDERS = "/orders"
 
+        // rehab
+        const val REHAB = "/rehab"                                  // GET — current user's sessions + recommendations
+        const val SUBMIT_REHAB_SESSION = "/rehab/sessions"          // POST — kick off processing of a recorded video
+        const val REHAB_SESSION_STATUS = "/rehab/sessions/{taskId}/status" // GET — poll processing status
+
         // auth
         const val LOGIN = "/auth/login"
 

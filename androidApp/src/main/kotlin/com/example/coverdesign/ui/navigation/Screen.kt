@@ -41,10 +41,6 @@ sealed class Screen(val route: String) {
         fun createRoute(configId: String) = "config/existing/$configId"
     }
 
-    object ArTryOn : Screen("ar/{configId}") {
-        fun createRoute(configId: String) = "ar/$configId"
-    }
-
     object OrderSummary : Screen("order/{configId}") {
         fun createRoute(configId: String) = "order/$configId"
     }

@@ -57,7 +57,6 @@ fun AppScaffold() {
     val patientHiddenRoutes = setOf(
         Screen.ModelPreview.route,
         Screen.ModelPreviewFromOrder.route,
-        Screen.ArTryOn.route,
         Screen.OrderSummary.route,
         Screen.Login.route,
         Screen.Register.route,

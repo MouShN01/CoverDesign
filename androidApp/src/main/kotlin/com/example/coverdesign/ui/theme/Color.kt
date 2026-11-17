@@ -80,3 +80,6 @@ val NeutralChipBg   = Color(0xFFF3F4F6)   // unselected filter chip background
 
 // ── Sensor / pose overlay ──────────────────────────────────────────────────
 val ScannerCyan     = Color(0xFF00E5FF)   // pose skeleton lines and landmark dots
+
+// ── Overlay / coach-mark ────────────────────────────────────────────────────
+val ScrimDark       = Color(0xFF1A1A2E)   // dimming scrim behind spotlight coach-marks

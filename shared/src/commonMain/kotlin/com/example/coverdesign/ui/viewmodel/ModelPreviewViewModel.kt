@@ -54,9 +54,6 @@ class ModelPreviewViewModel(
             is ModelPreviewAction.Retry ->
                 retry(action.taskId)
 
-            is ModelPreviewAction.ProceedToAr ->
-                sendEvent(ModelPreviewUiEvent.NavigateToAr(action.configId))
-
             is ModelPreviewAction.ProceedToOrder -> {
                 val taskId = uiState.value.adaptedModel?.id ?: return
                 viewModelScope.launch {
@@ -192,7 +189,6 @@ data class ModelPreviewUiState(
 // ── Events ────────────────────────────────────────────────────────────────────
 
 sealed class ModelPreviewUiEvent : UiEvent {
-    data class NavigateToAr(val configId: String) : ModelPreviewUiEvent()
     data class NavigateToOrder(val configId: String) : ModelPreviewUiEvent()
 }
 
@@ -203,6 +199,5 @@ sealed class ModelPreviewAction {
     data class LoadForConfig(val configId: String, val taskId: String?) : ModelPreviewAction()
     data class LoadFromOrder(val adaptedModelId: String) : ModelPreviewAction()
     data class Retry(val taskId: String) : ModelPreviewAction()
-    data class ProceedToAr(val configId: String) : ModelPreviewAction()
     data class ProceedToOrder(val configId: String) : ModelPreviewAction()
 }

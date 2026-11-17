@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config
+package com.example.coverdesign.ui.screens.patient.config
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule

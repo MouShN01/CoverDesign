@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config
+package com.example.coverdesign.ui.screens.patient.config
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.coverdesign.domain.model.Measurement
 import com.example.coverdesign.domain.model.OrderCategory
-import com.example.coverdesign.ui.screens.config.measurement_section.FootwearSizeSection
+import com.example.coverdesign.ui.screens.patient.config.measurement_section.FootwearSizeSection
 import com.example.coverdesign.ui.viewmodel.InsoleFootConfig
 import com.example.coverdesign.ui.viewmodel.LegSide
 import com.example.coverdesign.ui.viewmodel.ProductConfigAction

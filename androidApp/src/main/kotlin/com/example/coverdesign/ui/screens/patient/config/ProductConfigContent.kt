@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config
+package com.example.coverdesign.ui.screens.patient.config
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
@@ -32,9 +32,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.coverdesign.domain.model.Product
 import com.example.coverdesign.ui.constants.UIConstants.DEFAULT_TEXTURES
-import com.example.coverdesign.ui.screens.ArMode
-import com.example.coverdesign.ui.screens.config.measurement_section.MeasurementSection
-import com.example.coverdesign.ui.screens.resolveArMode
+import com.example.coverdesign.ui.screens.patient.config.measurement_section.MeasurementSection
 import com.example.coverdesign.ui.viewmodel.ProductConfigAction
 import com.example.coverdesign.ui.viewmodel.ProductConfigUiState
 
@@ -46,10 +44,6 @@ internal fun ProductConfigContent(
 ) {
     val config = state.currentConfig ?: return
 
-    val arMode = config.orderCategory.resolveArMode(
-        photoUri = config.userPhotoUri, measurements = config.measurement
-    )
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -60,8 +54,6 @@ internal fun ProductConfigContent(
         state.selectedProduct?.let { product ->
             ProductHeader(product = product)
         }
-
-        ArModeBadge(arMode = arMode)
 
         ConfigSection(title = "Measurements & Size") {
             MeasurementSection(
@@ -104,15 +96,6 @@ internal fun ProductConfigContent(
                 selected = config.additionalElements,
                 onAdd = { onAction(ProductConfigAction.AddElement(it)) },
                 onRemove = { onAction(ProductConfigAction.RemoveElement(it)) }
-            )
-        }
-
-        ConfigSection(title = "Fitting & Try-On") {
-            PhotoUploadSection(
-                currentUri = config.userPhotoUri,
-                arMode = arMode,
-                orderCategory = config.orderCategory,
-                onChanged = { onAction(ProductConfigAction.UpdateUserPhoto(it)) }
             )
         }
 
@@ -203,32 +186,6 @@ private fun ProductHeader(product: Product) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ArModeBadge(arMode: ArMode) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.tertiaryContainer
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = arMode.icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = "Try-on mode: ${arMode.label}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.tertiary
-            )
         }
     }
 }

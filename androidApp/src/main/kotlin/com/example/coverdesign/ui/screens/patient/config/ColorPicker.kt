@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config
+package com.example.coverdesign.ui.screens.patient.config
 
 import android.graphics.Color.parseColor
 import androidx.compose.foundation.background

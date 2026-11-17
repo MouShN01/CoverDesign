@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config.measurement_section
+package com.example.coverdesign.ui.screens.patient.config.measurement_section
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

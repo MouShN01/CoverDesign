@@ -113,10 +113,10 @@ class ProductConfigViewModel(
             is ProductConfigAction.UpdateQuantity -> onQuantityUpdated(action.qty)
             is ProductConfigAction.AddElement -> onElementToggled(action.element, add = true)
             is ProductConfigAction.RemoveElement -> onElementToggled(action.element, add = false)
-            is ProductConfigAction.UpdateUserPhoto -> onFieldUpdated { copy(userPhotoUri = action.imageURL) }
             is ProductConfigAction.RequestPriceUpdate -> onPriceRequested()
             is ProductConfigAction.SaveAndProceed -> onSaveAndProceed()
             is ProductConfigAction.ClearError -> setState { copy(error = null) }
+            is ProductConfigAction.ResetLock -> setState { copy(isLockedAfterSave = false) }
 
             // ── direct ordering: order type ────────────────────────────────
             is ProductConfigAction.SelectOrderType -> setState { copy(orderType = action.type) }
@@ -156,14 +156,6 @@ class ProductConfigViewModel(
                 copy(
                     insoleConfig = insoleConfig.copy(
                         color = action.color
-                    )
-                )
-            }
-
-            is ProductConfigAction.UpdateInsoleQuantity -> setState {
-                copy(
-                    insoleConfig = insoleConfig.copy(
-                        quantity = action.qty
                     )
                 )
             }
@@ -236,8 +228,6 @@ class ProductConfigViewModel(
             }
 
             is ProductConfigAction.SubmitProstheticOrder -> onSubmitProsthetic()
-
-            else -> {}
         }
     }
 
@@ -497,8 +487,6 @@ sealed class ProductConfigUiEvent : UiEvent {
 
 sealed class ProductConfigAction {
     // existing
-    data class Init(val productId: String) : ProductConfigAction()
-    data class SetProduct(val product: Product) : ProductConfigAction()
     data class UpdateMeasurement(val measurement: Measurement, val category: OrderCategory) :
         ProductConfigAction()
 
@@ -513,10 +501,10 @@ sealed class ProductConfigAction {
     data class Enter(val mode: ConfigEntryMode) : ProductConfigAction()
     data class ResumePreviousConfig(val config: ProductConfig) : ProductConfigAction()
     data class StartFreshConfig(val product: Product) : ProductConfigAction()
-    data class UpdateUserPhoto(val imageURL: String?) : ProductConfigAction()
     object SaveAndProceed : ProductConfigAction()
     object RequestPriceUpdate : ProductConfigAction()
     object ClearError : ProductConfigAction()
+    object ResetLock : ProductConfigAction()
 
     // direct order type selection
     data class SelectOrderType(val type: OrderType) : ProductConfigAction()
@@ -528,7 +516,6 @@ sealed class ProductConfigAction {
     object RemoveInsoleSecondFoot : ProductConfigAction()
     data class UpdateInsoleMaterial(val material: Material) : ProductConfigAction()
     data class UpdateInsoleColor(val color: ProductColor) : ProductConfigAction()
-    data class UpdateInsoleQuantity(val qty: Int) : ProductConfigAction()
     object SubmitInsoleOrder : ProductConfigAction()
 
     // prosthetic cover

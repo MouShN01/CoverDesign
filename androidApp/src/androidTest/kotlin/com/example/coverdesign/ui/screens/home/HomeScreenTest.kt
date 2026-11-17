@@ -42,20 +42,6 @@ class HomeScreenTest {
     }
 
     @Test
-    fun testVirtualTryOnClick() {
-        var actionReceived: HomeAction? = null
-        composeTestRule.setContent {
-            HomeContent(
-                state = HomeUiState(),
-                onAction = { actionReceived = it }
-            )
-        }
-
-        composeTestRule.onNodeWithText("Virtual Try-On").performClick()
-        assertEquals(HomeAction.OpenTryOn, actionReceived)
-    }
-
-    @Test
     fun testEmptyOrdersState() {
         composeTestRule.setContent {
             HomeContent(
@@ -120,5 +106,60 @@ class HomeScreenTest {
 
         composeTestRule.onNodeWithText("View History").performClick()
         assertEquals(HomeAction.OpenRehabHistory, actionReceived)
+    }
+
+    @Test
+    fun testWelcomeCoachMarkShownForNewUser() {
+        composeTestRule.setContent {
+            HomeContent(
+                state = HomeUiState(isNewUser = true),
+                onAction = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Welcome aboard!").assertIsDisplayed()
+    }
+
+    @Test
+    fun testWelcomeCoachMarkHiddenForExistingUser() {
+        composeTestRule.setContent {
+            HomeContent(
+                state = HomeUiState(isNewUser = false),
+                onAction = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Welcome aboard!").assertDoesNotExist()
+    }
+
+    @Test
+    fun testSkipDismissesWelcome() {
+        var actionReceived: HomeAction? = null
+        composeTestRule.setContent {
+            HomeContent(
+                state = HomeUiState(isNewUser = true),
+                onAction = { actionReceived = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Skip").performClick()
+        assertEquals(HomeAction.DismissWelcome, actionReceived)
+    }
+
+    @Test
+    fun testStartTourOpensQuickTour() {
+        var actionReceived: HomeAction? = null
+        composeTestRule.setContent {
+            HomeContent(
+                state = HomeUiState(isNewUser = true),
+                onAction = { actionReceived = it }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Start tour").performClick()
+
+        // Starting the tour dismisses the coach-mark and shows the first tour step.
+        assertEquals(HomeAction.DismissWelcome, actionReceived)
+        composeTestRule.onNodeWithText("Create an order").assertIsDisplayed()
     }
 }

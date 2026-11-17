@@ -8,13 +8,28 @@ import com.example.coverdesign.domain.model.GaitAnalysisResult
 import com.example.coverdesign.domain.model.GaitSession
 import com.example.coverdesign.domain.model.InsoleData
 import com.example.coverdesign.domain.model.RecommendationTag
+import com.example.coverdesign.domain.model.RehabData
+import com.example.coverdesign.domain.model.RehabSessionStatus
+import com.example.coverdesign.domain.model.RehabTask
 
 // ═══════════════════════════════════════════════════════════════════
 // DTO → Domain  (incoming from backend)
 // ═══════════════════════════════════════════════════════════════════
 
-fun RehabResponseDto.toDomain(): Pair<List<GaitSession>, List<DoctorRecommendation>> =
-    sessions.map { it.toDomain() } to recommendations.map { it.toDomain() }
+fun RehabResponseDto.toDomain(): RehabData = RehabData(
+    sessions        = sessions.map { it.toDomain() },
+    recommendations = recommendations.map { it.toDomain() }
+)
+
+fun RehabTaskDto.toDomain() = RehabTask(
+    taskId  = taskId,
+    status  = when (status.lowercase()) {
+        "ready"  -> RehabSessionStatus.READY
+        "failed" -> RehabSessionStatus.FAILED
+        else     -> RehabSessionStatus.PROCESSING
+    },
+    session = session?.toDomain()
+)
 
 fun GaitSessionDto.toDomain() = GaitSession(
     id              = id,

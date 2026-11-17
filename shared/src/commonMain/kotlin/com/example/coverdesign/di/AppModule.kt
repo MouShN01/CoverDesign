@@ -10,15 +10,18 @@ import com.example.coverdesign.data.remote.service.AuthApiService
 import com.example.coverdesign.data.remote.service.Model3DApiService
 import com.example.coverdesign.data.remote.service.OrderApiService
 import com.example.coverdesign.data.remote.service.ProductApiService
+import com.example.coverdesign.data.remote.service.RehabApiService
 import com.example.coverdesign.data.repoimpl.FireAuthRepositoryImpl
 import com.example.coverdesign.data.repoimpl.Model3DRepositoryImpl
 import com.example.coverdesign.data.repoimpl.OrderRepositoryImpl
 import com.example.coverdesign.data.repoimpl.ProductRepositoryImpl
+import com.example.coverdesign.data.repoimpl.RehabRepositoryImpl
 import com.example.coverdesign.db.AppDatabase
 import com.example.coverdesign.domain.repo.FireAuthRepository
 import com.example.coverdesign.domain.repo.Model3DRepository
 import com.example.coverdesign.domain.repo.OrderRepository
 import com.example.coverdesign.domain.repo.ProductRepository
+import com.example.coverdesign.domain.repo.RehabRepository
 import com.example.coverdesign.domain.usecase.CalculatePriceUseCase
 import com.example.coverdesign.domain.usecase.ConfigureProductUseCase
 import com.example.coverdesign.domain.usecase.CreateConfigFromProductUseCase
@@ -28,6 +31,9 @@ import com.example.coverdesign.domain.usecase.SubmitProstheticOrderUseCase
 import com.example.coverdesign.domain.usecase.GetCatalogUseCase
 import com.example.coverdesign.domain.usecase.GetOrderDetailUseCase
 import com.example.coverdesign.domain.usecase.GetOrderListUseCase
+import com.example.coverdesign.domain.usecase.GetRehabDataUseCase
+import com.example.coverdesign.domain.usecase.SubmitRehabSessionUseCase
+import com.example.coverdesign.domain.usecase.PollRehabSessionUseCase
 import com.example.coverdesign.domain.usecase.LinkOrderToAdaptedModelUseCase
 import com.example.coverdesign.domain.usecase.PollModelStatusUseCase
 import com.example.coverdesign.domain.usecase.SaveInsoleOrderLocallyUseCase
@@ -35,10 +41,8 @@ import com.example.coverdesign.domain.usecase.SaveOrderLocallyUseCase
 import com.example.coverdesign.domain.usecase.UpdateConfigUseCase
 import com.example.coverdesign.domain.usecase.UploadReferencePhotoUseCase
 import com.example.coverdesign.domain.usecase.UploadTextureImageUseCase
-import com.example.coverdesign.domain.usecase.VirtualTryOnUseCase
 import com.example.coverdesign.domain.validator.MeasurementValidator
 import com.example.coverdesign.ui.viewmodel.AppViewModel
-import com.example.coverdesign.ui.viewmodel.ArTryOnViewModel
 import com.example.coverdesign.ui.viewmodel.AuthViewModel
 import com.example.coverdesign.ui.viewmodel.CatalogViewModel
 import com.example.coverdesign.ui.viewmodel.ClinicianHomeViewModel
@@ -50,6 +54,7 @@ import com.example.coverdesign.ui.viewmodel.OrderSummaryViewModel
 import com.example.coverdesign.ui.viewmodel.ProductConfigViewModel
 import com.example.coverdesign.ui.viewmodel.RecommendationsViewModel
 import com.example.coverdesign.ui.viewmodel.RehabViewModel
+import com.example.coverdesign.ui.viewmodel.SensorCameraViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -84,6 +89,7 @@ val networkModule = module {
     singleOf(::Model3DApiService)
     singleOf(::OrderApiService)
     singleOf(::AuthApiService)
+    singleOf(::RehabApiService)
 
 }
 
@@ -91,6 +97,7 @@ val repositoryModule = module {
     single<ProductRepository> { ProductRepositoryImpl(api = get(), db = get()) }
     single<Model3DRepository> { Model3DRepositoryImpl(api = get(), db = get()) }
     single<OrderRepository> { OrderRepositoryImpl(api = get(), db = get()) }
+    single<RehabRepository> { RehabRepositoryImpl(api = get()) }
 //    single<AuthRepository> {
 //        AuthRepositoryImplTest(tokenStorage = get())
 //    }
@@ -119,7 +126,6 @@ val useCaseModule = module {
     //factoryOf(::GenerateModelUseCase)
 
     // FR6
-    factory { VirtualTryOnUseCase(model3DRepo = get()) }
     factory { LinkOrderToAdaptedModelUseCase(orderRepo = get()) }
 
     // FR7
@@ -135,6 +141,11 @@ val useCaseModule = module {
     // FR10
     factoryOf(::GetOrderListUseCase)
     factory { GetOrderDetailUseCase(orderRepo = get(), model3DRepo = get()) }
+
+    // Rehabilitation
+    factoryOf(::GetRehabDataUseCase)
+    factoryOf(::SubmitRehabSessionUseCase)
+    factory { PollRehabSessionUseCase(get()) }
 
     // shared validator
     singleOf(::MeasurementValidator)
@@ -162,20 +173,14 @@ val viewModelModule = module {
         )
     }
     viewModel {
-        ArTryOnViewModel(
-            virtualTryOn = get(),
-            //updateConfig = get(),
-            //getModelPreview = get()
-        )
-    }
-    viewModel {
         OrderSummaryViewModel(orderRepo = get(), getOrderDetail = get())
     }
     viewModel { OrderListViewModel(getOrderList = get()) }
-    viewModel { HomeViewModel(getOrderList = get(), authRepo = get()) }
+    viewModel { HomeViewModel(getOrderList = get(), getRehabData = get(), authRepo = get()) }
     viewModel { AuthViewModel(get(), get()) }
-    viewModel { RehabViewModel(authRepo = get()) }
-    viewModel { RecommendationsViewModel(authRepo = get()) }
+    viewModel { RehabViewModel(getRehabData = get(), authRepo = get()) }
+    viewModel { RecommendationsViewModel(getRehabData = get(), authRepo = get()) }
+    viewModel { SensorCameraViewModel(submitRehabSession = get(), pollRehabSession = get(), authRepo = get()) }
     viewModel { AppViewModel(authRepo = get()) }
     viewModel { ClinicianHomeViewModel(authRepo = get()) }
     viewModel { ClinicianPatientsViewModel(authRepo = get()) }

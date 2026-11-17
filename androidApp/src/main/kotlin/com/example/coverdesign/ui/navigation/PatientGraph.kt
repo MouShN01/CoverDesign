@@ -5,8 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.example.coverdesign.ui.screens.ProfileScreen
-import com.example.coverdesign.ui.screens.config.ProductConfigScreen
-import com.example.coverdesign.ui.screens.patient.ar.VirtualTryOnPlaceholderScreen
+import com.example.coverdesign.ui.screens.patient.config.ProductConfigScreen
 import com.example.coverdesign.ui.screens.patient.home.HomeScreen
 import com.example.coverdesign.ui.screens.patient.order.OrderSummaryScreen
 import com.example.coverdesign.ui.screens.patient.order.OrdersListScreen
@@ -39,14 +38,14 @@ fun NavGraphBuilder.patientGraph(
             HomeScreen(
                 onNewOrder = { navController.navigate(Screen.NewOrder.route) },
                 on3DVisualize = { navController.navigate(Screen.Model3D.route) },
-                onVirtualTryOn = { navController.navigate(Screen.ArTryOn.createRoute("")) },
                 onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderDetail.createRoute(orderId))
                 },
                 onSeeAllOrders = { navController.navigate(Screen.Orders.route) },
                 onOpenRehabHistory = { navController.navigate(Screen.RehabHistory.route) },
                 onOpenRecommendations = { navController.navigate(Screen.PatientRecommendations.route) },
-                onOrderInsoles = { navController.navigate(Screen.NewInsoleOrder.route) }
+                onOrderInsoles = { navController.navigate(Screen.NewInsoleOrder.route) },
+                onStartRehabScan = { navController.navigate(Screen.SensorCamera.route) }
             )
         }
         composable(Screen.RehabHistory.route) {
@@ -56,7 +55,14 @@ fun NavGraphBuilder.patientGraph(
             RecommendationsScreen(onBack = { navController.popBackStack() })
         }
         composable(Screen.SensorCamera.route) {
-            SensorCameraScreen()
+            SensorCameraScreen(
+                onSessionReady = {
+                    // Recreate Home so it re-fetches rehab data and shows the new session.
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.ModelPreview.route) { entry ->
@@ -66,7 +72,6 @@ fun NavGraphBuilder.patientGraph(
             ModelPreviewScreen(
                 configId = configId,
                 taskId = taskId,
-                onTryOn = { navController.navigate(Screen.ArTryOn.createRoute(configId)) },
                 onOrder = {
                     navController.navigate(
                         Screen.OrderSummary.createRoute(configId)
@@ -134,15 +139,6 @@ fun NavGraphBuilder.patientGraph(
                 onBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.ArTryOn.route) { entry ->
-            val configId = entry.arguments?.getString("configId").orEmpty()
-            VirtualTryOnPlaceholderScreen(
-                configId = configId,
-                onOrder = { navController.navigate(Screen.OrderSummary.createRoute(configId)) },
-                onEditConfig = { navController.navigate(Screen.ProductConfigFromOrder.createRoute(configId)) },
-                onBack = { navController.popBackStack() },
-            )
-        }
         composable(Screen.OrderSummary.route) { entry ->
             val configId = entry.arguments?.getString("configId") ?: return@composable
             OrderSummaryScreen(
@@ -179,7 +175,6 @@ fun NavGraphBuilder.patientGraph(
             ModelPreviewScreen(
                 configId = adaptedModelId,
                 taskId = null,
-                onTryOn  = { navController.navigate(Screen.ArTryOn.createRoute(adaptedModelId)) },
                 onOrder  = { navController.popBackStack() },
                 onBack   = { navController.popBackStack() },
                 loadAction = ModelPreviewAction.LoadFromOrder(adaptedModelId)

@@ -1,4 +1,4 @@
-package com.example.coverdesign.ui.screens.config
+package com.example.coverdesign.ui.screens.patient.config
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

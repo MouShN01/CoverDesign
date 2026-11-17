@@ -106,9 +106,13 @@ internal fun RegisterContent(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // local validation — passwords match
+    // local validation — each field validated independently
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
-    val phoneMismatch = phone.isNotEmpty() && phone.length == 13
+    val passwordTooShort = password.isNotEmpty() && password.length < 6
+    val phoneInvalid = phone.isNotEmpty() &&
+            !phone.matches(Regex("^\\+?\\d{10,13}$"))
+    val emailInvalid = email.isNotEmpty() &&
+            !email.matches(Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))
     val context = LocalContext.current
 
     Column(
@@ -156,8 +160,8 @@ internal fun RegisterContent(
                     label = "Phone number *",
                     keyboardType = KeyboardType.Phone,
                     placeholder = "+380 XX XXX XX XX",
-                    isError = passwordMismatch,
-                    supportingText = if (passwordMismatch) "The phone number invalid" else null
+                    isError = phoneInvalid,
+                    supportingText = if (phoneInvalid) "The phone number is invalid" else null
                 )
             }
         }
@@ -182,8 +186,8 @@ internal fun RegisterContent(
                     label = "Email *",
                     leadingIcon = { Icon(Icons.Default.Email, null) },
                     keyboardType = KeyboardType.Email,
-                    supportingText = if (passwordMismatch) "Email is invalid" else null, //TODO
-                    isError = passwordMismatch,
+                    supportingText = if (emailInvalid) "Email is invalid" else null,
+                    isError = emailInvalid,
                 )
                 AuthTextField(
                     value = password,
@@ -201,7 +205,10 @@ internal fun RegisterContent(
                                 contentDescription = null
                             )
                         }
-                    }
+                    },
+                    isError = passwordTooShort,
+                    supportingText = if (passwordTooShort)
+                        "Password must be at least 6 characters" else null
                 )
                 AuthTextField(
                     value = confirmPassword,
@@ -238,9 +245,10 @@ internal fun RegisterContent(
             text = "Create Account",
             isLoading = state.isLoading,
             enabled = fullName.isNotBlank() &&
-                    phone.isNotBlank() &&
-                    email.isNotBlank() &&
+                    phone.isNotBlank() && !phoneInvalid &&
+                    email.isNotBlank() && !emailInvalid &&
                     password.length >= 6 &&
+                    confirmPassword.isNotBlank() &&
                     !passwordMismatch,
             onClick = {
                 onAction(

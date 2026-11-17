@@ -51,7 +51,6 @@ fun ModifiableModelPreviewScreen(
     configId   : String,
     taskId     : String? = null,
     viewModel  : ModelPreviewViewModel = koinViewModel(),
-    onTryOn    : () -> Unit,
     onOrder    : () -> Unit,
     onBack     : () -> Unit,
     loadAction : ModelPreviewAction = ModelPreviewAction.LoadForConfig(configId, taskId)
@@ -68,7 +67,6 @@ fun ModifiableModelPreviewScreen(
 
     EventHandler(viewModel.events) { event ->
         when (event) {
-            is ModelPreviewUiEvent.NavigateToAr    -> onTryOn()
             is ModelPreviewUiEvent.NavigateToOrder -> onOrder()
         }
     }

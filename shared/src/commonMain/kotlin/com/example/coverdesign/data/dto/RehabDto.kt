@@ -79,3 +79,18 @@ data class DoctorRecommendationDto(
     @SerialName("tag")          val tag:         String,  // "insole_based" | "photogrammetric"
     @SerialName("text")         val text:        String
 )
+
+// ── Session submission / processing (video → gait chart) ───────────────────────
+
+@Serializable
+data class SubmitRehabSessionDto(
+    @SerialName("video_path")       val videoPath:       String,  // Firebase Storage path, e.g. "sessions/<uid>/pose_<ts>.mp4"
+    @SerialName("duration_seconds") val durationSeconds: Int = 0
+)
+
+@Serializable
+data class RehabTaskDto(
+    @SerialName("task_id") val taskId:  String,
+    @SerialName("status")  val status:  String,          // "processing" | "ready" | "failed"
+    @SerialName("session") val session: GaitSessionDto? = null
+)

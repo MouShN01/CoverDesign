@@ -34,6 +34,7 @@ class FireAuthRepositoryImpl : FireAuthRepository {
 
     private fun Exception.toAuthMessage(fallback: String): String {
         val raw = message ?: return fallback
+        println("Registration check $raw")
         return when {
             raw.contains("NETWORK_ERROR", ignoreCase = true)
                     || raw.contains("network error", ignoreCase = true)

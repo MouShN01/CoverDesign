@@ -2,7 +2,10 @@ package com.example.coverdesign.ui.screens.patient.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,10 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,11 +27,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.BluetoothDisabled
+import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,21 +48,32 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.coverdesign.R
 import com.example.coverdesign.domain.model.BodyPosition
@@ -70,6 +89,7 @@ import com.example.coverdesign.ui.theme.ChartEndRed
 import com.example.coverdesign.ui.theme.ChartStartGreen
 import com.example.coverdesign.ui.theme.NeutralMid
 import com.example.coverdesign.ui.theme.PatientActiveTeal
+import com.example.coverdesign.ui.theme.ScrimDark
 import com.example.coverdesign.ui.theme.StatusBlue
 import com.example.coverdesign.ui.theme.StatusBlueBg
 import com.example.coverdesign.ui.theme.StatusGreen
@@ -92,12 +112,12 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
     onNewOrder: () -> Unit,
     on3DVisualize: () -> Unit,
-    onVirtualTryOn: () -> Unit,
     onOrderClick: (String) -> Unit,
     onSeeAllOrders: () -> Unit,
     onOpenRehabHistory: () -> Unit,
     onOpenRecommendations: () -> Unit = {},
-    onOrderInsoles: () -> Unit = {}
+    onOrderInsoles: () -> Unit = {},
+    onStartRehabScan: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -105,12 +125,12 @@ fun HomeScreen(
         when (event) {
             is HomeUiEvent.NavigateToNewOrder    -> onNewOrder()
             is HomeUiEvent.NavigateTo3D          -> on3DVisualize()
-            is HomeUiEvent.NavigateToTryOn       -> onVirtualTryOn()
             is HomeUiEvent.NavigateToAllOrders   -> onSeeAllOrders()
             is HomeUiEvent.NavigateToOrder       -> onOrderClick(event.orderId)
             is HomeUiEvent.NavigateToRehabHistory    -> onOpenRehabHistory()
             is HomeUiEvent.NavigateToRecommendations -> onOpenRecommendations()
             is HomeUiEvent.NavigateToInsoleOrder     -> onOrderInsoles()
+            is HomeUiEvent.NavigateToSensorCamera    -> onStartRehabScan()
         }
     }
 
@@ -123,9 +143,22 @@ fun HomeScreen(
 internal fun HomeContent(
     state: HomeUiState, onAction: (HomeAction) -> Unit
 ) {
+    // Bounds of the top-bar info icon in root coordinates — drives the spotlight cutout.
+    var infoIconBounds by remember { mutableStateOf<Rect?>(null) }
+    var showTour by remember { mutableStateOf(false) }
+
+    val openTour = {
+        showTour = true
+        onAction(HomeAction.DismissWelcome)
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
-            HomeTopBar(onInfoClick = { /* todo show app info */ })
+            HomeTopBar(
+                onInfoClick = openTour,
+                onInfoPositioned = { infoIconBounds = it }
+            )
         }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
@@ -156,8 +189,8 @@ internal fun HomeContent(
                 onAction = { onAction(HomeAction.OpenRehabHistory) })
             RehabSummaryCard(
                 latestSession = state.rehabSessions.firstOrNull(),
-                hasInsoles = state.hasInsoles,
                 onOrderInsoles = { onAction(HomeAction.OrderInsoles) },
+                onStartScan = { onAction(HomeAction.StartRehabScan) },
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -194,14 +227,29 @@ internal fun HomeContent(
             Spacer(Modifier.height(24.dp))
         }
     }
+
+        // ── First-run welcome coach-mark ──────────────────────────────────
+        val bounds = infoIconBounds
+        if (state.isNewUser && bounds != null) {
+            WelcomeSpotlight(
+                targetBounds = bounds,
+                onStartTour = openTour,
+                onDismiss = { onAction(HomeAction.DismissWelcome) }
+            )
+        }
+
+        if (showTour) {
+            QuickTourDialog(onDismiss = { showTour = false })
+        }
+    }
 }
 
 // ── Rehabilitation summary card ───────────────────────────────────────────────
 @Composable
 private fun RehabSummaryCard(
     latestSession: GaitSession?,
-    hasInsoles: Boolean,
     onOrderInsoles: () -> Unit,
+    onStartScan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -213,8 +261,8 @@ private fun RehabSummaryCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // ── Score chips — only when a session exists ──────────────────
             if (latestSession != null) {
-                // ── Score chips ───────────────────────────────────────────
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -231,79 +279,68 @@ private fun RehabSummaryCard(
                 }
 
                 Spacer(Modifier.height(12.dp))
+            }
 
-                // ── Mini charts ───────────────────────────────────────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // ── Mini charts — each panel reflects its own server data ─────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Left: stabilogram (COP trajectory) from insole pressure data
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Left: stabilogram (COP trajectory) — only if insoles connected
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "COP Trajectory",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        "COP Trajectory",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    val pressureData = latestSession?.pressureData
+                    if (pressureData != null) {
+                        StabilogramMiniChart(
+                            copPoints = pressureData.copTrajectory,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
                         )
-                        Spacer(Modifier.height(4.dp))
-                        if (hasInsoles && latestSession.pressureData != null) {
-                            StabilogramMiniChart(
-                                copPoints = latestSession.pressureData!!.copTrajectory,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
-                            )
-                        } else {
-                            NoInsolesMiniCard(
-                                onOrderInsoles = onOrderInsoles,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
-                            )
-                        }
-                    }
-
-                    // Right: body deviation chart
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            "Body Deviation",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        DeviationMiniChart(
-                            series = latestSession.gaitAnalysis.positionSeries,
+                    } else {
+                        NoInsolesMiniCard(
+                            onOrderInsoles = onOrderInsoles,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(120.dp)
                         )
                     }
                 }
-            } else {
-                // No sessions yet
+
+                // Right: body deviation from the scanner (pose) data
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "No sessions recorded yet",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "Body Deviation",
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        "Complete a rehabilitation session to see your progress",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    Spacer(Modifier.height(4.dp))
+                    if (latestSession != null) {
+                        DeviationMiniChart(
+                            series = latestSession.gaitAnalysis.positionSeries,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        )
+                    } else {
+                        MakeAScanMiniCard(
+                            onStartScan = onStartScan,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        )
+                    }
                 }
             }
         }
@@ -483,10 +520,50 @@ private fun NoInsolesMiniCard(onOrderInsoles: () -> Unit, modifier: Modifier = M
     }
 }
 
+// Placeholder shown in the right panel when no scanner session has been recorded yet.
+@Composable
+private fun MakeAScanMiniCard(onStartScan: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.CameraAlt,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "No scan recorded",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            TextButton(
+                onClick = onStartScan,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+            ) {
+                Text("Make a scan", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
 // ── Top bar ───────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopBar(onInfoClick: () -> Unit) {
+private fun HomeTopBar(
+    onInfoClick: () -> Unit,
+    onInfoPositioned: (Rect) -> Unit = {}
+) {
     TopAppBar(
         title = {
         Column {
@@ -501,7 +578,10 @@ private fun HomeTopBar(onInfoClick: () -> Unit) {
             )
         }
     }, actions = {
-        IconButton(onClick = onInfoClick) {
+        IconButton(
+            onClick = onInfoClick,
+            modifier = Modifier.onGloballyPositioned { onInfoPositioned(it.boundsInRoot()) }
+        ) {
             Icon(Icons.Outlined.Info, contentDescription = "Info")
         }
     }, colors = TopAppBarDefaults.topAppBarColors(
@@ -788,6 +868,229 @@ private fun ContactRow(
     }
 }
 
+// ── Welcome spotlight coach-mark ────────────────────────────────────────────────
+// Dims the whole screen except a circular cutout around the top-bar info icon and
+// shows a tooltip bubble inviting the new user to tap it for a quick tour.
+@Composable
+private fun WelcomeSpotlight(
+    targetBounds: Rect,
+    onStartTour: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val density = LocalDensity.current
+    val scrim = ScrimDark.copy(alpha = 0.82f)
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val spotlightRadius = with(density) {
+        maxOf(targetBounds.width, targetBounds.height) / 2f + 10.dp.toPx()
+    }
+    val caretWidth = 16.dp
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Scrim with a transparent circular hole punched around the icon.
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        ) {
+            drawRect(color = scrim)
+            drawCircle(
+                color = scrim,
+                radius = spotlightRadius,
+                center = targetBounds.center,
+                blendMode = BlendMode.Clear
+            )
+        }
+
+        // Tap anywhere on the scrim to dismiss.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onDismiss() }
+        )
+
+        // Transparent hit target over the icon → starts the tour.
+        Box(
+            modifier = Modifier
+                .offset(
+                    x = with(density) { targetBounds.left.toDp() },
+                    y = with(density) { targetBounds.top.toDp() }
+                )
+                .size(
+                    width = with(density) { targetBounds.width.toDp() },
+                    height = with(density) { targetBounds.height.toDp() }
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onStartTour() }
+        )
+
+        // Upward caret pointing at the icon.
+        Canvas(
+            modifier = Modifier
+                .offset(
+                    x = with(density) { targetBounds.center.x.toDp() } - caretWidth / 2,
+                    y = with(density) { targetBounds.bottom.toDp() } + 6.dp
+                )
+                .size(width = caretWidth, height = 8.dp)
+        ) {
+            val caret = Path().apply {
+                moveTo(size.width / 2f, 0f)
+                lineTo(size.width, size.height)
+                lineTo(0f, size.height)
+                close()
+            }
+            drawPath(caret, color = surfaceColor)
+        }
+
+        // Tooltip bubble below the icon.
+        Surface(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(
+                    top = with(density) { targetBounds.bottom.toDp() } + 13.dp,
+                    end = 12.dp,
+                    start = 24.dp
+                )
+                .widthIn(max = 300.dp),
+            shape = MaterialTheme.shapes.large,
+            color = surfaceColor,
+            shadowElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Welcome aboard!",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Tap the info icon here any time to take a quick tour of the app.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Skip", style = MaterialTheme.typography.labelMedium)
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    Button(onClick = onStartTour) {
+                        Text("Start tour", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Quick tour ──────────────────────────────────────────────────────────────────
+private data class TourStep(
+    val icon: ImageVector,
+    val title: String,
+    val description: String
+)
+
+@Composable
+private fun QuickTourDialog(onDismiss: () -> Unit) {
+    val steps = remember {
+        listOf(
+            TourStep(
+                Icons.Default.Add,
+                "Create an order",
+                "Tap \"Create new order\" to design a custom prosthetic cover or insole from scratch."
+            ),
+            TourStep(
+                Icons.Outlined.AssignmentTurnedIn,
+                "Your recommendations",
+                "Open \"View Recommendations\" to see suggestions tailored to you."
+            ),
+            TourStep(
+                Icons.Outlined.ShoppingBag,
+                "Track your orders",
+                "\"Recent Orders\" shows your latest orders — tap \"See all\" for the full history."
+            ),
+            TourStep(
+                Icons.Outlined.Info,
+                "Need help?",
+                "Reach our team any time from the \"Contact Us\" section at the bottom of the screen."
+            )
+        )
+    }
+    var index by remember { mutableStateOf(0) }
+    val step = steps[index]
+    val isLast = index == steps.lastIndex
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(
+                        imageVector = step.icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .size(28.dp)
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(step.title, style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    step.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        steps.indices.forEach { i ->
+                            val selected = i == index
+                            Surface(
+                                modifier = Modifier.size(if (selected) 8.dp else 6.dp),
+                                shape = CircleShape,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant
+                            ) {}
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (!isLast) {
+                            TextButton(onClick = onDismiss) {
+                                Text("Skip", style = MaterialTheme.typography.labelMedium)
+                            }
+                            Spacer(Modifier.width(4.dp))
+                        }
+                        Button(onClick = { if (isLast) onDismiss() else index++ }) {
+                            Text(
+                                if (isLast) "Done" else "Next",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ── Date formatter ────────────────────────────────────────────────────────────
 fun formatDate(epochMillis: Long): String {
     val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
@@ -818,6 +1121,22 @@ private fun HomeScreenPreview() {
                 ),
                 rehabSessions = RehabMockData.generateSessions(),
                 hasInsoles = true
+            ),
+            onAction = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "New user welcome")
+@Composable
+private fun HomeScreenNewUserPreview() {
+    AppTheme {
+        HomeContent(
+            state = HomeUiState(
+                recentOrders = emptyList(),
+                rehabSessions = emptyList(),
+                hasInsoles = false,
+                isNewUser = true
             ),
             onAction = {}
         )
